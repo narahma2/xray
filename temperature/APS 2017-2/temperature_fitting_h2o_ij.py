@@ -6,12 +6,12 @@ Created on Fri Apr  5 01:02:13 2019
 """
 
 import sys
-sys.path.append('E:/GitHub/xray/general')
-
-if sys.platform == 'windows':
-	sys_folder = 'R:/'
+if sys.platform == 'win32':
+	sys.path.append('E:/GitHub/xray/general')
+	sys.path.append('R:/')
 elif sys.platform == 'linux':
-	sys_folder = '/mnt/r/'
+	sys.path.append('/mnt/e/GitHub/xray/general')
+	sys.path.append('/mnt/r/')
 
 import os
 import h5py
@@ -55,7 +55,7 @@ def interpolate(x_loc, calib, profile, name, folder):
     plt.close()
 
 #%%
-project_folder = 'R:/X-ray Temperature/APS 2017-2'
+project_folder = 'X-ray Temperature/APS 2017-2'
 
 test = 'Water Temperature Mixing'
 scan_no = [452, 453, 448, 446, 447, 454, 455, 456]
@@ -66,7 +66,7 @@ bg = [g['Intensity_vs_q'][:,i] for i in range(np.shape(g['Intensity_vs_q'])[1])]
 bg_avg = np.mean(bg, axis=0)
 
 #calib_folder = project_folder + '/Processed/Water/403/Statistics'
-calib_folder = 'R:/X-ray Temperature/APS 2018-1/Processed/Water_700umNozzle/Combined/Statistics'
+calib_folder = 'X-ray Temperature/APS 2018-1/Processed/Water_700umNozzle/Combined/Statistics'
 
 ij_mapping_X = []
 ij_mapping_Y = []
