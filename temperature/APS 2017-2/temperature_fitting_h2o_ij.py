@@ -6,7 +6,7 @@ Created on Fri Apr  5 01:02:13 2019
 """
 
 import sys
-sys.path.append('E:/General Scripts/python')
+sys.path.append('E:/GitHub/xray/general')
 
 import os
 import h5py
