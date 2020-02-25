@@ -5,6 +5,14 @@ Created on Wed May  8 14:29:08 2019
 @author: rahmann
 """
 
+import sys
+if sys.platform == 'win32':
+	sys.path.append('E:/GitHub/xray/general')
+	sys_folder = 'R:/'
+elif sys.platform == 'linux':
+	sys.path.append('/mnt/e/GitHub/xray/general')
+	sys_folder = '/mnt/r/'
+
 import os
 import h5py
 import numpy as np
@@ -14,7 +22,7 @@ from scipy.signal import savgol_filter, find_peaks
 from scipy import stats
 from calc_statistics import comparefit
 
-project_folder = 'R:/X-ray Temperature/APS 2017-2'
+project_folder = sys_folder + '/X-ray Temperature/APS 2017-2'
 
 test = 'Ethanol Impinging Jet Ambient Temperature Y Scan'
 scans = [438, 439, 440, 441, 442, 443, 444]
