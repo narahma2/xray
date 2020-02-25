@@ -66,7 +66,7 @@ bg = [g['Intensity_vs_q'][:,i] for i in range(np.shape(g['Intensity_vs_q'])[1])]
 bg_avg = np.mean(bg, axis=0)
 
 #calib_folder = project_folder + '/Processed/Water/403/Statistics'
-calib_folder = 'X-ray Temperature/APS 2018-1/Processed/Water_700umNozzle/Combined/Statistics'
+calib_folder = sys_folder + '/X-ray Temperature/APS 2018-1/Processed/Water_700umNozzle/Combined/Statistics'
 
 ij_mapping_X = []
 ij_mapping_Y = []
