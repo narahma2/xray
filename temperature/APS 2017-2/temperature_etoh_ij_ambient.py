@@ -72,14 +72,14 @@ folder = project_folder + '/Processed/EtOH IJ Ambient'
 if not os.path.exists(folder):
     os.makedirs(folder)
     
-#etoh_jet_intensity = np.loadtxt(project_folder + '/Processed/Ethanol404/Tests/43_24p78C.txt')
-#etoh_jet_q = np.loadtxt(project_folder + '/Processed/Ethanol404/q_range.txt')
+#etoh_jet_intensity = np.loadtxt(project_folder + '/Processed/Ethanol/404/Tests/43_24p78C.txt')
+#etoh_jet_q = np.loadtxt(project_folder + '/Processed/Ethanol/404/q_range.txt')
 
-#etoh_jet_intensity = np.loadtxt(project_folder + '/Processed/Ethanol408/Tests/03_25p29C.txt')
-#etoh_jet_q = np.loadtxt(project_folder + '/Processed/Ethanol408/q_range.txt')
+#etoh_jet_intensity = np.loadtxt(project_folder + '/Processed/Ethanol/408/Tests/03_25p29C.txt')
+#etoh_jet_q = np.loadtxt(project_folder + '/Processed/Ethanol/408/q_range.txt')
 
-etoh_jet_intensity = np.loadtxt(project_folder + '/Processed/Ethanol409/Tests/77_24p83C.txt')
-etoh_jet_q = np.loadtxt(project_folder + '/Processed/Ethanol409/q_range.txt')
+etoh_jet_intensity = np.loadtxt(project_folder + '/Processed/Ethanol/409/Tests/77_24p83C.txt')
+etoh_jet_q = np.loadtxt(project_folder + '/Processed/Ethanol/409/q_range.txt')
     
 mpl.rcParams['font.family'] = 'sans-serif'
 mpl.rcParams['font.sans-serif'] = 'Arial'
