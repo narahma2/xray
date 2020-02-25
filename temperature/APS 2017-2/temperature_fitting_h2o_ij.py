@@ -8,10 +8,10 @@ Created on Fri Apr  5 01:02:13 2019
 import sys
 if sys.platform == 'win32':
 	sys.path.append('E:/GitHub/xray/general')
-	sys.path.append('R:/')
+	sys_folder = 'R:/'
 elif sys.platform == 'linux':
 	sys.path.append('/mnt/e/GitHub/xray/general')
-	sys.path.append('/mnt/r/')
+	sys_folder = '/mnt/r/'
 
 import os
 import h5py
@@ -55,7 +55,7 @@ def interpolate(x_loc, calib, profile, name, folder):
     plt.close()
 
 #%%
-project_folder = '/X-ray Temperature/APS 2017-2'
+project_folder = sys_folder + '/X-ray Temperature/APS 2017-2'
 
 test = 'Water Temperature Mixing'
 scan_no = [452, 453, 448, 446, 447, 454, 455, 456]
