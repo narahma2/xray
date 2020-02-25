@@ -55,7 +55,7 @@ def interpolate(x_loc, calib, profile, name, folder):
     plt.close()
 
 #%%
-project_folder = 'X-ray Temperature/APS 2017-2'
+project_folder = '/X-ray Temperature/APS 2017-2'
 
 test = 'Water Temperature Mixing'
 scan_no = [452, 453, 448, 446, 447, 454, 455, 456]
