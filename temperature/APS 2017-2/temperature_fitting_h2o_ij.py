@@ -8,7 +8,7 @@ Created on Fri Apr  5 01:02:13 2019
 import sys
 if sys.platform == 'win32':
 	sys.path.append('E:/GitHub/xray/general')
-	sys_folder = 'R:/'
+	sys_folder = 'R:'
 elif sys.platform == 'linux':
 	sys.path.append('/mnt/e/GitHub/xray/general')
 	sys_folder = '/mnt/r/'
