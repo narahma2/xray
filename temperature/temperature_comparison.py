@@ -8,7 +8,14 @@ Created on Thu Jan 16 11:18:19 2020
 """
 
 import sys
-sys.path.append('E:/General Scripts/python')
+if sys.platform == 'win32':
+	sys.path.append('E:/GitHub/xray/general')
+	sys.path.append('E:/GitHub/xray/temperature')
+	sys_folder = 'R:/'
+elif sys.platform == 'linux':
+	sys.path.append('/mnt/e/GitHub/xray/general')
+	sys.path.append('/mnt/e/GitHub/xray/temperature')
+	sys_folder = '/mnt/r/'
 
 import glob
 import pickle
@@ -22,10 +29,10 @@ from scipy import stats
 from Form_Factor.xray_factor import ItoS, waas_kirf
 from calc_statistics import polyfit
 
-folder_2017 = 'R:/X-ray Temperature/APS 2017-2/Processed'
+folder_2017 = sys_folder + '/X-ray Temperature/APS 2017-2/Processed'
 #scan_2017 = '/Water/400'
 scan_2017 = '/Ethanol/408'
-folder_2018 = 'R:/X-ray Temperature/APS 2018-1/Processed'
+folder_2018 = sys_folder + '/X-ray Temperature/APS 2018-1/Processed'
 #scan_2018 = '/Water_700umNozzle/Combined'
 scan_2018 = '/Ethanol_700umNozzle/RampDown'
 

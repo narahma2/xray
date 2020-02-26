@@ -6,7 +6,10 @@ Created on Tue Jan 21 13:54:00 2020
 """
 
 import sys
-sys.path.append('E:/General Scripts/python')
+if sys.platform == 'win32':
+	sys_folder = 'R:/'
+elif sys.platform == 'linux':
+	sys_folder = '/mnt/r/'
 
 import os
 import pickle
