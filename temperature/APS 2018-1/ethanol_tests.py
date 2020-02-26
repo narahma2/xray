@@ -7,8 +7,14 @@ Created on Thu Jan 23 17:42:32 2020
 """
 
 import sys
-sys.path.append('E:/General Scripts/python')
-sys.path.append('R:/X-ray Temperature/Scripts')
+if sys.platform == 'win32':
+	sys.path.append('E:/GitHub/xray/general')
+	sys.path.append('E:/GitHub/xray/temperature')
+	sys_folder = 'R:/'
+elif sys.platform == 'linux':
+	sys.path.append('/mnt/e/GitHub/xray/general')
+	sys.path.append('/mnt/e/GitHub/xray/temperature')
+	sys_folder = '/mnt/r/'
 
 import os
 import glob
@@ -19,7 +25,7 @@ from Form_Factor.xray_factor import ItoS
 from temperature_processing import main as temperature_processing
 
 #%% Setup
-project_folder = 'R:/X-ray Temperature/APS 2018-1/'
+project_folder = sys_folder + '/X-ray Temperature/APS 2018-1/'
 
 test = 'Ethanol_700umNozzle'
 

@@ -5,6 +5,16 @@ Created on Wed Mar 20 15:13:08 2019
 @author: rahmann
 """
 
+import sys
+if sys.platform == 'win32':
+	sys.path.append('E:/GitHub/xray/general')
+	sys.path.append('E:/GitHub/xray/temperature')
+	sys_folder = 'R:/'
+elif sys.platform == 'linux':
+	sys.path.append('/mnt/e/GitHub/xray/general')
+	sys.path.append('/mnt/e/GitHub/xray/temperature')
+	sys_folder = '/mnt/r/'
+
 import os
 import numpy as np
 import matplotlib as mpl
@@ -12,9 +22,9 @@ import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter
 from scipy import stats
 
-ij_folder = 'R:/APS 2018-1/Temperature/Ethanol_ImpingingJet/q Space/'
+ij_folder = sys_folder + '/APS 2018-1/Temperature/Ethanol_ImpingingJet/q Space/'
 
-folder = 'R:/APS 2018-1/Temperature/Processing/Ethanol_ImpingingJet/'
+folder = sys_folder + '/APS 2018-1/Temperature/Processing/Ethanol_ImpingingJet/'
 if not os.path.exists(folder):
     os.makedirs(folder)
 
