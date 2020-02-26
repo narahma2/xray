@@ -9,8 +9,14 @@ Created on Sat Aug 25 14:51:24 2018
 """
 
 import sys
-sys.path.append('E:/General Scripts/python')
-sys.path.append('R:/X-ray Temperature/Scripts')
+if sys.platform == 'win32':
+	sys.path.append('E:/GitHub/xray/general')
+	sys.path.append('E:/GitHub/xray/temperature')
+	sys_folder = 'R:/'
+elif sys.platform == 'linux':
+	sys.path.append('/mnt/e/GitHub/xray/general')
+	sys.path.append('/mnt/e/GitHub/xray/general')
+	sys_folder = '/mnt/r/'
 
 import h5py
 import numpy as np
@@ -19,7 +25,7 @@ from scipy.signal import savgol_filter
 from Form_Factor.xray_factor import ItoS
 from temperature_processing import main as temperature_processing
 
-project_folder = 'R:/X-ray Temperature/APS 2017-2/'
+project_folder = sys_folder + '/X-ray Temperature/APS 2017-2/'
 
 # Water: 400, 401, 403
 # Ethanol: 404, 408, 409

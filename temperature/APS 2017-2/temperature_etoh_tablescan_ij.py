@@ -8,6 +8,14 @@ Created on Sat Apr  6 10:15:38 2019
 @author: rahmann
 """
 
+import sys
+if sys.platform == 'win32':
+	sys.path.append('E:/GitHub/xray/general')
+	sys_folder = 'R:/'
+elif sys.platform == 'linux':
+	sys.path.append('/mnt/e/GitHub/xray/general')
+	sys_folder = '/mnt/r/'
+
 import os
 import h5py
 import numpy as np
@@ -21,7 +29,7 @@ test = 'Ethanol Impinging Jet Table Scan'
 calib_no = [408]
 rank_x = np.linspace(0,13, num=14, dtype=int)
 
-project_folder = 'R:/X-ray Temperature/APS 2017-2'
+project_folder = sys_folder + '/X-ray Temperature/APS 2017-2'
 
 f = h5py.File(project_folder + '/RawData/Scan_' + str(425) + '.hdf5', 'r')
 g = h5py.File(project_folder + '/RawData/Scan_' + str(429) + '.hdf5', 'r')
@@ -156,10 +164,10 @@ for calib in calib_no:
         r2_peakq2.append(det)
         rmse_peakq2.append(rmse)
 
-etoh_q = np.loadtxt(project_folder + '/Processed/Ethanol' + str(calib) + '/q_range.txt')
-etoh_calib_low = np.loadtxt(project_folder + '/Processed/Ethanol' + str(calib) + '/Tests/00_7p5C.txt')
-etoh_calib_mid = np.loadtxt(project_folder + '/Processed/Ethanol' + str(calib) + '/Tests/04_31p7C.txt')
-etoh_calib_high = np.loadtxt(project_folder + '/Processed/Ethanol' + str(calib) + '/Tests/09_60p95C.txt')
+etoh_q = np.loadtxt(project_folder + '/Processed/Ethanol/' + str(calib) + '/q_range.txt')
+etoh_calib_low = np.loadtxt(project_folder + '/Processed/Ethanol/' + str(calib) + '/Tests/00_7p5C.txt')
+etoh_calib_mid = np.loadtxt(project_folder + '/Processed/Ethanol/' + str(calib) + '/Tests/04_31p7C.txt')
+etoh_calib_high = np.loadtxt(project_folder + '/Processed/Ethanol/' + str(calib) + '/Tests/09_60p95C.txt')
 
 plt.figure()
 plt.plot(reduced_q, [reduced_intensity[z] for z in positions[6]][0], linestyle='-', color=(0,0,1), linewidth=2.0, label='IJ 7.6°C')
