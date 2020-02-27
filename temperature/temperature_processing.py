@@ -58,6 +58,22 @@ def profile(name, temperature, profile, profiles_folder, stats_folder, test, plo
     plt.tight_layout()
     plt.savefig(plots_folder + name + '.png')
     plt.close()
+    
+def density(test, q_spacing):
+	"""
+    Computes density based on q spacing data. Serves as a measure of error.
+    =============
+    --VARIABLES--
+    test:          		Type of liquid: "Water", "Ethanol", "Dodecane"
+    peak_q:         	Location of peak in q [1/A]
+    """
+    
+    # Convert q to d (q = 4*sin(theta)*pi/lambda; 2*d*sin(theta) = n*lambda)
+    d = 2*pi/peak_q
+    
+    
+    # Get molecular weight
+    
 
 def main(test, folder, scan, reduced_intensity, reduced_q, temperature, structure_factor=None):
 
