@@ -14,6 +14,7 @@ elif sys.platform == 'linux':
 import os
 import pickle
 import numpy as np
+import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter, find_peaks
@@ -59,22 +60,26 @@ def profile(name, temperature, profile, profiles_folder, stats_folder, test, plo
     plt.savefig(plots_folder + name + '.png')
     plt.close()
     
-def density(test, q_spacing):
+def density(test, q_spacing, T):
 	"""
     Computes density based on q spacing data. Serves as a measure of error.
     =============
     --VARIABLES--
     test:          		Type of liquid: "Water", "Ethanol", "Dodecane"
     peak_q:         	Location of peak in q [1/A]
+    T:                  Temperature of liquid [°C]
     """
     
     # Convert q to d (q = 4*sin(theta)*pi/lambda; 2*d*sin(theta) = n*lambda)
     d = 2*pi/peak_q
     
     
-    # Get molecular weight
+    # Get temperatures and densities from EES data file
+    density_file = sys_folder + '/X-ray Temperature/ScriptData/densities.txt'
+    density_data = pd.read_csv(density_file, sep="\t")
+    temp = density_data["T_" + test[0:3].lower()]
+    dens = density_data["rho" + test[0:3].lower()]
     
-
 def main(test, folder, scan, reduced_intensity, reduced_q, temperature, structure_factor=None):
 
     profiles_folder = folder + '/' + str(scan) + '/Profiles/'
@@ -326,12 +331,3 @@ def main(test, folder, scan, reduced_intensity, reduced_q, temperature, structur
     
     with open(folder + '/' + str(scan) + '/' + str(scan) + '_data.pckl', 'wb') as f:
         pickle.dump([temperature, reduced_q, reduced_intensity], f)
-        
-    
-        
-        
-        
-        
-        
-        
-        
