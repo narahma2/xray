@@ -10,13 +10,13 @@ Created on Sat Aug 25 14:51:24 2018
 
 import sys
 if sys.platform == 'win32':
-	sys.path.append('E:/GitHub/xray/general')
-	sys.path.append('E:/GitHub/xray/temperature')
-	sys_folder = 'R:/'
+    sys.path.append('E:/GitHub/xray/general')
+    sys.path.append('E:/GitHub/xray/temperature')
+    sys_folder = 'R:'
 elif sys.platform == 'linux':
-	sys.path.append('/mnt/e/GitHub/xray/general')
-	sys.path.append('/mnt/e/GitHub/xray/general')
-	sys_folder = '/mnt/r/'
+    sys.path.append('/mnt/e/GitHub/xray/general')
+    sys.path.append('/mnt/e/GitHub/xray/general')
+    sys_folder = '/mnt/r/'
 
 import h5py
 import numpy as np

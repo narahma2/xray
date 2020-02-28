@@ -7,9 +7,9 @@ Created on Tue Jan 21 13:54:00 2020
 
 import sys
 if sys.platform == 'win32':
-	sys_folder = 'R:/'
+    sys_folder = 'R:/'
 elif sys.platform == 'linux':
-	sys_folder = '/mnt/r/'
+    sys_folder = '/mnt/r/'
 
 import os
 import pickle
@@ -61,18 +61,17 @@ def profile(name, temperature, profile, profiles_folder, stats_folder, test, plo
     plt.close()
     
 def density(test, q_spacing, T):
-	"""
+    """
     Computes density based on q spacing data. Serves as a measure of error.
     =============
     --VARIABLES--
-    test:          		Type of liquid: "Water", "Ethanol", "Dodecane"
-    peak_q:         	Location of peak in q [1/A]
+    test:               Type of liquid: "Water", "Ethanol", "Dodecane"
+    peak_q:             Location of peak in q [1/A]
     T:                  Temperature of liquid [°C]
     """
     
     # Convert q to d (q = 4*sin(theta)*pi/lambda; 2*d*sin(theta) = n*lambda)
     d = 2*pi/peak_q
-    
     
     # Get temperatures and densities from EES data file
     density_file = sys_folder + '/X-ray Temperature/ScriptData/densities.txt'
