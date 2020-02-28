@@ -30,8 +30,8 @@ project_folder = sys_folder + '/X-ray Temperature/APS 2017-2/'
 # Water: 400, 401, 403
 # Ethanol: 404, 408, 409
 # Dodecane: 414, 415
-scans = [400, 401, 403, 404, 408, 409, 414, 415]
-tests = ['Water','Water','Water', 'Ethanol','Ethanol','Ethanol', 'Dodecane','Dodecane']
+scans = [397, 398, 400, 401, 403, 404, 408, 409, 414, 415]
+tests = ['Water','Water','Water','Water','Water', 'Ethanol','Ethanol','Ethanol', 'Dodecane','Dodecane']
 
 def main(test, scan):
     folder = project_folder + 'Processed/' + test
@@ -42,34 +42,39 @@ def main(test, scan):
     q = list(f['q'])
     
     #%% 2017 Water
+    if scan == 397:
+        intensity = [f['Intensity_vs_q_BG_Sub'][:,i] for i in range(np.shape(f['Intensity_vs_q_BG_Sub'])[1])]
+        sl = slice((np.abs(np.array(q) - 1.70)).argmin(), (np.abs(np.array(q) - 3.1)).argmin())
+        avg_rows = 12
+
+    if scan == 398:
+        intensity = [f['Intensity_vs_q_BG_Sub'][:,i] for i in range(np.shape(f['Intensity_vs_q_BG_Sub'])[1])]
+        sl = slice((np.abs(np.array(q) - 1.70)).argmin(), (np.abs(np.array(q) - 3.1)).argmin())
+        avg_rows = 12
+
     if scan == 400:
         intensity = [f['Intensity_vs_q_BG_Sub'][:,i] for i in range(np.shape(f['Intensity_vs_q_BG_Sub'])[1])]
-#        sl = slice(6,427)
         sl = slice((np.abs(np.array(q) - 1.70)).argmin(), (np.abs(np.array(q) - 3.1)).argmin())
         avg_rows = 20
-        mid_temp = 109
         
     if scan == 401:
         intensity = [f['Intensity_vs_q_BG_Sub'][:,i] for i in range(np.shape(f['Intensity_vs_q_BG_Sub'])[1])]
-#        sl = slice(6,427)
         sl = slice((np.abs(np.array(q) - 1.70)).argmin(), (np.abs(np.array(q) - 3.1)).argmin())
         avg_rows = 20
-        mid_temp = 40
         
     if scan == 403:
         intensity = [f['Intensity_vs_q_BG_Sub'][:,i] for i in range(np.shape(f['Intensity_vs_q_BG_Sub'])[1])]
-#        sl = slice(6,427)
         sl = slice((np.abs(np.array(q) - 1.70)).argmin(), (np.abs(np.array(q) - 3.1)).argmin())
         avg_rows = 20
-        mid_temp = 25
         
     #%% 2017 Ethanol
-    if (test == 'Ethanol' and scan == 404):
+    # 404 looked at the same q range as the water scans
+    if scan == 404:
         intensity = [f['Intensity_vs_q_BG_Sub'][:,i] for i in range(np.shape(f['Intensity_vs_q_BG_Sub'])[1])]
-        sl = slice(0,195)
+        sl = slice((np.abs(np.array(q) - 1.70)).argmin(), (np.abs(np.array(q) - 3.1)).argmin())
         avg_rows = 20
-        mid_temp = 71
         
+    # 408 and 409 had a different detector position to inspect a different q range
     if scan == 408:
         g = h5py.File(project_folder + '/RawData/Scan_410.hdf5', 'r')
         bg = [g['Intensity_vs_q'][:,i] for i in range(np.shape(g['Intensity_vs_q'])[1])]
@@ -78,7 +83,6 @@ def main(test, scan):
         intensity = [(x-bg_avg) for x in raw_intensity]
         sl = slice((np.abs(np.array(q) - 0.6)).argmin(), (np.abs(np.array(q) - 1.75)).argmin())
         avg_rows = 30
-        mid_temp = 5
         
     if scan == 409:
         g = h5py.File(project_folder + '/RawData/Scan_410.hdf5', 'r')
@@ -88,7 +92,6 @@ def main(test, scan):
         intensity = [(x-bg_avg) for x in raw_intensity]
         sl = slice(43, 452)
         avg_rows = 5
-        mid_temp = 54
         
     #%% 2017 Dodecane
     if scan == 414:
@@ -99,7 +102,6 @@ def main(test, scan):
         intensity = [(x-bg_avg) for x in raw_intensity]
         sl = slice(43, 452)
         avg_rows = 24
-        mid_temp = 6
         
     if scan == 415:
         g = h5py.File(project_folder + '/RawData/Scan_416.hdf5', 'r')
@@ -109,7 +111,6 @@ def main(test, scan):
         intensity = [(x-bg_avg) for x in raw_intensity]
         sl = slice(43, 452)
         avg_rows = 6
-        mid_temp = 34
     
     #%% Intensity correction
     if not isinstance(scan, str):
@@ -155,7 +156,7 @@ def main(test, scan):
         llim = 0.10
         
     plots_folder = folder + '/' + str(scan) + '/Plots/'
-    
+    mid_temp = len(reduced_intensity) // 2  # grab the middle slice to get the median temperature
     plt.figure()
     plt.plot(reduced_q, reduced_intensity[0], linestyle='-', color=(rr[0],0,bb[0]), linewidth=2.0, label=str(int(round(temperature_avg[0],1))) + '°C')
     plt.plot(reduced_q, reduced_intensity[mid_temp], linestyle='-.', color=(rr[mid_temp],0,bb[mid_temp]), linewidth=2.0, label=str(int(round(temperature_avg[mid_temp],1))) + '°C')
