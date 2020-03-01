@@ -91,7 +91,7 @@ for j in reduced_intensity:
     peak.append(np.max(j))
     
 for calib in calib_no:
-    calib_folder = project_folder + '/Processed/Ethanol' + str(calib) + '/Statistics'
+    calib_folder = project_folder + '/Processed/Ethanol/' + str(calib) + '/Statistics'
     calib_var = np.poly1d(np.loadtxt(calib_folder + '/var_polynomial.txt'))
     calib_skew = np.poly1d(np.loadtxt(calib_folder + '/skew_polynomial.txt'))
     calib_kurt = np.poly1d(np.loadtxt(calib_folder + '/kurt_polynomial.txt'))
