@@ -15,7 +15,7 @@ if sys.platform == 'win32':
     sys_folder = 'R:'
 elif sys.platform == 'linux':
     sys.path.append('/mnt/e/GitHub/xray/general')
-    sys.path.append('/mnt/e/GitHub/xray/general')
+    sys.path.append('/mnt/e/GitHub/xray/temperature')
     sys_folder = '/mnt/r/'
 
 import h5py
