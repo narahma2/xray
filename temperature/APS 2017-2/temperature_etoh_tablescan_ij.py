@@ -46,9 +46,7 @@ y_loc = []
 
 for i in rank_x:
     y_locs = list(f['Rank_2_Point_' + str(i) + '/7bmb1:aero:m1.VAL'])
-    n = -1
-    for y in y_locs:
-        n += 1
+    for n, y in enumerate(y_locs):
         nozzle_T.append(list(f['Rank_2_Point_' + str(i) + '/7bm_dau1:dau:010:ADC'])[n])
         y_loc.append(round(list(f['Rank_2_Point_' + str(i) + '/7bmb1:aero:m1.VAL'])[n], 2))
         
@@ -114,13 +112,11 @@ for calib in calib_no:
     rmse_peakq2 = []
     
     for i in range(len(y_locs)):
-        folder = project_folder + '/Processed/EtOH IJ 425/y' + str(round(y_locs[i], 2))
+        folder = project_folder + '/Processed/Ethanol/IJ Ramping/y' + str(round(y_locs[i], 2))
         if not os.path.exists(folder):
             os.makedirs(folder)
         
-        k = -1
-        for j in stats:
-            k += 1
+        for k, j in enumerate(stats):
             calib_curve = j([calc_stats[k][z] for z in positions[i]])
             calib_curve[calib_curve > 100] = np.nan
             calib_curve[calib_curve < 0] = np.nan
@@ -182,8 +178,8 @@ plt.minorticks_on()
 plt.tick_params(which='both',direction='in')
 plt.title('Select Curves at y = 1.75 mm')
 plt.tight_layout()
-plt.savefig(project_folder + '/Processed/EtOH IJ 425/y175_comparison.png')
-np.savetxt(project_folder + '/Processed/EtOH IJ 425/y1.75/y1p75_data.txt', np.transpose([reduced_q, [reduced_intensity[z] for z in positions[6]][0], 
+plt.savefig(project_folder + '/Processed/Ethanol/IJ Ramping/y175_comparison.png')
+np.savetxt(project_folder + '/Processed/Ethanol/IJ Ramping/y1.75/y1p75_data.txt', np.transpose([reduced_q, [reduced_intensity[z] for z in positions[6]][0], 
             [reduced_intensity[z] for z in positions[6]][6], [reduced_intensity[z] for z in positions[6]][-1]]), header='q 7.6C 31.9C 58.7C',
             delimiter='\t')
 
@@ -200,8 +196,8 @@ plt.minorticks_on()
 plt.tick_params(which='both',direction='in')
 plt.title('Select Curves at y = 0.75 mm')
 plt.tight_layout()
-plt.savefig(project_folder + '/Processed/EtOH IJ 425/y075_comparison.png')
-np.savetxt(project_folder + '/Processed/EtOH IJ 425/y0.75/y0p75_data.txt', np.transpose([reduced_q, [reduced_intensity[z] for z in positions[2]][0], 
+plt.savefig(project_folder + '/Processed/Ethanol/IJ Ramping/y075_comparison.png')
+np.savetxt(project_folder + '/Processed/Ethanol/IJ Ramping/y0.75/y0p75_data.txt', np.transpose([reduced_q, [reduced_intensity[z] for z in positions[2]][0], 
             [reduced_intensity[z] for z in positions[2]][6], [reduced_intensity[z] for z in positions[2]][-1]]), header='q 7.1C 31.0C 57.9C',
             delimiter='\t')
 
@@ -219,8 +215,8 @@ plt.minorticks_on()
 plt.tick_params(which='both',direction='in')
 plt.title('Select Curves at y = 10.0 mm')
 plt.tight_layout()
-plt.savefig(project_folder + '/Processed/EtOH IJ 425/y10_comparison.png')
-np.savetxt(project_folder + '/Processed/EtOH IJ 425/y10.0/y10p0_data.txt', np.transpose([reduced_q, [reduced_intensity[z] for z in positions[-1]][0], 
+plt.savefig(project_folder + '/Processed/Ethanol/IJ Ramping/y10_comparison.png')
+np.savetxt(project_folder + '/Processed/Ethanol/IJ Ramping/y10.0/y10p0_data.txt', np.transpose([reduced_q, [reduced_intensity[z] for z in positions[-1]][0], 
             [reduced_intensity[z] for z in positions[-1]][6], [reduced_intensity[z] for z in positions[-1]][-1]]), header='q 9.3C 34.4C 60.4C',
             delimiter='\t')
 
