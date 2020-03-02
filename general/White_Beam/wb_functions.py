@@ -86,11 +86,11 @@ def ellipse(data_epl, position, cm_pix, peak_width=20, relative_height=0.8, plot
     """
     
     peaks, _ = find_peaks(savgol_filter(data_epl[position, :], 105, 7), width=peak_width, prominence=0.1)
-    [full_width, relative_max, lpos, rpos] = peak_widths(savgol_filter(data_epl[position, :], 105, 7), peaks, rel_height=relative_height)
-    full_width = full_width[0]
+    [relative_width, relative_max, lpos, rpos] = peak_widths(savgol_filter(data_epl[position, :], 105, 7), peaks, rel_height=relative_height)
+    relative_width = relative_width[0]
     relative_max = relative_max[0]
-#    model_epl, fitted_graph, epl_graph = ideal_ellipse(y=savgol_filter(data_epl[position, :], 105, 7)[int(round(lpos[0])):int(round(rpos[0]))], full_width=full_width, relative_max=relative_max, dx=cm_pix)
-    model_epl, fitted_graph, epl_graph = ideal_ellipse(y=data_epl[position, :][int(round(lpos[0])):int(round(rpos[0]))], full_width=full_width, relative_max=relative_max, dx=cm_pix)
+#    model_epl, fitted_graph, epl_graph = ideal_ellipse(y=savgol_filter(data_epl[position, :], 105, 7)[int(round(lpos[0])):int(round(rpos[0]))], relative_width=relative_width, relative_max=relative_max, dx=cm_pix)
+    model_epl, fitted_graph, epl_graph = ideal_ellipse(y=data_epl[position, :][int(round(lpos[0])):int(round(rpos[0]))], relative_width=relative_width, relative_max=relative_max, dx=cm_pix)
 
     
     if plot:
@@ -108,32 +108,43 @@ def ellipse(data_epl, position, cm_pix, peak_width=20, relative_height=0.8, plot
         plt.xlabel('Horizontal Location [px]')
         plt.ylabel('EPL [cm]')
     
-def ideal_ellipse(y, full_width, relative_max, dx, units='cm'):
+def ideal_ellipse(y, relative_width, relative_max, dx, units='cm'):
+    """
+    Function that takes in a line scan and returns the best fit ellipse.
+    =============
+    --VARIABLES--
+    y:                  Intensity line scan values (array).
+    relative_width:     Width of peak.
+    relative_max:       Y value corresponding to the peak width (float).
+    dx:                 Pixel size for x dimension (float).
+    units:              Units of the x dimension (string: 'cm', 'mm').
+    """
+    
     x = np.linspace(start=-(len(y)*dx)/2, stop=(len(y)*dx)/2, num=len(y))
     y = y - relative_max
 #    y = savgol_filter(y, 105, 7)
     
-    epl_area = np.trapz(y, dx=dx)
+    area = np.trapz(y, dx=dx)
     if units == 'cm':
         b = np.linspace(0,1,1000)
     elif units == 'mm':
         b = np.linspace(0,10,1000)
-    a = full_width/2*dx
+    a = relative_width/2*dx
     minimize = np.zeros(len(b))
     
     for i, R in enumerate(b):
         check_area = (1/2)*np.pi*a*R
-        minimize[i] = abs(epl_area - check_area)
+        minimize[i] = abs(area - check_area)
         
     y = y + relative_max
         
     fitted_radius = b[np.argmin(minimize)]
-    epl_graph = {"x": x, "y": y}
+    data_graph = {"x": x, "y": y}
     fitted_graph = {"center": (0, relative_max), "a": a, "b": fitted_radius}
     
-    return fitted_radius, fitted_graph, epl_graph
+    return fitted_radius, fitted_graph, data_graph
 
-def plot_ellipse(epl_graph, fitted_graph):
+def plot_ellipse(data_graph, fitted_graph):
     t = np.linspace(0, np.pi)
     a = fitted_graph["a"]
     b = fitted_graph["b"]
@@ -141,7 +152,7 @@ def plot_ellipse(epl_graph, fitted_graph):
     yc = fitted_graph["center"][1]
     
     plt.figure()
-    plt.plot(epl_graph["x"], epl_graph["y"], label="EPL w/ Full Width = " + str(round(a*2,2)) + " cm")
+    plt.plot(data_graph["x"], data_graph["y"], label="Data w/ Full Width = " + str(round(a*2,2)) + " cm")
     plt.plot(xc+a*np.cos(t), yc+b*np.sin(t), label="Fitted Ellipse w/ Diameter = " + str(round(b,2)) + " cm")
     plt.legend()
     plt.title('Ellipse Fitting to EPL Scan')
