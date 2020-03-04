@@ -205,7 +205,7 @@ def main(test, folder, scan, reduced_intensity, reduced_q, temperature, structur
     profile('qratio', fit_var, mu1 / mu2, profiles_folder, stats_folder, test, plots_folder)
     profile('qdist', fit_var, mu1 - mu2, profiles_folder, stats_folder, test, plots_folder)
     profile('iratio', fit_var, mu1_int / mu2_int, profiles_folder, stats_folder, test, plots_folder)
-    profile('ipratio', fit_var, mu1_int / pinned_q_int2, profiles_folder, stats_folder, test, plots_folder)
+    #profile('ipratio', fit_var, mu1_int / pinned_q_int2, profiles_folder, stats_folder, test, plots_folder)
     profile('ratio', fit_var, (mu1_int/pinned_q_int2)/(mu1/pinned_q[-1]), profiles_folder, stats_folder, test, plots_folder)
     profile('aratio', fit_var, [np.trapz(x[:pinned_pts[-1]], reduced_q[:pinned_pts[-1]]) / np.trapz(x[pinned_pts[-1]:], reduced_q[pinned_pts[-1]:]) for x in reduced_intensity], profiles_folder, stats_folder, test, plots_folder)
     profile('mean', fit_var, [np.mean(x) for x in reduced_intensity], profiles_folder, stats_folder, test, plots_folder)
