@@ -37,7 +37,7 @@ q = list(f['q'])
 intensity = [f['Intensity_vs_q'][:,i] for i in range(np.shape(f['Intensity_vs_q'])[1])]
 intensity = [(x-bg_avg) for x in intensity]
 y = list(f['7bmb1:aero:m1.VAL'])    
-    
+breakpoint()    
 sl = slice((np.abs(np.array(q) - 0.6)).argmin(), (np.abs(np.array(q) - 1.75)).argmin())
 
 filtered_intensity = [savgol_filter(x, 55, 3) for x in intensity]
