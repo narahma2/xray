@@ -27,7 +27,7 @@ test = 'Ethanol/IJ Cold'
 
 folder = project_folder + '/Processed/Ethanol'
 
-g = h5py.File(project_folder + '/RawData/Scan_427.hdf5', 'r')
+g = h5py.File(project_folder + '/RawData/Scan_429.hdf5', 'r')
 bg = [g['Intensity_vs_q'][:,i] for i in range(np.shape(g['Intensity_vs_q'])[1])]
 bg_avg = np.mean(bg, axis=0)
 
