@@ -19,6 +19,7 @@ import os
 import h5py
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.signal import savgol_filter
 from temperature_processing import main as temperature_processing
 
 project_folder = sys_folder + '/X-ray Temperature/APS 2017-2'
