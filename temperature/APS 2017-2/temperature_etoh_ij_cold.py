@@ -34,10 +34,13 @@ bg_avg = np.mean(bg, axis=0)
 
 f = h5py.File(project_folder + '/RawData/Scan_423.hdf5', 'r')
 q = list(f['q'])
+
+# Grab intensity profiles and crop down to match len(y) (detector collected for too long?)
 intensity = [f['Intensity_vs_q'][:,i] for i in range(np.shape(f['Intensity_vs_q'])[1])]
 intensity = [(x-bg_avg) for x in intensity]
+intensity = intensity[:50]
 y = list(f['7bmb1:aero:m1.VAL'])    
-breakpoint()    
+
 sl = slice((np.abs(np.array(q) - 0.6)).argmin(), (np.abs(np.array(q) - 1.75)).argmin())
 
 filtered_intensity = [savgol_filter(x, 55, 3) for x in intensity]
