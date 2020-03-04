@@ -5,6 +5,7 @@ Created on Tue May 29 18:03:03 2018
 @author: rahmann
 """
 
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 #from nexusformat.nexus import nxload
@@ -58,10 +59,10 @@ def waas_kirf(atom, q):
                 b) doi:10.1038/nature13266, Supplementary Information, Eq. S.23"""
     
     if atom == "H" or atom == "hydrogen":
-        file = "hydrogen.txt"
+        file = os.path.dirname(os.path.realpath(__file__)) + "hydrogen.txt"
         alpha = -0.43
     elif atom == "O" or atom == "oxygen":
-        file = "oxygen.txt"
+        file = os.path.dirname(os.path.realpath(__file__))+ "oxygen.txt"
         alpha = 0.1075
     
     lines = []
