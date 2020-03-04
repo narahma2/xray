@@ -58,10 +58,10 @@ def waas_kirf(atom, q):
                 b) doi:10.1038/nature13266, Supplementary Information, Eq. S.23"""
     
     if atom == "H" or atom == "hydrogen":
-        file = "E:/General Scripts/python/Form_Factor/hydrogen.txt"
+        file = "hydrogen.txt"
         alpha = -0.43
     elif atom == "O" or atom == "oxygen":
-        file = "E:/General Scripts/python/Form_Factor/oxygen.txt"
+        file = "oxygen.txt"
         alpha = 0.1075
     
     lines = []
