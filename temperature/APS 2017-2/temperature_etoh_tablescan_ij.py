@@ -11,13 +11,14 @@ Created on Sat Apr  6 10:15:38 2019
 import sys
 if sys.platform == 'win32':
 	sys.path.append('E:/GitHub/xray/general')
-	sys_folder = 'R:/'
+	sys_folder = 'R:'
 elif sys.platform == 'linux':
 	sys.path.append('/mnt/e/GitHub/xray/general')
 	sys_folder = '/mnt/r/'
 
 import os
 import h5py
+import pdb
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -25,7 +26,7 @@ from scipy.signal import savgol_filter, find_peaks
 from scipy import stats
 from calc_statistics import comparefit
 
-test = 'Ethanol Impinging Jet Table Scan'
+test = 'Ethanol/IJ Ramping'
 calib_no = [408]
 rank_x = np.linspace(0,13, num=14, dtype=int)
 
@@ -53,7 +54,7 @@ for i in rank_x:
 positions = []
 for k in y_locs:
     positions.append([i for i, x in enumerate(y_loc) if x == round(k, 2)])      # 14 total occurrences of the 18 y positions
-        
+pdb.set_trace()        
 intensities = intensities[0:252]
 intensities = [(x-bg_avg) for x in intensities]
 filtered_intensity = [savgol_filter(x, 55, 3) for x in intensities]
