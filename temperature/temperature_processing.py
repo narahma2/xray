@@ -42,6 +42,19 @@ def poly4(x, c0, c1, c2, c3, c4):
     return c0*x**4 + c1*x**3 + c2*x**2 + c3*x + c4
 
 def profile(name, fit_var, profile, profiles_folder, stats_folder, test, plots_folder):
+    """
+    Creates plots for the potential thermometer/positioning profiles.
+    =============
+    --VARIABLES--
+    name:               Profile name ('peak', 'q1', etc.)
+    fit_var:            Y axis variable (temperature or y location)
+    profile:            X axis variable ('peak', 'q1', etc.)
+    profiles_folder:    Location where profiles (X axis values) will be saved.
+    stats_folder:       Location where statistics (polynomial fit) will be saved.
+    test:               Type of liquid ("Water", "Ethanol", "Dodecane")
+    plots_folder        Location where plots will be saved.
+    """
+
     profile_polyfit = polyfit(profile, fit_var, 1)
     np.savetxt(profiles_folder + '/profile_' + name + '.txt', profile)
     np.savetxt(stats_folder + '/' + name + '_polynomial.txt', profile_polyfit['polynomial'])
@@ -82,7 +95,21 @@ def density(test, q_spacing, T):
     temp = density_data["T_" + test[0:3].lower()]
     dens = density_data["rho" + test[0:3].lower()]
     
-def main(test, folder, scan, reduced_intensity, reduced_q, temperature, structure_factor=None, y=[], IJ=False):
+def main(test, folder, scan, reduced_intensity, reduced_q, temperature=None, structure_factor=None, y=None, ramping=False):
+    """
+    Processes data sets, create statistical fits, and outputs plots.
+    =============
+    --VARIABLES--
+    test:               Type of liquid: "Water", "Ethanol", "Dodecane"
+    folder:             Save location of the processed data set.
+    scan:               Specific scan under the type of test.
+    reduced_intensity   Intensity profiles reduced down to the cropped q.
+    reduced_q           Cropped q range.
+    temperature         Nozzle temperature.
+    structure_factor    Structure factor profiles (water only).
+    y                   Vertical location in spray (IJ only).
+    ramping             Ramping IJ case (True/False).
+    """
 
     profiles_folder = folder + '/' + str(scan) + '/Profiles/'
     if not os.path.exists(profiles_folder):
@@ -188,13 +215,14 @@ def main(test, folder, scan, reduced_intensity, reduced_q, temperature, structur
     intensity_poly4 = [c0[i]*reduced_q**4 + c1[i]*reduced_q**3 + c2[i]*reduced_q**2 + c3[i]*reduced_q + c4[i] for i,_ in enumerate(c0)]
 
     #%%
-    if IJ is False:
-        fit_var = temperature
-    elif IJ is True:
+    if y is not None:
         fit_var = y
-
-    np.savetxt(profiles_folder + '/temperature.txt', temperature)
-    np.savetxt(stats_folder + '/temperature.txt', temperature)
+        np.savetxt(profiles_folder + '/positions.txt', y)
+        np.savetxt(stats_folder + '/positions.txt', y)
+    elif temperature is not None:
+        fit_var = temperature
+        np.savetxt(profiles_folder + '/temperature.txt', temperature)
+        np.savetxt(stats_folder + '/temperature.txt', temperature)
     
     profile('peak', fit_var, [np.max(x) for x in reduced_intensity], profiles_folder, stats_folder, test, plots_folder)
     profile('peakq', fit_var, [reduced_q[np.argmax(x)] for x in reduced_intensity], profiles_folder, stats_folder, test, plots_folder)
@@ -243,8 +271,12 @@ def main(test, folder, scan, reduced_intensity, reduced_q, temperature, structur
         llim = 0.46
 
     for i,_ in enumerate(reduced_intensity):
-        np.savetxt(tests_folder + '/' + f"{i:02d}" + '_' + str(round(fit_var[i],2)).replace('.','p') + 'C' + '.txt', reduced_intensity[i])
+        # if temperature is not None:
+        #     np.savetxt(tests_folder + '/' + f"{i:02d}" + '_' + str(round(fit_var[i],2)).replace('.','p') + 'C' + '.txt', reduced_intensity[i])
+        # elif y is not None:
+        #     np.savetxt(tests_folder + '/' + f"{i:02d}" + '_' + str(round(fit_var[i],2)).replace('.','p') + 'mm' + '.txt', reduced_intensity[i])
         
+        # Create intensity plots with q values of interest highlighted
         plt.figure()
         plt.plot(reduced_q, reduced_intensity[i], linestyle='-', color=(rr[i],0,bb[i]), linewidth=2.0, label=str(round(fit_var[i],1)) + '°C')
         plt.plot(reduced_q, intensity_poly4[i], linestyle='-', color='k', linewidth=1.0, label='Poly4')
@@ -264,81 +296,93 @@ def main(test, folder, scan, reduced_intensity, reduced_q, temperature, structur
         plt.close()
             
     
-    if IJ is False:
-        for i,_ in enumerate(concavity):
-            np.savetxt(tests_folder + '/' + f"{i:02d}" + '_' + str(round(temperature[i],2)).replace('.','p') + 'C' + '.txt', concavity[i])
+    # if IJ is False:
+    for i,_ in enumerate(concavity):
+        if temperature is not None:
+            np.savetxt(tests_folder + '/concavity' + f"{i:02d}" + '_' + str(round(fit_var[i],2)).replace('.','p') + 'C.txt', concavity[i])
+        elif y is not None:
+            np.savetxt(tests_folder + '/concavity' + f"{i:02d}" + '_' + str(round(fit_var[i],2)).replace('.','p') + 'mm.txt', concavity[i])
+        
+        plt.figure()
+        if temperature is not None:
+            plt.plot(reduced_q, concavity[i], linestyle='-', color=(rr[i],0,bb[i]), linewidth=2.0, label=str(round(fit_var[i],1)) + '°C')
+        elif y is not None:
+            plt.plot(reduced_q, concavity[i], linestyle='-', color=(rr[i],0,bb[i]), linewidth=2.0, label=str(round(fit_var[i],1)) + 'mm')
+        plt.axvline(x=conc_q1[i], linestyle='--', color='C2', label='q$_1$ = ' + str(round(conc_q1[i],2)))
+        plt.axvline(x=conc_q2[i], linestyle='--', color='C3', label='q$_2$ = ' + str(round(conc_q2[i],2)))
+        plt.legend(loc='upper right')
+        plt.xlabel('q (Å$^{-1}$)')
+        plt.ylabel('Negative Concavity (a.u.)')
+        plt.autoscale(enable=True, axis='x', tight=True)
+        plt.minorticks_on()
+        plt.tick_params(which='both',direction='in')
+        plt.title(test + ' Curves')
+        plt.tight_layout()
+        plt.savefig(concavity_folder +  '/' + test + 'curves_' + str(round(fit_var[i],1)) + '.png')
+        plt.close()
+        
+    if structure_factor:    
+        for i,_ in enumerate(structure_factor):
+            np.savetxt(tests_folder + '/' + f"{i:02d}" + '_' + str(round(temperature[i],2)).replace('.','p') + 'C' + '.txt', structure_factor[i])
             
             plt.figure()
-            plt.plot(reduced_q, concavity[i], linestyle='-', color=(rr[i],0,bb[i]), linewidth=2.0, label=str(round(temperature[i],1)) + '°C')
-            plt.axvline(x=conc_q1[i], linestyle='--', color='C2', label='q$_1$ = ' + str(round(conc_q1[i],2)))
-            plt.axvline(x=conc_q2[i], linestyle='--', color='C3', label='q$_2$ = ' + str(round(conc_q2[i],2)))
+            plt.plot(reduced_q, structure_factor[i], linestyle='-', color=(rr[i],0,bb[i]), linewidth=2.0, label=str(round(temperature[i],1)) + '°C')
             plt.legend(loc='upper right')
             plt.xlabel('q (Å$^{-1}$)')
-            plt.ylabel('Negative Concavity (a.u.)')
+            plt.ylabel('Structure Factor (a.u.)')
             plt.autoscale(enable=True, axis='x', tight=True)
             plt.minorticks_on()
             plt.tick_params(which='both',direction='in')
             plt.title(test + ' Curves')
             plt.tight_layout()
-            plt.savefig(concavity_folder +  '/' + test + 'curves_' + str(round(temperature[i],1)) + '.png')
+            plt.savefig(structure_factor_folder +  '/' + test + 'curves_' + str(round(temperature[i],1)) + '.png')
             plt.close()
-        
-        if structure_factor:    
-            for i,_ in enumerate(structure_factor):
-                np.savetxt(tests_folder + '/' + f"{i:02d}" + '_' + str(round(temperature[i],2)).replace('.','p') + 'C' + '.txt', structure_factor[i])
-                
-                plt.figure()
-                plt.plot(reduced_q, structure_factor[i], linestyle='-', color=(rr[i],0,bb[i]), linewidth=2.0, label=str(round(temperature[i],1)) + '°C')
-                plt.legend(loc='upper right')
-                plt.xlabel('q (Å$^{-1}$)')
-                plt.ylabel('Structure Factor (a.u.)')
-                plt.autoscale(enable=True, axis='x', tight=True)
-                plt.minorticks_on()
-                plt.tick_params(which='both',direction='in')
-                plt.title(test + ' Curves')
-                plt.tight_layout()
-                plt.savefig(structure_factor_folder +  '/' + test + 'curves_' + str(round(temperature[i],1)) + '.png')
-                plt.close()
             
-        np.savetxt(folder + '/' + str(scan) + '/q_range.txt', reduced_q)
+    np.savetxt(folder + '/' + str(scan) + '/q_range.txt', reduced_q)
+    if temperature is not None:
         np.savetxt(folder + '/' + str(scan) + '/temperature.txt', temperature)
-        #%%    
-        plt.figure()
-        plt.plot(reduced_q, intensity_std, linewidth='2.0')
-        plt.xlabel('q (Å$^{-1}$)')
-        plt.ylabel('SD(Intensity) [a.u.]')
-        [plt.axvline(x=y, color='k', linestyle='--') for y in pinned_q]
-        [plt.text(x, 0.6*np.mean(intensity_std), 'q = ' + "%02.2f"%round(x, 2), horizontalalignment='center', bbox=dict(facecolor='white', alpha=1.0)) for x in pinned_q]
-        [plt.axvline(x=y, color='g', linestyle='-.') for y in peak_q]
-        [plt.text(x, 1.2*np.mean(intensity_std), 'q = ' + "%02.2f"%round(x, 2), horizontalalignment='center', bbox=dict(ec='g',facecolor='white', alpha=1.0)) for x in peak_q]
-        plt.title('Scan ' + str(scan))
-        plt.tight_layout()
-        plt.savefig(plots_folder + 'stdev.png')
-        #    plt.close()
-        
-        plt.figure()
-        [plt.plot(reduced_q, x, color=(rr[i],0,bb[i])) for i,x in enumerate(reduced_intensity)]
-        plt.xlabel('q (Å$^{-1}$)')
-        plt.ylabel('Intensity [a.u.]')
-        [plt.axvline(x=y, color='k', linestyle='--') for y in pinned_q]
-        [plt.text(x, 0.5, 'q = ' + "%02.2f"%round(x, 2), horizontalalignment='center', bbox=dict(facecolor='white', alpha=1.0)) for x in pinned_q]
-        [plt.axvline(x=y, color='g', linestyle='-.') for y in peak_q]
-        [plt.text(x, 0.7, 'q = ' + "%02.2f"%round(x, 2), horizontalalignment='center', bbox=dict(ec='g',facecolor='white', alpha=1.0)) for x in peak_q]
-        plt.title('Scan ' + str(scan))
-        plt.ylim([llim, 1.05])
-        plt.tight_layout()
-        plt.savefig(plots_folder + 'superimposedcurves.png')
-        #    plt.close()
+    elif y is not None:
+        np.savetxt(folder + '/' + str(scan) + '/positions.txt', y)
+    #%%
+
+    # Standard deviation plot of all intensities
+    plt.figure()
+    plt.plot(reduced_q, intensity_std, linewidth='2.0')
+    plt.xlabel('q (Å$^{-1}$)')
+    plt.ylabel('SD(Intensity) [a.u.]')
+    [plt.axvline(x=y, color='k', linestyle='--') for y in pinned_q]
+    [plt.text(x, 0.6*np.mean(intensity_std), 'q = ' + "%02.2f"%round(x, 2), horizontalalignment='center', bbox=dict(facecolor='white', alpha=1.0)) for x in pinned_q]
+    [plt.axvline(x=y, color='g', linestyle='-.') for y in peak_q]
+    [plt.text(x, 1.2*np.mean(intensity_std), 'q = ' + "%02.2f"%round(x, 2), horizontalalignment='center', bbox=dict(ec='g',facecolor='white', alpha=1.0)) for x in peak_q]
+    plt.title('Scan ' + str(scan))
+    plt.tight_layout()
+    plt.savefig(plots_folder + 'stdev.png')
+    #    plt.close()
+    
+    # Superimposed intensity plot    
+    plt.figure()
+    [plt.plot(reduced_q, x, color=(rr[i],0,bb[i])) for i,x in enumerate(reduced_intensity)]
+    plt.xlabel('q (Å$^{-1}$)')
+    plt.ylabel('Intensity [a.u.]')
+    [plt.axvline(x=y, color='k', linestyle='--') for y in pinned_q]
+    [plt.text(x, 0.5, 'q = ' + "%02.2f"%round(x, 2), horizontalalignment='center', bbox=dict(facecolor='white', alpha=1.0)) for x in pinned_q]
+    [plt.axvline(x=y, color='g', linestyle='-.') for y in peak_q]
+    [plt.text(x, 0.7, 'q = ' + "%02.2f"%round(x, 2), horizontalalignment='center', bbox=dict(ec='g',facecolor='white', alpha=1.0)) for x in peak_q]
+    plt.title('Scan ' + str(scan))
+    plt.ylim([llim, 1.05])
+    plt.tight_layout()
+    plt.savefig(plots_folder + 'superimposedcurves.png')
+    #    plt.close()
     
     # Save the calibration data sets
-    if y is [] and IJ is False:
+    if temperature is not None and ramping is False:
         with open(folder + '/' + str(scan) + '/' + str(scan) + '_data.pckl', 'wb') as f:
             pickle.dump([temperature, reduced_q, reduced_intensity], f)
     # Save the ethanol (cold/ambient/hot) and water impinging jet data sets
-    elif y is not []:
+    elif y is not None and ramping is False:
         with open(folder + '/' + str(scan) + '/' + str(scan) + '_data.pckl', 'wb') as f:
             pickle.dump([y, reduced_q, reduced_intensity], f)
     # Save the ethanol ramping impinging jet data set
-    else:
-        with open(folder + '/' + str(scan) + '/' + str(scan) + '_data.pckl', 'wb') as f:
+    elif ramping is True:
+        with open(folder + '/' + str(scan) + '_data.pckl', 'wb') as f:
             pickle.dump([temperature, y, reduced_q, reduced_intensity], f)
