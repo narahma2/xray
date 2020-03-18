@@ -36,4 +36,4 @@ for fld in flds:
 	for name, file in zip(names, files):
 		data = np.loadtxt(file)
 		df.loc[name] = pd.Series({'Mean': round(np.mean(data), 3), 'StDv': round(np.std(data), 3), 'RStD': round(np.std(data) / np.mean(data), 3)})
-	df.to_csv(fld + '/' + temp + '_summary.txt', sep='\t')
+	df.to_csv(fld + '/' + temp + 'summary.txt', sep='\t')
