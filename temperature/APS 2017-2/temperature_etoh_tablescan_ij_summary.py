@@ -32,8 +32,8 @@ for fld in flds:
 	temp = fld.rsplit('/')[-1]
 	files = glob.glob(fld + '/Profiles/profile*')
 	names = [x.rsplit('/')[-1].rsplit('_')[-1].rsplit('.')[0] for x in files]
-	df = pd.DataFrame(columns=['Mean','StDv','RStD'], index=names)
+	df = pd.DataFrame(columns=['Mean','StD','CV'], index=names)
 	for name, file in zip(names, files):
 		data = np.loadtxt(file)
-		df.loc[name] = pd.Series({'Mean': round(np.mean(data), 3), 'StDv': round(np.std(data), 3), 'RStD': round(np.std(data) / np.mean(data), 3)})
+		df.loc[name] = pd.Series({'Mean': round(np.mean(data), 3), 'StD': round(np.std(data), 3), 'CV': round(np.std(data) / np.mean(data), 3)})
 	df.to_csv(fld + '/' + temp + 'summary.txt', sep='\t')
