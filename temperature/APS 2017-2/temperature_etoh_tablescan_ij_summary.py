@@ -35,4 +35,4 @@ for fld in flds:
 	df = pd.DataFrame(columns=['Mean','StDev','CV'], index=names)
 	for name, file in zip(names, files):
 		data = np.loadtxt(file)
-		df.loc[name] = pandas.Series({'Mean': np.mean(data), 'StDev': np.std(data), 'CV': np.std(data) / np.mean(data)})
+		df.loc[name] = pd.Series({'Mean': np.mean(data), 'StDev': np.std(data), 'CV': np.std(data) / np.mean(data)})
