@@ -74,7 +74,7 @@ r2_q3 = np.array([np.percentile([pd.read_csv(fld + '/summary.txt', sep='\t', ind
 r2_cd = (r2_q1 - r2_q3) / (r2_q1 + r2_q3)
 r2_data = {'Mean of R^2': r2_mean, 'StD of R^2': r2_std, 'CfVar of R^2': r2_cv, 'CfDis of R^2': r2_cd}
 df = pd.DataFrame(r2_data, index=names)
-df.to_csv(folder + 'IJ Ramping/temperature_r2_summary.txt', sep='\t')
+df.to_csv(folder + '/IJ Ramping/temperature_r2_summary.txt', sep='\t')
 
 # Mean summary
 mean_mean = np.array([np.mean([pd.read_csv(fld + '/summary.txt', sep='\t', index_col=0, header=0).loc[name]['Mean'] for fld in flds]) for name in names])
@@ -85,7 +85,7 @@ mean_q3 = np.array([np.percentile([pd.read_csv(fld + '/summary.txt', sep='\t', i
 mean_cd = (mean_q1 - mean_q3) / (mean_q1 + mean_q3)
 mean_data = {'Mean of Mean': mean_mean, 'StD of Mean': mean_std, 'CfVar of Mean': mean_cv, 'CfDis of Mean': mean_cd}
 df = pd.DataFrame(mean_data, index=names)
-df.to_csv(folder + 'IJ Ramping/temperature_mean_summary.txt', sep='\t')
+df.to_csv(folder + '/IJ Ramping/temperature_mean_summary.txt', sep='\t')
 
 
 ## Create summary of Position data sets (to find best profile)
