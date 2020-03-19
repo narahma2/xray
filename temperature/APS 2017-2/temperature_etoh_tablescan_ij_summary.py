@@ -59,15 +59,19 @@ for fld in flds:
 
 	df.to_csv(fld + '/' + temp + 'summary.txt', sep='\t')
 
-breakpoint()
 ## Summarize the Temperature summaries
 flds = glob.glob(folder + '/IJ Ramping/Temperature/*/')
 # Profile names (kurtosis, A1, q2, etc.)
 profiles = glob.glob(flds[0] + '/Profiles/profile*')
 names = [x.rsplit('/')[-1].rsplit('_')[-1].rsplit('.')[0] for x in profiles]
-df = pd.DataFrame(columns=['Mean of R^2', 'StD of R^2', 'CfVar of R^2', 'CfDisp of R^2'], index=names)
-r2_mean = [np.mean(pd.read_csv(fld + '/summary.txt', sep='\t', index_col=0, header=0).loc[name]['R^2']) for fld in flds for name in names]
-	
+r2_mean = np.array([np.mean([pd.read_csv(fld + '/summary.txt', sep='\t', index_col=0, header=0).loc[name]['R^2'] for fld in flds]) for name in names])
+r2_std = np.array([np.std([pd.read_csv(fld + '/summary.txt', sep='\t', index_col=0, header=0).loc[name]['R^2'] for fld in flds]) for name in names])
+r2_cv = r2_std / r2_mean
+r2_q1 = np.array([np.percentile([pd.read_csv(fld + '/summary.txt', sep='\t', index_col=0, header=0).loc[name]['R^2'] for fld in flds], 25, interpolation = 'midpoint') for name in names])
+r2_q3 = np.array([np.percentile([pd.read_csv(fld + '/summary.txt', sep='\t', index_col=0, header=0).loc[name]['R^2'] for fld in flds], 75, interpolation = 'midpoint') for name in names])
+r2_cd = (r2_q1 - r2_q3) / (r2_q1 + r2_q3)
+df = pd.DataFrame(data=[r2_mean, r2_std, r2_cv, r2_cd], columns=['Mean of R^2', 'StD of R^2', 'CfVar of R^2', 'CfDisp of R^2'], index=names)
+breakpoint()
 
 ## Create summary of Position data sets (to find best profile)
 flds = glob.glob(folder + '/IJ Ramping/Positions/*/')
