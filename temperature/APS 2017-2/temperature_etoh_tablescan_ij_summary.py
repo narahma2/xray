@@ -64,14 +64,29 @@ flds = glob.glob(folder + '/IJ Ramping/Temperature/*/')
 # Profile names (kurtosis, A1, q2, etc.)
 profiles = glob.glob(flds[0] + '/Profiles/profile*')
 names = [x.rsplit('/')[-1].rsplit('_')[-1].rsplit('.')[0] for x in profiles]
+
+# R^2 summary
 r2_mean = np.array([np.mean([pd.read_csv(fld + '/summary.txt', sep='\t', index_col=0, header=0).loc[name]['R^2'] for fld in flds]) for name in names])
 r2_std = np.array([np.std([pd.read_csv(fld + '/summary.txt', sep='\t', index_col=0, header=0).loc[name]['R^2'] for fld in flds]) for name in names])
 r2_cv = r2_std / r2_mean
 r2_q1 = np.array([np.percentile([pd.read_csv(fld + '/summary.txt', sep='\t', index_col=0, header=0).loc[name]['R^2'] for fld in flds], 25, interpolation = 'midpoint') for name in names])
 r2_q3 = np.array([np.percentile([pd.read_csv(fld + '/summary.txt', sep='\t', index_col=0, header=0).loc[name]['R^2'] for fld in flds], 75, interpolation = 'midpoint') for name in names])
 r2_cd = (r2_q1 - r2_q3) / (r2_q1 + r2_q3)
-df = pd.DataFrame(data=[r2_mean, r2_std, r2_cv, r2_cd], columns=['Mean of R^2', 'StD of R^2', 'CfVar of R^2', 'CfDisp of R^2'], index=names)
-breakpoint()
+r2_data = {'Mean of R^2': r2_mean, 'StD of R^2': r2_std, 'CfVar of R^2': r2_cv, 'CfDis of R^2': r2_cd}
+df = pd.DataFrame(r2_data, index=names)
+df.to_csv(folder + 'IJ Ramping/temperature_r2_summary.txt', sep='\t')
+
+# Mean summary
+mean_mean = np.array([np.mean([pd.read_csv(fld + '/summary.txt', sep='\t', index_col=0, header=0).loc[name]['Mean'] for fld in flds]) for name in names])
+mean_std = np.array([np.std([pd.read_csv(fld + '/summary.txt', sep='\t', index_col=0, header=0).loc[name]['Mean'] for fld in flds]) for name in names])
+mean_cv = mean_std / mean_mean
+mean_q1 = np.array([np.percentile([pd.read_csv(fld + '/summary.txt', sep='\t', index_col=0, header=0).loc[name]['Mean'] for fld in flds], 25, interpolation = 'midpoint') for name in names])
+mean_q3 = np.array([np.percentile([pd.read_csv(fld + '/summary.txt', sep='\t', index_col=0, header=0).loc[name]['Mean'] for fld in flds], 75, interpolation = 'midpoint') for name in names])
+mean_cd = (mean_q1 - mean_q3) / (mean_q1 + mean_q3)
+mean_data = {'Mean of Mean': mean_mean, 'StD of Mean': mean_std, 'CfVar of Mean': mean_cv, 'CfDis of Mean': mean_cd}
+df = pd.DataFrame(mean_data, index=names)
+df.to_csv(folder + 'IJ Ramping/temperature_mean_summary.txt', sep='\t')
+
 
 ## Create summary of Position data sets (to find best profile)
 flds = glob.glob(folder + '/IJ Ramping/Positions/*/')
@@ -80,7 +95,7 @@ for fld in flds:
 	pos = fld.rsplit('/')[-1]
 	files = glob.glob(fld + '/Profiles/profile*')
 	names = [x.rsplit('/')[-1].rsplit('_')[-1].rsplit('.')[0] for x in files]
-	df = pd.DataFrame(columns=['R^2', 'Mean', 'StD', 'CfVar', 'CfDisp'], index=names)
+	df = pd.DataFrame(columns=['Mean', 'Mean', 'StD', 'CfVar', 'CfDisp'], index=names)
 	for name, file in zip(names, files):
 		# Profile data
 		data = np.loadtxt(file)
