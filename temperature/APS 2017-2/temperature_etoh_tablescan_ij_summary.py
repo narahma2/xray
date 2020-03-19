@@ -66,7 +66,7 @@ for fld in flds:
 	pos = fld.rsplit('/')[-1]
 	files = glob.glob(fld + '/Profiles/profile*')
 	names = [x.rsplit('/')[-1].rsplit('_')[-1].rsplit('.')[0] for x in files]
-	df = pd.DataFrame(columns=['R^2', 'Mean', 'StD', 'CfDisp'], index=names)
+	df = pd.DataFrame(columns=['R^2', 'Mean', 'StD', 'CfVar', 'CfDisp'], index=names)
 	for name, file in zip(names, files):
 		# Profile data
 		data = np.loadtxt(file)
