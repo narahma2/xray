@@ -26,7 +26,7 @@ from Statistics.calc_statistics import polyfit
 project_folder = sys_folder + '/X-ray Temperature/APS 2017-2'
 folder = project_folder + '/Processed/Ethanol'
 
-# Create summary of Temperature data sets (to find most consistent profile)
+## Create summary of Temperature data sets (to find most consistent profile)
 flds = glob.glob(folder + '/IJ Ramping/Temperature/*/')
 
 for fld in flds:
@@ -59,7 +59,17 @@ for fld in flds:
 
 	df.to_csv(fld + '/' + temp + 'summary.txt', sep='\t')
 
-# Create summary of Profile data sets (to find best profile)
+breakpoint()
+## Summarize the Temperature summaries
+flds = glob.glob(folder + '/IJ Ramping/Temperature/*/')
+# Profile names (kurtosis, A1, q2, etc.)
+profiles = glob.glob(flds[0] + '/Profiles/profile*')
+names = [x.rsplit('/')[-1].rsplit('_')[-1].rsplit('.')[0] for x in profiles]
+df = pd.DataFrame(columns=['Mean of R^2', 'StD of R^2', 'CfVar of R^2', 'CfDisp of R^2'], index=names)
+r2_mean = [np.mean(pd.read_csv(fld + '/summary.txt', sep='\t', index_col=0, header=0).loc[name]['R^2']) for fld in flds for name in names]
+	
+
+## Create summary of Position data sets (to find best profile)
 flds = glob.glob(folder + '/IJ Ramping/Positions/*/')
 
 for fld in flds:
