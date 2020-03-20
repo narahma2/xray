@@ -94,8 +94,8 @@ for i in range(len(reduced_intensity)):
 for x, i in enumerate(positions[0]):
 	y = y_loc[18*x:18*(x+1)]
 	temperature = np.mean(nozzle_T[18*x:18*(x+1)])
-	temperature_processing(test.rsplit('/')[0], folder, test.rsplit('/')[1] + '/Temperature/' + '{0:.2f}'.format(temperature).replace('.', 'p'), reduced_intensity[18*x:18*(x+1)], reduced_q, temperature=None, structure_factor=None, y=y, ramping=True)
+	temperature_processing(test.rsplit('/')[0], folder, test.rsplit('/')[1] + '/Temperature/T' + '{0:05.2f}'.format(temperature).replace('.', 'p'), reduced_intensity[18*x:18*(x+1)], reduced_q, temperature=None, structure_factor=None, y=y, ramping=True)
 
 for x, i in enumerate(positions):
 	y = y_locs[x]
-	temperature_processing(test.rsplit('/')[0], folder, test.rsplit('/')[1] + '/Positions/y' + '{0:.2f}'.format(y).replace('.', 'p'), reduced_intensity[i], reduced_q, temperature=nozzle_T[i], structure_factor=None, y=None, ramping=True)
+	temperature_processing(test.rsplit('/')[0], folder, test.rsplit('/')[1] + '/Positions/y' + '{0:05.2f}'.format(y).replace('.', 'p'), reduced_intensity[i], reduced_q, temperature=nozzle_T[i], structure_factor=None, y=None, ramping=True)
