@@ -94,7 +94,7 @@ for fld in flds:
 
 ## Summarize the Temperature/Position summaries
 for parameter in ["Temperature", "Positions"]:
-	flds = glob.glob(folder + '/IJ Ramping/' + parameter + '/*/')
+	flds = glob.glob(folder + '/IJ Ramping/' + parameter + '/?*p*/')
 
 	# Get Temperature/Position values
 	y_axis = [float(x.rsplit('/')[-2][1:].replace('p','.')) for x in flds]
