@@ -123,7 +123,7 @@ for parameter in ["Temperature", "Positions"]:
 
 	for i, x in enumerate(r2_data):
 		plt.figure()
-		plt.plot(x, y_axis)
+		plt.plot(x, y_axis, ' o')
 		plt.xlabel(names[i])
 		plt.ylabel(parameter)
 		plt.tight_layout()
@@ -151,7 +151,7 @@ for parameter in ["Temperature", "Positions"]:
 
 	for i, x in enumerate(mean_data):
 		plt.figure()
-		plt.plot(x, y_axis)
+		plt.plot(x, y_axis, ' o')
 		plt.xlabel(names[i])
 		plt.ylabel(parameter)
 		plt.tight_layout()
