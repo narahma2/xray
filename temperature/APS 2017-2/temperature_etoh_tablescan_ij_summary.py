@@ -115,19 +115,19 @@ for parameter in ["Temperature", "Positions"]:
 
 	# Plot R^2 values
 	plots_folder = folder + '/IJ Ramping/' + parameter + '/Plots_R2/'
-    if not os.path.exists(plots_folder):
-        os.makedirs(plots_folder)
+	if not os.path.exists(plots_folder):
+		os.makedirs(plots_folder)
 
-    r2_data = [[pd.read_csv(fld + '/summary.txt', sep='\t', index_col=0, header=0).loc[name]['R^2'] for fld in flds] for name in names]
+	r2_data = [[pd.read_csv(fld + '/summary.txt', sep='\t', index_col=0, header=0).loc[name]['R^2'] for fld in flds] for name in names]
 
-    for i, x in enumerate(r2_data):
-    	plt.figure()
-    	plt.plot(x, y_axis)
-    	plt.xlabel(names[i])
-    	plt.ylabel(parameter)
-    	plt.tight_layout()
-    	plt.savefig(plots_folder + names[i] + '.png')
-    	plt.close()
+	for i, x in enumerate(r2_data):
+		plt.figure()
+		plt.plot(x, y_axis)
+		plt.xlabel(names[i])
+		plt.ylabel(parameter)
+		plt.tight_layout()
+		plt.savefig(plots_folder + names[i] + '.png')
+		plt.close()
 
 	# Mean summary
 	mean_r2 = np.array([np.mean([pd.read_csv(fld + '/summary.txt', sep='\t', index_col=0, header=0).loc[name]['Mean'] for fld in flds]) for name in names])
@@ -143,16 +143,16 @@ for parameter in ["Temperature", "Positions"]:
 
 	# Plot Mean values
 	plots_folder = folder + '/IJ Ramping/' + parameter + '/Plots_Mean/'
-    if not os.path.exists(plots_folder):
-        os.makedirs(plots_folder)
+	if not os.path.exists(plots_folder):
+		os.makedirs(plots_folder)
 
-    mean_data = [[pd.read_csv(fld + '/summary.txt', sep='\t', index_col=0, header=0).loc[name]['Mean'] for fld in flds] for name in names]
+	mean_data = [[pd.read_csv(fld + '/summary.txt', sep='\t', index_col=0, header=0).loc[name]['Mean'] for fld in flds] for name in names]
 
-    for i, x in enumerate(mean_data):
-    	plt.figure()
-    	plt.plot(x, y_axis)
-    	plt.xlabel(names[i])
-    	plt.ylabel(parameter)
-    	plt.tight_layout()
-    	plt.savefig(plots_folder + names[i] + '.png')
-    	plt.close()
+	for i, x in enumerate(mean_data):
+		plt.figure()
+		plt.plot(x, y_axis)
+		plt.xlabel(names[i])
+		plt.ylabel(parameter)
+		plt.tight_layout()
+		plt.savefig(plots_folder + names[i] + '.png')
+		plt.close()
