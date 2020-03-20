@@ -384,5 +384,5 @@ def main(test, folder, scan, reduced_intensity, reduced_q, temperature=None, str
             pickle.dump([y, reduced_q, reduced_intensity], f)
     # Save the ethanol ramping impinging jet data set
     elif ramping is True:
-        with open(folder + '/' + str(scan) + '/' + str(scan) + '_data.pckl', 'wb') as f:
+        with open(folder + '/' + str(scan) + '/' + str(scan).rsplit('/')[-1] + '_data.pckl', 'wb') as f:
             pickle.dump([temperature, y, reduced_q, reduced_intensity], f)
