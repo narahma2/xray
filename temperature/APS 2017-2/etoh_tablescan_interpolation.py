@@ -50,7 +50,7 @@ for profile in profiles:
 		# Create folders
 		plots_folder = folder + '/IJ Ramping/PositionsInterp/' + calibration + '_' + profile
 		if not os.path.exists(plots_folder):
-    		os.makedirs(plots_folder)
+			os.makedirs(plots_folder)
 		
 		# Load in Positions
 		for fld in flds:
