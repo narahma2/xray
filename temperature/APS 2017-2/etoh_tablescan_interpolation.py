@@ -68,7 +68,7 @@ for profile in profiles:
 			fit = polyfit(interpT, nozzleT, 1)
 
 			# Plot results
-			plt.figure(interpT, nozzleT)
+			plt.figure()
 			plt.plot(interpT, nozzleT, ' o', markerfacecolor='none', markeredgecolor='b', label='Data')
 			plt.plot(interpT, fit['function'](interpT), 'k', linewidth=2.0, label='y = ' + '%0.2f'%fit['polynomial'][0] + 'x + ' + '%0.2f'%fit['polynomial'][1])
 			plt.title('y = ' + yp[1:].replace('p', '.') + ' mm - ' + calibration + ': ' + profile)
