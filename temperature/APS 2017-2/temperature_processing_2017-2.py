@@ -82,7 +82,7 @@ def main(test, scan):
         raw_intensity = [f['Intensity_vs_q'][:,i] for i in range(np.shape(f['Intensity_vs_q'])[1])]
         intensity = [(x-bg_avg) for x in raw_intensity]
         sl = slice((np.abs(np.array(q) - 0.6)).argmin(), (np.abs(np.array(q) - 1.75)).argmin())
-        avg_rows = 30
+        avg_rows = 5 
         
     if scan == 409:
         g = h5py.File(project_folder + '/RawData/Scan_410.hdf5', 'r')
@@ -90,7 +90,7 @@ def main(test, scan):
         bg_avg = np.mean(bg, axis=0)
         raw_intensity = [f['Intensity_vs_q'][:,i] for i in range(np.shape(f['Intensity_vs_q'])[1])]
         intensity = [(x-bg_avg) for x in raw_intensity]
-        sl = slice(43, 452)
+        sl = slice((np.abs(np.array(q) - 0.6)).argmin(), (np.abs(np.array(q) - 1.75)).argmin())
         avg_rows = 5
         
     #%% 2017 Dodecane
@@ -135,7 +135,7 @@ def main(test, scan):
     reduced_q = np.array(q[sl])
     reduced_intensity = [x[sl] for x in filtered_intensity]
     reduced_intensity = [y/np.trapz(y, x=reduced_q) for y in reduced_intensity]
-    reduced_intensity /= np.max(reduced_intensity)
+    #reduced_intensity /= np.max(reduced_intensity)
     
     if test == 'Water':
         structure_factor = [ItoS(np.array(reduced_q), x) for x in reduced_intensity]
@@ -165,7 +165,7 @@ def main(test, scan):
     plt.xlabel('q (Å$^{-1}$)')
     plt.ylabel('Intensity (a.u.)')
     plt.autoscale(enable=True, axis='x', tight=True)
-    plt.gca().set_ylim([llim, 1.02])
+    #plt.gca().set_ylim([llim, 1.02])
     plt.minorticks_on()
     plt.tick_params(which='both',direction='in')
     plt.title('Select ' + test + ' Curves')
@@ -174,19 +174,7 @@ def main(test, scan):
     plt.close()
   
 # Run all tests      
-[main(tests[i], scans[i]) for i,_ in enumerate(scans)]
+#[main(tests[i], scans[i]) for i,_ in enumerate(scans)]
     
 # Run select tests (only ethanol & dodecane)
-# [main(tests[i], scans[i]) for i in [j for j,_ in enumerate(tests) if tests[j] != 'Water']]
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+[main(tests[i], scans[i]) for i in [j for j,_ in enumerate(tests) if tests[j] == 'Ethanol']] 
