@@ -29,7 +29,6 @@ from calc_statistics import comparefit
 from temperature_processing import main as temperature_processing
 
 test = 'Ethanol/IJ Ramping'
-calib_no = [408]
 rank_x = np.linspace(0,13, num=14, dtype=int)
 
 project_folder = sys_folder + '/X-ray Temperature/APS 2017-2'
@@ -78,7 +77,7 @@ reduced_intensity = [x[sl] for x in filtered_intensity]
 reduced_intensity = [y/np.trapz(y, x=reduced_q) for y in reduced_intensity]
 
 # Normalize intensities by the curve's maximum
-reduced_intensity = [z/np.max(z) for z in reduced_intensity]
+# reduced_intensity = [z/np.max(z) for z in reduced_intensity]
 
 # Convert reduced_intensity to numpy array
 reduced_intensity = np.array(reduced_intensity)
