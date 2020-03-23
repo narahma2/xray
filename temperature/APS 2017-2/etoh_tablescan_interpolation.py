@@ -76,5 +76,5 @@ for profile in profiles:
 			plt.xlabel('Interpolated Temperature (°C)')
 			plt.ylabel('Nozzle Temperature (°C)')
 			plt.tight_layout()
-			plt.savefig(yp + '.png')
+			plt.savefig(plots_folder + '/' + yp + '.png')
 			plt.close()
