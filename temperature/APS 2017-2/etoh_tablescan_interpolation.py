@@ -93,7 +93,7 @@ for calibration in calibrations:
 
 	# Plot summary
 	plt.figure()
-	[plt.plot(positions, summary[:,j], linewidth=2.0, label=profiles[j]) for j in range(len(positions))]
+	[plt.plot(positions, summary[:,j], linewidth=2.0, label=profiles[j]) for j in range(len(profiles))]
 	plt.legend()
 	plt.ylabel('RMSE (K)')
 	plt.xlabel('Vertical Location (mm)')
