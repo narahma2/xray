@@ -40,10 +40,13 @@ calibrations = ['408', '409']
 flds = glob.glob(folder + '/IJ Ramping/Positions/y*/')
 
 ## Load in and process data sets
-# Iterate through each selected profile
-for profile in profiles:
-	# Iterate through each selected calibration jet
-	for calibration in calibrations:
+# Iterate through each selected calibration jet
+for calibration in calibrations:
+	# Initialize summary array
+	summary = np.zeros((len(flds), len(profiles)))
+
+	# Iterate through each selected profile
+	for j, profile in enumerate(profiles):
 		# Create polynomial object based on selected profile & calibration jet
 		p = np.poly1d(np.loadtxt(folder + '/' + calibration + '/Statistics/' + profile + '_polynomial.txt'))
 		
@@ -51,9 +54,9 @@ for profile in profiles:
 		plots_folder = folder + '/IJ Ramping/PositionsInterp/' + calibration + '_' + profile
 		if not os.path.exists(plots_folder):
 			os.makedirs(plots_folder)
-		
+
 		# Load in Positions
-		for fld in flds:
+		for i, fld in enumerate(flds):
 			# Y position string (y00p25, y00p05, etc.)
 			yp = fld.rsplit('/')[-2]
 
@@ -67,6 +70,12 @@ for profile in profiles:
 			# Fit a linear line of interpT vs. nozzleT
 			fit = polyfit(interpT, nozzleT, 1)
 
+			# Calculate RMSE
+			rmse = np.sqrt(((interpT - nozzleT)**2).mean())
+
+			# Build up summary
+			summary[i,j] = rmse
+
 			# Plot results
 			plt.figure()
 			plt.plot(interpT, nozzleT, ' o', markerfacecolor='none', markeredgecolor='b', label='Data')
@@ -78,3 +87,6 @@ for profile in profiles:
 			plt.tight_layout()
 			plt.savefig(plots_folder + '/' + yp + '.png')
 			plt.close()
+
+	# Save summary file
+	np.savetxt(folder + '/IJ Ramping/PositionsInterp/' + calibration + '_rmse.txt', summary, delimiter='\t', header=profiles)
