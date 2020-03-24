@@ -39,6 +39,9 @@ calibrations = ['408', '409']
 # Load in IJ Ramping folders
 flds = glob.glob(folder + '/IJ Ramping/Positions/y*/')
 
+# Positions array
+positions = np.loadtxt(folder + '/IJ Ramping/Temperature/T281p13/positions.txt')
+
 ## Load in and process data sets
 # Iterate through each selected calibration jet
 for calibration in calibrations:
@@ -87,6 +90,16 @@ for calibration in calibrations:
 			plt.tight_layout()
 			plt.savefig(plots_folder + '/' + yp + '.png')
 			plt.close()
+
+	# Plot summary
+	plt.figure()
+	[plt.plot(positions, summary[:,j], linewidth=2.0, label=profiles[j]) for j in range(len(positions))]
+	plt.legend()
+	plt.ylabel('RMSE (K)')
+	plt.xlabel('Vertical Location (mm)')
+	plt.title(calibration)
+	plt.savefig(folder + '/IJ Ramping/PositionsInterp/' + calibration + '.png')
+	plt.close()
 
 	# Save summary file
 	np.savetxt(folder + '/IJ Ramping/PositionsInterp/' + calibration + '_rmse.txt', summary, delimiter='\t', header="\t".join(str(x) for x in profiles))
