@@ -23,8 +23,9 @@ import h5py
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from scipy.signal import savgol_filter, find_peaks
 from scipy import stats
+from scipy.constants import convert_temperature
+from scipy.signal import savgol_filter, find_peaks
 from calc_statistics import comparefit
 from temperature_processing import main as temperature_processing
 
@@ -53,8 +54,9 @@ for i in rank_x:
 		nozzle_T.append(list(f['Rank_2_Point_' + str(i) + '/7bm_dau1:dau:010:ADC'])[n])
 		y_loc.append(round(list(f['Rank_2_Point_' + str(i) + '/7bmb1:aero:m1.VAL'])[n], 2))
 		
-# Convert temperatures to numpy array
+# Convert temperatures to numpy array and from Celsius to Kelvin
 nozzle_T = np.array(nozzle_T)
+nozzle_T = convert_temperature(nozzle_T, 'Celsius', 'Kelvin')
 
 positions = []
 for k in y_locs:

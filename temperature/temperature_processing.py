@@ -67,7 +67,7 @@ def profile(name, fit_var, profile, profiles_folder, stats_folder, test, plots_f
     if 'IJ Ramping/Temperature' in profiles_folder:
         plt.ylabel('Y Location (mm)')
     else:
-        plt.ylabel('Temperature (°C)')
+        plt.ylabel('Temperature (K)')
     plt.xlabel(name)
     plt.autoscale(enable=True, axis='x', tight=True)
     plt.minorticks_on()
@@ -83,7 +83,7 @@ def density(test, q_spacing, T):
     --VARIABLES--
     test:               Type of liquid: "Water", "Ethanol", "Dodecane"
     peak_q:             Location of peak in q [1/A]
-    T:                  Temperature of liquid [°C]
+    T:                  Temperature of liquid [K]
     """
     
     # Convert q to d (q = 4*sin(theta)*pi/lambda; 2*d*sin(theta) = n*lambda)
@@ -188,7 +188,7 @@ def main(test, folder, scan, reduced_intensity, reduced_q, temperature=None, str
         
         # Create intensity plots with q values of interest highlighted
         plt.figure()
-        plt.plot(reduced_q, reduced_intensity[i], linestyle='-', color=(rr[i],0,bb[i]), linewidth=2.0, label=str(round(fit_var[i],1)) + '°C')
+        plt.plot(reduced_q, reduced_intensity[i], linestyle='-', color=(rr[i],0,bb[i]), linewidth=2.0, label=str(round(fit_var[i],1)) + ' K')
         plt.axvline(x=profile_peakq[i], linestyle='--', color='C1', label='peakq = ' + str(round(profile_peakq[i],2)))
         plt.legend(loc='upper right')
         plt.xlabel('q (Å$^{-1}$)')
@@ -206,10 +206,10 @@ def main(test, folder, scan, reduced_intensity, reduced_q, temperature=None, str
     # if IJ is False:
     if structure_factor:    
         for i,_ in enumerate(structure_factor):
-            np.savetxt(tests_folder + '/' + f"{i:02d}" + '_' + str(round(temperature[i],2)).replace('.','p') + 'C' + '.txt', structure_factor[i])
+            np.savetxt(tests_folder + '/' + f"{i:02d}" + '_' + str(round(temperature[i],2)).replace('.','p') + 'K' + '.txt', structure_factor[i])
             
             plt.figure()
-            plt.plot(reduced_q, structure_factor[i], linestyle='-', color=(rr[i],0,bb[i]), linewidth=2.0, label=str(round(temperature[i],1)) + '°C')
+            plt.plot(reduced_q, structure_factor[i], linestyle='-', color=(rr[i],0,bb[i]), linewidth=2.0, label=str(round(temperature[i],1)) + ' K')
             plt.legend(loc='upper right')
             plt.xlabel('q (Å$^{-1}$)')
             plt.ylabel('Structure Factor (a.u.)')
@@ -233,7 +233,7 @@ def main(test, folder, scan, reduced_intensity, reduced_q, temperature=None, str
         plt.figure()
         plt.plot(reduced_q, intensity_std, linewidth='2.0')
         plt.xlabel('q (Å$^{-1}$)')
-        plt.ylabel('SD(Intensity) [a.u.]')
+        plt.ylabel('SD(Intensity) (a.u.)')
         plt.axvline(x=pinned_q, color='k', linestyle='--')
         plt.text(pinned_q, 0.6*np.mean(intensity_std), 'q = ' + "%02.2f"%round(pinned_q, 2), horizontalalignment='center', bbox=dict(facecolor='white', alpha=1.0))
         #[plt.axvline(x=y, color='g', linestyle='-.') for y in peak_q]
@@ -247,7 +247,7 @@ def main(test, folder, scan, reduced_intensity, reduced_q, temperature=None, str
     plt.figure()
     [plt.plot(reduced_q, x, color=(rr[i],0,bb[i])) for i,x in enumerate(reduced_intensity)]
     plt.xlabel('q (Å$^{-1}$)')
-    plt.ylabel('Intensity [a.u.]')
+    plt.ylabel('Intensity (a.u.)')
     plt.axvline(x=pinned_q, color='k', linestyle='--')
     plt.text(pinned_q, 0.5, 'q = ' + "%02.2f"%round(pinned_q, 2), horizontalalignment='center', bbox=dict(facecolor='white', alpha=1.0))
     plt.title('Scan ' + str(scan))

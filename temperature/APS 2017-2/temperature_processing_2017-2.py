@@ -22,6 +22,7 @@ import h5py
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter
+from scipy.constants import convert_temperature
 from Form_Factor.xray_factor import ItoS
 from temperature_processing import main as temperature_processing
 
@@ -39,6 +40,9 @@ def main(test, scan):
     f = h5py.File(project_folder + '/RawData/Scan_' + str(scan) + '.hdf5', 'r')
     temperature = list(f['7bm_dau1:dau:010:ADC'])
     temperature.append(temperature[-1])
+
+    # Convert temperature from Celsius to Kelvin
+    temperature = convert_temperature(temperature, 'Celsius', 'Kelvin')
     q = list(f['q'])
     
     #%% 2017 Water
@@ -158,9 +162,9 @@ def main(test, scan):
     plots_folder = folder + '/' + str(scan) + '/Plots/'
     mid_temp = len(reduced_intensity) // 2  # grab the middle slice to get the median temperature
     plt.figure()
-    plt.plot(reduced_q, reduced_intensity[0], linestyle='-', color=(rr[0],0,bb[0]), linewidth=2.0, label=str(int(round(temperature_avg[0],1))) + '°C')
-    plt.plot(reduced_q, reduced_intensity[mid_temp], linestyle='-.', color=(0.5,0,0.5), linewidth=2.0, label=str(int(round(temperature_avg[mid_temp],1))) + '°C')
-    plt.plot(reduced_q, reduced_intensity[-1], linestyle=':', color=(rr[-1],0,bb[-1]), linewidth=2.0, label=str(int(round(temperature_avg[-1],1))) + '°C')
+    plt.plot(reduced_q, reduced_intensity[0], linestyle='-', color=(rr[0],0,bb[0]), linewidth=2.0, label=str(int(round(temperature_avg[0],1))) + ' K')
+    plt.plot(reduced_q, reduced_intensity[mid_temp], linestyle='-.', color=(0.5,0,0.5), linewidth=2.0, label=str(int(round(temperature_avg[mid_temp],1))) + ' K')
+    plt.plot(reduced_q, reduced_intensity[-1], linestyle=':', color=(rr[-1],0,bb[-1]), linewidth=2.0, label=str(int(round(temperature_avg[-1],1))) + ' K')
     plt.legend()
     plt.xlabel('q (Å$^{-1}$)')
     plt.ylabel('Intensity (a.u.)')
