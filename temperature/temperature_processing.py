@@ -148,8 +148,6 @@ def main(test, folder, scan, reduced_intensity, reduced_q, temperature=None, str
         pinned_pts = pinned_pts[np.argmin(intensity_std[pinned_pts])]
         
     pinned_q = reduced_q[pinned_pts] #[reduced_q[int(x)] for x in pinned_pts]
-    peak_pts = find_peaks(intensity_std)[0]
-    #peak_q = [reduced_q[int(x)] for x in peak_pts]
 
     if y is not None:
         fit_var = y
@@ -229,20 +227,21 @@ def main(test, folder, scan, reduced_intensity, reduced_q, temperature=None, str
     elif y is not None:
         np.savetxt(folder + '/' + str(scan) + '/positions.txt', y)
     #%%
-
-    # Standard deviation plot of all intensities
-    plt.figure()
-    plt.plot(reduced_q, intensity_std, linewidth='2.0')
-    plt.xlabel('q (Å$^{-1}$)')
-    plt.ylabel('SD(Intensity) [a.u.]')
-    plt.axvline(x=pinned_q, color='k', linestyle='--')
-    plt.text(pinned_q, 0.6*np.mean(intensity_std), 'q = ' + "%02.2f"%round(pinned_q, 2), horizontalalignment='center', bbox=dict(facecolor='white', alpha=1.0))
-    #[plt.axvline(x=y, color='g', linestyle='-.') for y in peak_q]
-    #[plt.text(x, 1.2*np.mean(intensity_std), 'q = ' + "%02.2f"%round(x, 2), horizontalalignment='center', bbox=dict(ec='g',facecolor='white', alpha=1.0)) for x in peak_q]
-    plt.title('Scan ' + str(scan))
-    plt.tight_layout()
-    plt.savefig(plots_folder + 'stdev.png')
-    #    plt.close()
+    
+    if not ramping:
+        # Standard deviation plot of all intensities
+        plt.figure()
+        plt.plot(reduced_q, intensity_std, linewidth='2.0')
+        plt.xlabel('q (Å$^{-1}$)')
+        plt.ylabel('SD(Intensity) [a.u.]')
+        plt.axvline(x=pinned_q, color='k', linestyle='--')
+        plt.text(pinned_q, 0.6*np.mean(intensity_std), 'q = ' + "%02.2f"%round(pinned_q, 2), horizontalalignment='center', bbox=dict(facecolor='white', alpha=1.0))
+        #[plt.axvline(x=y, color='g', linestyle='-.') for y in peak_q]
+        #[plt.text(x, 1.2*np.mean(intensity_std), 'q = ' + "%02.2f"%round(x, 2), horizontalalignment='center', bbox=dict(ec='g',facecolor='white', alpha=1.0)) for x in peak_q]
+        plt.title('Scan ' + str(scan))
+        plt.tight_layout()
+        plt.savefig(plots_folder + 'stdev.png')
+        plt.close()
     
     # Superimposed intensity plot    
     plt.figure()
@@ -255,7 +254,7 @@ def main(test, folder, scan, reduced_intensity, reduced_q, temperature=None, str
     #plt.ylim([llim, 1.05])
     plt.tight_layout()
     plt.savefig(plots_folder + 'superimposedcurves.png')
-    #    plt.close()
+    plt.close()
     
     # Save the calibration data sets
     if temperature is not None and ramping is False:
