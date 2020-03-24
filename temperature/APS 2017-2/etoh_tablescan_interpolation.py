@@ -89,4 +89,4 @@ for calibration in calibrations:
 			plt.close()
 
 	# Save summary file
-	np.savetxt(folder + '/IJ Ramping/PositionsInterp/' + calibration + '_rmse.txt', summary, delimiter='\t', header=profiles)
+	np.savetxt(folder + '/IJ Ramping/PositionsInterp/' + calibration + '_rmse.txt', summary, delimiter='\t', header="\t".join(str(x) for x in profiles))
