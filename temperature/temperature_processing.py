@@ -137,12 +137,16 @@ def main(test, folder, scan, reduced_intensity, reduced_q, temperature=None, str
             os.makedirs(structure_factor_folder)
     
     #reduced_intensity = np.array([x / np.max(x) for x in reduced_intensity])
-    
-    ## Find pinned points in the curves (least variation)
-    intensity_std = np.std(reduced_intensity, axis=0)
-    pinned_pts = find_peaks(-intensity_std)[0]
-    # Find the minimum peak only (throw away every other valley)
-    pinned_pts = pinned_pts[np.argmin(intensity_std[pinned_pts])]
+
+    if ramping and 'Ethanol' in test:
+        pinned_pts = np.abs(reduced_q - 1.40).argmin()
+    else:
+        ## Find pinned points in the curves (least variation)
+        intensity_std = np.std(reduced_intensity, axis=0)
+        pinned_pts = find_peaks(-intensity_std)[0]
+        # Find the minimum peak only (throw away every other valley)
+        pinned_pts = pinned_pts[np.argmin(intensity_std[pinned_pts])]
+        
     pinned_q = reduced_q[pinned_pts] #[reduced_q[int(x)] for x in pinned_pts]
     peak_pts = find_peaks(intensity_std)[0]
     #peak_q = [reduced_q[int(x)] for x in peak_pts]
