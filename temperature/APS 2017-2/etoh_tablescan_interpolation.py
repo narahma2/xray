@@ -34,7 +34,7 @@ folder = project_folder + '/Processed/Ethanol'
 profiles = ['aratio', 'peakq', 'var', 'skew', 'kurt']
 
 # Select calibration data sets
-calibrations = ['408', '409']
+calibrations = ['408', '409', 'Combined']
 
 # Load in IJ Ramping folders
 flds = glob.glob(folder + '/IJ Ramping/Positions/y*/')
@@ -45,6 +45,10 @@ positions = np.loadtxt(folder + '/IJ Ramping/Temperature/T281p13/positions.txt')
 ## Load in and process data sets
 # Iterate through each selected calibration jet
 for calibration in calibrations:
+	# Change path to APS 2018-1 for 'Combined'
+	if calibration == 'Combined':
+		folder = folder.replace('APS 2017-2', 'APS 2018-1').replace('Ethanol', 'Ethanol_700umNozzle')
+			
 	# Initialize summary arrays
 	summary_rmse = np.zeros((len(flds), len(profiles)))
 	summary_mape = np.zeros((len(flds), len(profiles)))
