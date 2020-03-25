@@ -1,5 +1,5 @@
-font.family : 'sans-serif'
-font.sans-serif : 'Arial'
+font.family : sans-serif 
+font.serif : Arial 
 axes.titlesize : 22
 axes.labelsize : 22
 xtick.labelsize : 17

@@ -9,23 +9,26 @@ Created on Tue Jan 21 13:54:00 2020
 
 import sys
 if sys.platform == 'win32':
-    sys.path.append('E:/GitHub/xray/general')
+    gh_fld = 'E:/GitHub/xray/general'
+    sys.path.append(gh_fld)
+    sys.path.append('E:/GitHub/xray/temperature')
 elif sys.platform == 'linux':
-    sys.path.append('/mnt/e/GitHub/xray/general')
+    gh_fld = '/mnt/e/GitHub/xray/general'
+    sys.path.append(gh_fld)
+    sys.path.append('/mnt/e/GitHub/xray/temperature')
 
 import os
-os.environ['MPLCONFIGDIR'] = '/python/matploblib/'
-
 import pickle
 import numpy as np
 import pandas as pd
-import matplotlib as mpl
+import matplotlib.font_manager as fm
+fm._rebuild()
 import matplotlib.pyplot as plt
-plt.style.use('paper')
+plt.style.use(gh_fld + '/python/matplotlib/stylelib/paper.mplstyle')
 from scipy.signal import savgol_filter, find_peaks
 from scipy.optimize import curve_fit
 from scipy import stats
-from calc_statistics import polyfit
+from Statistics.calc_statistics import polyfit
 
 # Functions for intensity profile fitting
 def gauss(x,mu,sigma,A):
