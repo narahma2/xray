@@ -7,6 +7,12 @@ Created on Tue Jan 21 13:54:00 2020
 @author: rahmann
 """
 
+import sys
+if sys.platform == 'win32':
+    sys.path.append('E:/GitHub/xray/general')
+elif sys.platform == 'linux':
+    sys.path.append('/mnt/e/GitHub/xray/general')
+
 import os
 os.environ['MPLCONFIGDIR'] = '/python/matploblib/'
 
