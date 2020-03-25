@@ -49,6 +49,7 @@ for calibration in calibrations:
 	summary_rmse = np.zeros((len(flds), len(profiles)))
 	summary_mape = np.zeros((len(flds), len(profiles)))
 	summary_zeta = np.zeros((len(flds), len(profiles)))
+	summary_mdlq = np.zeros((len(flds), len(profiles)))
 
 	# Iterate through each selected profile
 	for j, profile in enumerate(profiles):
@@ -84,10 +85,15 @@ for calibration in calibrations:
 			# Calculate median symmetric accuracy
 			zeta = 100*np.exp(np.median(np.abs(np.log(interpT/nozzleT))) - 1)
 
+			# Calculate MdLQ (median log accuracy ratio)
+			# Positive/negative: systematic (over/under)-prediction
+			mdlq = np.median(np.log(interpT/nozzleT))
+
 			# Build up summaries
 			summary_rmse[i,j] = rmse
 			summary_mape[i,j] = mape
 			summary_zeta[i,j] = zeta
+			summary_mdlq[i,j] = mdlq
 
 			# Plot results
 			plt.figure()
@@ -130,7 +136,17 @@ for calibration in calibrations:
 	plt.savefig(folder + '/IJ Ramping/PositionsInterp/' + calibration + '_zeta.png')
 	plt.close()
 
+	plt.figure()
+	[plt.plot(positions, summary_mdlq[:,j], linewidth=2.0, label=profiles[j]) for j in range(len(profiles))]
+	plt.legend()
+	plt.ylabel('MdLQ (-)')
+	plt.xlabel('Vertical Location (mm)')
+	plt.title(calibration)
+	plt.savefig(folder + '/IJ Ramping/PositionsInterp/' + calibration + '_mdlq.png')
+	plt.close()
+
 	# Save summary file
 	np.savetxt(folder + '/IJ Ramping/PositionsInterp/' + calibration + '_rmse.txt', summary_rmse, delimiter='\t', header="\t".join(str(x) for x in profiles))
 	np.savetxt(folder + '/IJ Ramping/PositionsInterp/' + calibration + '_mape.txt', summary_mape, delimiter='\t', header="\t".join(str(x) for x in profiles))
 	np.savetxt(folder + '/IJ Ramping/PositionsInterp/' + calibration + '_zeta.txt', summary_zeta, delimiter='\t', header="\t".join(str(x) for x in profiles))
+	np.savetxt(folder + '/IJ Ramping/PositionsInterp/' + calibration + '_mdlq.txt', summary_mdlq, delimiter='\t', header="\t".join(str(x) for x in profiles))
