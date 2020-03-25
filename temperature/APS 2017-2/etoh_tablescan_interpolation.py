@@ -48,7 +48,7 @@ for calibration in calibrations:
 	# Change path to APS 2018-1 for 'Combined'
 	if calibration == 'Combined':
 		folder = folder.replace('APS 2017-2', 'APS 2018-1').replace('Ethanol', 'Ethanol_700umNozzle')
-			
+
 	# Initialize summary arrays
 	summary_rmse = np.zeros((len(flds), len(profiles)))
 	summary_mape = np.zeros((len(flds), len(profiles)))
@@ -58,8 +58,12 @@ for calibration in calibrations:
 	# Iterate through each selected profile
 	for j, profile in enumerate(profiles):
 		# Create polynomial object based on selected profile & calibration jet
-		p = np.poly1d(np.loadtxt(folder + '/' + calibration + '/Statistics/' + profile + '_polynomial.txt'))
-		
+		# Load APS 2018-1 for 'Combined'
+		if calibration == 'Combined':
+			p = np.poly1d(np.loadtxt(folder.replace('APS 2017-2', 'APS 2018-1').replace('Ethanol', 'Ethanol_700umNozzle') + '/' + calibration + '/Statistics/' + profile + '_polynomial.txt'))
+		else:
+			p = np.poly1d(np.loadtxt(folder + '/' + calibration + '/Statistics/' + profile + '_polynomial.txt'))
+
 		# Create folders
 		plots_folder = folder + '/IJ Ramping/PositionsInterp/' + calibration + '_' + profile
 		if not os.path.exists(plots_folder):
