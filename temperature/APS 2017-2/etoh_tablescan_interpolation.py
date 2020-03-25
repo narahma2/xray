@@ -45,10 +45,6 @@ positions = np.loadtxt(folder + '/IJ Ramping/Temperature/T281p13/positions.txt')
 ## Load in and process data sets
 # Iterate through each selected calibration jet
 for calibration in calibrations:
-	# Change path to APS 2018-1 for 'Combined'
-	if calibration == 'Combined':
-		folder = folder.replace('APS 2017-2', 'APS 2018-1').replace('Ethanol', 'Ethanol_700umNozzle')
-
 	# Initialize summary arrays
 	summary_rmse = np.zeros((len(flds), len(profiles)))
 	summary_mape = np.zeros((len(flds), len(profiles)))
