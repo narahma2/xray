@@ -45,8 +45,10 @@ positions = np.loadtxt(folder + '/IJ Ramping/Temperature/T281p13/positions.txt')
 ## Load in and process data sets
 # Iterate through each selected calibration jet
 for calibration in calibrations:
-	# Initialize summary array
-	summary = np.zeros((len(flds), len(profiles)))
+	# Initialize summary arrays
+	summary_rmse = np.zeros((len(flds), len(profiles)))
+	summary_mape = np.zeros((len(flds), len(profiles)))
+	summary_zeta = np.zeros((len(flds), len(profiles)))
 
 	# Iterate through each selected profile
 	for j, profile in enumerate(profiles):
@@ -73,16 +75,25 @@ for calibration in calibrations:
 			# Fit a linear line of interpT vs. nozzleT
 			fit = polyfit(interpT, nozzleT, 1)
 
-			# Calculate RMSE
+			# Calculate RMSE (root mean squared error)
 			rmse = np.sqrt(((interpT - nozzleT)**2).mean())
 
-			# Build up summary
-			summary[i,j] = rmse
+			# Calculate MAPE (mean absolute percentage error)
+			mape = 100*np.abs((interpT - nozzleT)/nozzleT) / len(nozzleT)
+
+			# Calculate median symmetric accuracy
+			zeta = 100*np.exp(np.median(np.abs(np.log(interpT/nozzleT))) - 1)
+
+			# Build up summaries
+			summary_rmse[i,j] = rmse
+			summary_mape[i,j] = mape
+			summary_zeta[i,j] = zeta
 
 			# Plot results
 			plt.figure()
 			plt.plot(interpT, nozzleT, ' o', markerfacecolor='none', markeredgecolor='b', label='Data')
-			plt.plot(interpT, fit['function'](interpT), 'k', linewidth=2.0, label='y = ' + '%0.2f'%fit['polynomial'][0] + 'x + ' + '%0.2f'%fit['polynomial'][1])
+			plt.plot(nozzleT, nozzleT, 'k', linewidth=2.0, label='y = x')
+			plt.plot(interpT, fit['function'](interpT), 'r', linewidth=2.0, label='y = ' + '%0.2f'%fit['polynomial'][0] + 'x + ' + '%0.2f'%fit['polynomial'][1])
 			plt.title('y = ' + yp[1:].replace('p', '.') + ' mm - ' + calibration + ': ' + profile)
 			plt.legend()
 			plt.xlabel('Interpolated Temperature (K)')
@@ -91,15 +102,35 @@ for calibration in calibrations:
 			plt.savefig(plots_folder + '/' + yp + '.png')
 			plt.close()
 
-	# Plot summary
+	# Plot summaries
 	plt.figure()
-	[plt.plot(positions, summary[:,j], linewidth=2.0, label=profiles[j]) for j in range(len(profiles))]
+	[plt.plot(positions, summary_rmse[:,j], linewidth=2.0, label=profiles[j]) for j in range(len(profiles))]
 	plt.legend()
 	plt.ylabel('RMSE (K)')
 	plt.xlabel('Vertical Location (mm)')
 	plt.title(calibration)
-	plt.savefig(folder + '/IJ Ramping/PositionsInterp/' + calibration + '.png')
+	plt.savefig(folder + '/IJ Ramping/PositionsInterp/' + calibration + '_rmse.png')
+	plt.close()
+
+	plt.figure()
+	[plt.plot(positions, summary_mape[:,j], linewidth=2.0, label=profiles[j]) for j in range(len(profiles))]
+	plt.legend()
+	plt.ylabel('MAPE (%)')
+	plt.xlabel('Vertical Location (mm)')
+	plt.title(calibration)
+	plt.savefig(folder + '/IJ Ramping/PositionsInterp/' + calibration + '_mape.png')
+	plt.close()
+
+	plt.figure()
+	[plt.plot(positions, summary_zeta[:,j], linewidth=2.0, label=profiles[j]) for j in range(len(profiles))]
+	plt.legend()
+	plt.ylabel('$\zeta$ (%)')
+	plt.xlabel('Vertical Location (mm)')
+	plt.title(calibration)
+	plt.savefig(folder + '/IJ Ramping/PositionsInterp/' + calibration + '_zeta.png')
 	plt.close()
 
 	# Save summary file
-	np.savetxt(folder + '/IJ Ramping/PositionsInterp/' + calibration + '_rmse.txt', summary, delimiter='\t', header="\t".join(str(x) for x in profiles))
+	np.savetxt(folder + '/IJ Ramping/PositionsInterp/' + calibration + '_rmse.txt', summary_rmse, delimiter='\t', header="\t".join(str(x) for x in profiles))
+	np.savetxt(folder + '/IJ Ramping/PositionsInterp/' + calibration + '_mape.txt', summary_mape, delimiter='\t', header="\t".join(str(x) for x in profiles))
+	np.savetxt(folder + '/IJ Ramping/PositionsInterp/' + calibration + '_zeta.txt', summary_zeta, delimiter='\t', header="\t".join(str(x) for x in profiles))
