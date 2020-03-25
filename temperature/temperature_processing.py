@@ -1,35 +1,25 @@
 # -*- coding: utf-8 -*-
 """
+Functions for processing temperature data sets (calibration + IJ).
+
 Created on Tue Jan 21 13:54:00 2020
 
 @author: rahmann
 """
 
-import sys
-if sys.platform == 'win32':
-    sys_folder = 'R:/'
-elif sys.platform == 'linux':
-    sys_folder = '/mnt/r/'
-
 import os
+os.environ['MPLCONFIGDIR'] = '/python/matploblib/'
+
 import pickle
 import numpy as np
 import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+plt.style.use('paper')
 from scipy.signal import savgol_filter, find_peaks
 from scipy.optimize import curve_fit
 from scipy import stats
 from calc_statistics import polyfit
-
-# Plot defaults
-mpl.rcParams['font.family'] = 'sans-serif'
-mpl.rcParams['font.sans-serif'] = 'Arial'
-mpl.rcParams['axes.titlesize'] = 22
-mpl.rcParams['axes.labelsize'] = 22
-mpl.rcParams['xtick.labelsize'] = 17
-mpl.rcParams['ytick.labelsize'] = 17
-mpl.rcParams['legend.fontsize'] = 16
 
 # Functions for intensity profile fitting
 def gauss(x,mu,sigma,A):
