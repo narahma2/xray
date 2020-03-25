@@ -79,7 +79,7 @@ for calibration in calibrations:
 			rmse = np.sqrt(((interpT - nozzleT)**2).mean())
 
 			# Calculate MAPE (mean absolute percentage error)
-			mape = 100*np.abs((interpT - nozzleT)/nozzleT) / len(nozzleT)
+			mape = 100*np.sum(np.abs((interpT - nozzleT)/nozzleT)) / len(nozzleT)
 
 			# Calculate median symmetric accuracy
 			zeta = 100*np.exp(np.median(np.abs(np.log(interpT/nozzleT))) - 1)
