@@ -26,7 +26,7 @@ from temperature_processing import main as temperature_processing
 
 project_folder = sys_folder + '/X-ray Temperature/APS 2017-2'
 
-tests = ['Ethanol/IJ Ambient']
+tests = ['Ethanol/IJ Ambient', 'Ethanol/IJ Hot']
 
 for test in tests:
     folder = project_folder + '/Processed/Ethanol'
@@ -51,11 +51,6 @@ for test in tests:
         q = list(f['q'])
         intensity = [f['Intensity_vs_q'][:,i] for i in range(np.shape(f['Intensity_vs_q'])[1])]
         intensities.append(np.mean(intensity, axis=0))
-        
-        # Load temperature and convert to Kelvin
-        temperature = [f['Intensity_vs_q'][:,i] for i in range(np.shape(f['Intensity_vs_q'])[1])]
-        temperatures.append(np.mean(temperature, axis=0))
-        temperature = convert_temperature(temperature, 'Celsius', 'Kelvin')
     
     sl = slice((np.abs(np.array(q) - 0.6)).argmin(), (np.abs(np.array(q) - 1.75)).argmin())
     intensities = [(x-bg_avg) for x in intensities]
@@ -64,4 +59,4 @@ for test in tests:
     reduced_intensity = [x[sl] for x in filtered_intensity]
     reduced_intensity = [y/np.trapz(y, x=reduced_q) for y in reduced_intensity]
 
-    temperature_processing(test.rsplit('/')[0], folder, test.rsplit('/')[1], reduced_intensity, reduced_q, temperature=[], structure_factor=None, y=y, ramping=False)
+    temperature_processing(test.rsplit('/')[0], folder, test.rsplit('/')[1], reduced_intensity, reduced_q, temperature=None, structure_factor=None, y=y, ramping=False)
