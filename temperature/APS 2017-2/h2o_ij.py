@@ -148,14 +148,14 @@ for ycount, _ in enumerate(ij_mapping_Y):
 		for key in ij_mapping_T.keys():
 			ii = np.abs(xv-ij_mapping_X[ycount][xcount]).argmin()
 			zv[key][jj,ii] = ij_mapping_T[key][ycount][xcount]
-			if not (0 <= zv[key][jj,ii] <= 100):
+			if not (250 <= zv[key][jj,ii] <= 320):
 				zv[key][jj,ii] = 0
 
 def temperature_plot(T, Ttype):    
 	fig, ax = plt.subplots()
 	pc = ax.pcolormesh(xv, yv, T, cmap=plt.cm.bwr)
 	cbar = fig.colorbar(pc)
-	cbar.set_label('Temperature (C)')
+	cbar.set_label('Temperature (K)')
 	plt.gca().invert_yaxis()
 	plt.xlabel('X Position (mm)')
 	plt.ylabel('Y Position (mm)')
