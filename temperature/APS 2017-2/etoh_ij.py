@@ -26,7 +26,7 @@ from temperature_processing import main as temperature_processing
 
 project_folder = sys_folder + '/X-ray Temperature/APS 2017-2'
 
-tests = ['Ethanol/IJ Ambient', 'Ethanol/IJ Hot']
+tests = ['Ethanol/IJ Ambient']
 
 for test in tests:
     folder = project_folder + '/Processed/Ethanol'
