@@ -10,10 +10,12 @@ if sys.platform == 'win32':
     gh_fld = 'E:/GitHub/xray/general'
     sys.path.append(gh_fld)
     sys.path.append('E:/GitHub/xray/temperature')
+    sys_folder = 'R:'
 elif sys.platform == 'linux':
     gh_fld = '/mnt/e/GitHub/xray/general'
     sys.path.append(gh_fld)
     sys.path.append('/mnt/e/GitHub/xray/temperature')
+    sys_folder = '/mnt/r/'
 
 import os
 import h5py
