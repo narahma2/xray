@@ -93,7 +93,7 @@ for i, scan in enumerate(scan_no):
 	x_loc = list(f['7bmb1:aero:m2.VAL'])
 	q = list(f['q'])
 	sl = slice((np.abs(np.array(q) - 1.70)).argmin(), (np.abs(np.array(q) - 3.1)).argmin())
-	pinned_sl = np.abs(np.array(q) - 2.84).argmin()
+	pinned_sl = np.abs(np.array(q) - 2.78).argmin()
 	intensity = [f['Intensity_vs_q'][:,i] for i in range(np.shape(f['Intensity_vs_q'])[1])]
 	intensity = [(x-bg_avg) for x in intensity]
 	filtered_intensity = [savgol_filter(x, 55, 3) for x in intensity]
@@ -137,7 +137,6 @@ for i, scan in enumerate(scan_no):
 		pickle.dump([x_loc, reduced_q, reduced_intensity, peakq], f)
 	
 #%% Create density map of temperature
-start = time.time()
 xx = np.linspace(-2,2,81)
 yy = np.linspace(0, 12, 25)
 xv, yv = np.meshgrid(xx, yy)
@@ -152,9 +151,6 @@ for ycount, _ in enumerate(ij_mapping_Y):
 			zv[key][jj,ii] = ij_mapping_T[key][ycount][xcount]
 			if not (0 <= zv[key][jj,ii] <= 100):
 				zv[key][jj,ii] = 0
-			
-end = time.time()
-density_time = end - start
 
 def temperature_plot(T, Ttype):    
 	fig, ax = plt.subplots()
