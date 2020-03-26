@@ -54,6 +54,8 @@ def interpolate(x_loc, calib, profile, name, folder):
 	plt.title('Temperature from ' + name)
 	plt.ylabel('Temperature (K)')
 	plt.xlabel('X Location (mm)')
+	axes = plt.gca()
+	axes.set_ylim([250, 320])
 	plt.autoscale(enable=True, axis='x', tight=True)
 	plt.minorticks_on()
 	plt.tick_params(which='both',direction='in')
@@ -153,7 +155,7 @@ for ycount, _ in enumerate(ij_mapping_Y):
 
 def temperature_plot(T, Ttype):    
 	fig, ax = plt.subplots()
-	pc = ax.pcolormesh(xv, yv, T, cmap=plt.cm.bwr)
+	pc = ax.pcolormesh(xv, yv, T, cmap=plt.cm.bwr, vmin=250, vmax=320)
 	cbar = fig.colorbar(pc)
 	cbar.set_label('Temperature (K)')
 	plt.gca().invert_yaxis()
