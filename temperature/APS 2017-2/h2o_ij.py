@@ -100,7 +100,6 @@ for i, scan in enumerate(scan_no):
 	reduced_q = q[sl]
 	reduced_intensity = [x[sl] for x in filtered_intensity]
 	reduced_intensity = [y/np.trapz(y, x=reduced_q) for y in reduced_intensity]
-	reduced_intensity = [z/np.max(z) for z in reduced_intensity]
 	concavity = [-np.gradient(np.gradient(i)) for i in reduced_intensity]
 	concavity = [savgol_filter(j, 55, 3) for j in concavity]
 	peak_locs = [find_peaks(k, height=0.00001, distance=100)[0] for k in concavity]
