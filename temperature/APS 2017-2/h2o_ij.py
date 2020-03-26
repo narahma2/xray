@@ -7,19 +7,19 @@ Created on Fri Apr  5 01:02:13 2019
 
 import sys
 if sys.platform == 'win32':
-	sys.path.append('E:/GitHub/xray/general')
-	sys.path.append('E:/GitHub/xray/temperature')
-	sys_folder = 'R:'
+    gh_fld = 'E:/GitHub/xray/general'
+    sys.path.append(gh_fld)
+    sys.path.append('E:/GitHub/xray/temperature')
 elif sys.platform == 'linux':
-	sys.path.append('/mnt/e/GitHub/xray/general')
-	sys.path.append('/mnt/e/GitHub/xray/temperature')
-	sys_folder = '/mnt/r/'
+    gh_fld = '/mnt/e/GitHub/xray/general'
+    sys.path.append(gh_fld)
+    sys.path.append('/mnt/e/GitHub/xray/temperature')
 
 import os
 import h5py
 import numpy as np
 import matplotlib.pyplot as plt
-plt.style.use('/python/matplotlib/stylelib/paper.mplstyle')
+plt.style.use(gh_folder + '/python/matplotlib/stylelib/paper.mplstyle')
 from scipy.constants import convert_temperature
 from scipy.signal import savgol_filter, find_peaks
 from scipy import stats
