@@ -74,68 +74,70 @@ g = h5py.File(project_folder + '/RawData/Scan_437.hdf5', 'r')
 bg = [g['Intensity_vs_q'][:,i] for i in range(np.shape(g['Intensity_vs_q'])[1])]
 bg_avg = np.mean(bg, axis=0)
 
-calib_folder = project_folder + '/Processed/Water/403/Statistics'
-# calib_folder = sys_folder + '/X-ray Temperature/APS 2018-1/Processed/Water_700umNozzle/Combined/Statistics'
+calib_folders = [project_folder + '/Processed/Water/403/Statistics', sys_folder + '/X-ray Temperature/APS 2018-1/Processed/Water_700umNozzle/Combined/Statistics']
+calibrations = ['403', 'Combined'] 
 
 ij_mapping_X = []
 ij_mapping_Y = []
 ij_mapping_T = {}
 
-for i, scan in enumerate(scan_no):
-	y_loc = y_location[i]
-	folder = project_folder + '/Processed/Water/IJ Mixing/y' + '{0:05.2f}'.format(y_location[i]).replace('.', 'p')
-	if not os.path.exists(folder + '/Curves'):
-		os.makedirs(folder + '/Curves')
-	if not os.path.exists(folder + '/Temperature'):
-		os.makedirs(folder + '/Temperature')
-	if not os.path.exists(folder + '/Statistics'):
-		os.makedirs(folder + '/Statistics')
-	
-	f = h5py.File(project_folder + '/RawData/Scan_' + str(scan) + '.hdf5', 'r')
-	x_loc = list(f['7bmb1:aero:m2.VAL'])
-	q = list(f['q'])
-	sl = slice((np.abs(np.array(q) - 1.70)).argmin(), (np.abs(np.array(q) - 3.1)).argmin())
-	pinned_sl = np.abs(np.array(q) - 2.78).argmin()
-	intensity = [f['Intensity_vs_q'][:,i] for i in range(np.shape(f['Intensity_vs_q'])[1])]
-	intensity = [(x-bg_avg) for x in intensity]
-	filtered_intensity = [savgol_filter(x, 55, 3) for x in intensity]
-	reduced_q = q[sl]
-	reduced_intensity = [x[sl] for x in filtered_intensity]
-	reduced_intensity = [y/np.trapz(y, x=reduced_q) for y in reduced_intensity]
-	concavity = [-np.gradient(np.gradient(i)) for i in reduced_intensity]
-	concavity = [savgol_filter(j, 55, 3) for j in concavity]
-	peak_locs = [find_peaks(k, height=0.00001, distance=100)[0] for k in concavity]
-	
-	peakq, ij_mapping_T = calibrate(folder, calib_folder, 'peakq', ij_mapping_T, np.array([reduced_q[x[0]] for x in peak_locs]), x_loc)
-	# q2, ij_mapping_T = calibrate(folder, calib_folder, 'q2', ij_mapping_T, np.array([reduced_q[x[1]] if len(x) == 2 else np.nan for x in peak_locs]), x_loc)
-	_, ij_mapping_T = calibrate(folder, calib_folder, 'aratio', ij_mapping_T, [np.trapz(x[:pinned_sl], reduced_q[:pinned_sl]) / np.trapz(x[pinned_sl:], reduced_q[pinned_sl:]) for x in reduced_intensity], x_loc)
-	_, ij_mapping_T = calibrate(folder, calib_folder, 'var', ij_mapping_T, [stats.skew(k) for k in reduced_intensity], x_loc)
-	_, ij_mapping_T = calibrate(folder, calib_folder, 'skew', ij_mapping_T, [np.var(k) for k in reduced_intensity], x_loc)
-	_, ij_mapping_T = calibrate(folder, calib_folder, 'kurt', ij_mapping_T, [stats.kurtosis(k) for k in reduced_intensity], x_loc)
-	
+for n, calib_folder in enumerate(calib_folders):
+	calib = calibrations[n]
+	for i, scan in enumerate(scan_no):
+		y_loc = y_location[i]
+		folder = project_folder + '/Processed/Water/IJ Mixing/' + calib + 'y' + '{0:05.2f}'.format(y_location[i]).replace('.', 'p')
+		if not os.path.exists(folder + '/Curves'):
+			os.makedirs(folder + '/Curves')
+		if not os.path.exists(folder + '/Temperature'):
+			os.makedirs(folder + '/Temperature')
+		if not os.path.exists(folder + '/Statistics'):
+			os.makedirs(folder + '/Statistics')
 		
-	for j,_ in enumerate(reduced_intensity):
-		plt.figure()
-		plt.plot(reduced_q, reduced_intensity[j], color='k', linewidth=2.0, label='x = ' + str(round(x_loc[j],2)) + ' mm')
-		plt.axvline(x=peakq[j], linestyle='--', color='C0', label='peakq = ' + str(round(peakq[j], 2)))
-		# plt.axvline(x=q2[j], linestyle='--', color='C1', label='q2 = ' + str(round(q2[j], 2)))
-		plt.legend()
-		plt.xlabel('q (Å$^{-1}$)')
-		plt.ylabel('Intensity (arb. units)')
-		plt.autoscale(enable=True, axis='x', tight=True)
-		plt.gca().set_ylim([0, 1.02])
-		plt.minorticks_on()
-		plt.tick_params(which='both',direction='in')
-		plt.title(str(y_location[i]) + ' mm')
-		plt.tight_layout()
-		plt.savefig(folder + '/Curves/' + str(j).zfill(3) + '.png')
-		plt.close()
-	
-	ij_mapping_X.append(x_loc)
-	ij_mapping_Y.append(y_loc)
-	
-	with open(folder + '/' + str(scan) + '_data.pckl', 'wb') as f:
-		pickle.dump([x_loc, reduced_q, reduced_intensity, peakq], f)
+		f = h5py.File(project_folder + '/RawData/Scan_' + str(scan) + '.hdf5', 'r')
+		x_loc = list(f['7bmb1:aero:m2.VAL'])
+		q = list(f['q'])
+		sl = slice((np.abs(np.array(q) - 1.70)).argmin(), (np.abs(np.array(q) - 3.1)).argmin())
+		pinned_sl = np.abs(np.array(q) - 2.78).argmin()
+		intensity = [f['Intensity_vs_q'][:,i] for i in range(np.shape(f['Intensity_vs_q'])[1])]
+		intensity = [(x-bg_avg) for x in intensity]
+		filtered_intensity = [savgol_filter(x, 55, 3) for x in intensity]
+		reduced_q = q[sl]
+		reduced_intensity = [x[sl] for x in filtered_intensity]
+		reduced_intensity = [y/np.trapz(y, x=reduced_q) for y in reduced_intensity]
+		concavity = [-np.gradient(np.gradient(i)) for i in reduced_intensity]
+		concavity = [savgol_filter(j, 55, 3) for j in concavity]
+		peak_locs = [find_peaks(k, height=0.00001, distance=100)[0] for k in concavity]
+		
+		peakq, ij_mapping_T = calibrate(folder, calib_folder, 'peakq', ij_mapping_T, np.array([reduced_q[x[0]] for x in peak_locs]), x_loc)
+		# q2, ij_mapping_T = calibrate(folder, calib_folder, 'q2', ij_mapping_T, np.array([reduced_q[x[1]] if len(x) == 2 else np.nan for x in peak_locs]), x_loc)
+		_, ij_mapping_T = calibrate(folder, calib_folder, 'aratio', ij_mapping_T, [np.trapz(x[:pinned_sl], reduced_q[:pinned_sl]) / np.trapz(x[pinned_sl:], reduced_q[pinned_sl:]) for x in reduced_intensity], x_loc)
+		_, ij_mapping_T = calibrate(folder, calib_folder, 'var', ij_mapping_T, [stats.skew(k) for k in reduced_intensity], x_loc)
+		_, ij_mapping_T = calibrate(folder, calib_folder, 'skew', ij_mapping_T, [np.var(k) for k in reduced_intensity], x_loc)
+		_, ij_mapping_T = calibrate(folder, calib_folder, 'kurt', ij_mapping_T, [stats.kurtosis(k) for k in reduced_intensity], x_loc)
+		
+			
+		for j,_ in enumerate(reduced_intensity):
+			plt.figure()
+			plt.plot(reduced_q, reduced_intensity[j], color='k', linewidth=2.0, label='x = ' + str(round(x_loc[j],2)) + ' mm')
+			plt.axvline(x=peakq[j], linestyle='--', color='C0', label='peakq = ' + str(round(peakq[j], 2)))
+			# plt.axvline(x=q2[j], linestyle='--', color='C1', label='q2 = ' + str(round(q2[j], 2)))
+			plt.legend()
+			plt.xlabel('q (Å$^{-1}$)')
+			plt.ylabel('Intensity (arb. units)')
+			plt.autoscale(enable=True, axis='x', tight=True)
+			plt.gca().set_ylim([0, 1.02])
+			plt.minorticks_on()
+			plt.tick_params(which='both',direction='in')
+			plt.title(str(y_location[i]) + ' mm')
+			plt.tight_layout()
+			plt.savefig(folder + '/Curves/' + str(j).zfill(3) + '.png')
+			plt.close()
+		
+		ij_mapping_X.append(x_loc)
+		ij_mapping_Y.append(y_loc)
+		
+		with open(folder + '/' + str(scan) + '_data.pckl', 'wb') as f:
+			pickle.dump([x_loc, reduced_q, reduced_intensity, peakq], f)
 	
 #%% Create density map of temperature
 xx = np.linspace(-2,2,81)
