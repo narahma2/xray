@@ -118,24 +118,23 @@ def main(test, scan):
         avg_rows = 6
     
     #%% Intensity correction
-    if not isinstance(scan, str):
-        intensity_avg = []
-        temperature_avg = []
+    intensity_avg = []
+    temperature_avg = []
+    scatter = []
+    
+    # Bin the data sets
+    for i in range(0, len(intensity) // avg_rows):
+        scatter.append(np.mean(f['Scatter_images'][(i*avg_rows):((i+1)*avg_rows-1)], axis=0))
+        intensity_avg.append(np.mean(intensity[(i*avg_rows):((i+1)*avg_rows-1)], axis=0))
+        temperature_avg.append(np.mean(temperature[(i*avg_rows):((i+1)*avg_rows-1)]))
+    
+    i = (len(intensity) // avg_rows)
+    if np.mod(len(intensity), avg_rows) != 0:
+        scatter.append(np.mean(f['Scatter_images'][(i*avg_rows):-1], axis=0))
+        intensity_avg.append(np.mean(intensity[(i*avg_rows):-1], axis=0))
+        temperature_avg.append(np.mean(temperature[(i*avg_rows):-1]))
         
-        for i in range(0, len(intensity) // avg_rows):
-            intensity_avg.append(np.mean(intensity[(i*avg_rows):((i+1)*avg_rows-1)], axis=0))
-            temperature_avg.append(np.mean(temperature[(i*avg_rows):((i+1)*avg_rows-1)]))
-        
-        i = (len(intensity) // avg_rows)
-        if np.mod(len(intensity), avg_rows) != 0:
-            intensity_avg.append(np.mean(intensity[(i*avg_rows):-1], axis=0))
-            temperature_avg.append(np.mean(temperature[(i*avg_rows):-1]))
-            
-        filtered_intensity = [savgol_filter(x, 55, 3) for x in intensity_avg]
-        
-    elif isinstance(scan, str):
-        filtered_intensity = [savgol_filter(x, 55, 3) for x in intensity]
-        temperature_avg = temperature
+    filtered_intensity = [savgol_filter(x, 55, 3) for x in intensity_avg]
         
     reduced_q = np.array(q[sl])
     reduced_intensity = [x[sl] for x in filtered_intensity]
@@ -147,7 +146,7 @@ def main(test, scan):
     else:
         structure_factor = None
     
-    temperature_processing(test, folder, scan, reduced_intensity, reduced_q, temperature_avg, structure_factor, scatter=f['Scatter_images'], background=g['Scatter_images'])
+    temperature_processing(test, folder, scan, reduced_intensity, reduced_q, temperature_avg, structure_factor, scatter=scatter, background=g['Scatter_images'])
     
     
     rr = np.array([(x-min(temperature))/(max(temperature)-min(temperature)) for x in temperature])
