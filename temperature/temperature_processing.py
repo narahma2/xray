@@ -67,7 +67,7 @@ def profile(name, fit_var, profile, profiles_folder, stats_folder, test, plots_f
         plt.ylabel('Y Location (mm)')
     else:
         plt.ylabel('Temperature (K)')
-    plt.xlabel(name)0
+    plt.xlabel(name)
     plt.autoscale(enable=True, axis='x', tight=True)
     plt.minorticks_on()
     plt.tick_params(which='both',direction='in')
