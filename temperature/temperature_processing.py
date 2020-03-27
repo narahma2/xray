@@ -63,7 +63,7 @@ def profile(name, fit_var, profile, profiles_folder, stats_folder, test, plots_f
     plt.plot(profile, profile_polyfit['function'](profile), 'k', linewidth=2.0, label='y = ' + '%0.2f'%profile_polyfit['polynomial'][0] + 'x + ' + '%0.2f'%profile_polyfit['polynomial'][1])
     plt.title(test + ' ' + name + ' - R$^2$ = ' + str(round(profile_polyfit['determination'],4)))
     plt.legend()
-    if 'IJ Ramping/Temperature' in profiles_folder or 'IJ Ambient' in profiles_folder:
+    if 'IJ Ramping/Temperature' in profiles_folder or 'IJ Ambient' in profiles_folder or 'IJ65C' in profiles_folder:
         plt.ylabel('Y Location (mm)')
     else:
         plt.ylabel('Temperature (K)')
@@ -137,7 +137,7 @@ def main(test, folder, scan, reduced_intensity, reduced_q, temperature=None, str
     
     #reduced_intensity = np.array([x / np.max(x) for x in reduced_intensity])
 
-    if ramping and 'Ethanol' in test:
+    if 'IJ' in test and 'Ethanol' in test:
         pinned_pts = np.abs(reduced_q - 1.40).argmin()
     else:
         ## Find pinned points in the curves (least variation)
