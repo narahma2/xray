@@ -47,28 +47,21 @@ def main(test, scan):
     q = list(f['q'])
     
     #%% 2017 Water
-    if scan == 397:
-        intensity = [f['Intensity_vs_q_BG_Sub'][:,i] for i in range(np.shape(f['Intensity_vs_q_BG_Sub'])[1])]
+    if scan in [397, 398]:
+        g = h5py.File(project_folder + '/RawData/Scan_402.hdf5', 'r')
+        bg = [g['Intensity_vs_q'][:,i] for i in range(np.shape(g['Intensity_vs_q'])[1])]
+        bg_avg = np.mean(bg, axis=0)
+        raw_intensity = [f['Intensity_vs_q'][:,i] for i in range(np.shape(f['Intensity_vs_q'])[1])]
+        intensity = [(x-bg_avg) for x in raw_intensity]
         sl = slice((np.abs(np.array(q) - 1.70)).argmin(), (np.abs(np.array(q) - 3.1)).argmin())
         avg_rows = 12
 
-    if scan == 398:
-        intensity = [f['Intensity_vs_q_BG_Sub'][:,i] for i in range(np.shape(f['Intensity_vs_q_BG_Sub'])[1])]
-        sl = slice((np.abs(np.array(q) - 1.70)).argmin(), (np.abs(np.array(q) - 3.1)).argmin())
-        avg_rows = 12
-
-    if scan == 400:
-        intensity = [f['Intensity_vs_q_BG_Sub'][:,i] for i in range(np.shape(f['Intensity_vs_q_BG_Sub'])[1])]
-        sl = slice((np.abs(np.array(q) - 1.70)).argmin(), (np.abs(np.array(q) - 3.1)).argmin())
-        avg_rows = 20
-        
-    if scan == 401:
-        intensity = [f['Intensity_vs_q_BG_Sub'][:,i] for i in range(np.shape(f['Intensity_vs_q_BG_Sub'])[1])]
-        sl = slice((np.abs(np.array(q) - 1.70)).argmin(), (np.abs(np.array(q) - 3.1)).argmin())
-        avg_rows = 20
-        
-    if scan == 403:
-        intensity = [f['Intensity_vs_q_BG_Sub'][:,i] for i in range(np.shape(f['Intensity_vs_q_BG_Sub'])[1])]
+    if scan in [400, 401, 403]:
+        g = h5py.File(project_folder + '/RawData/Scan_402.hdf5', 'r')
+        bg = [g['Intensity_vs_q'][:,i] for i in range(np.shape(g['Intensity_vs_q'])[1])]
+        bg_avg = np.mean(bg, axis=0)
+        raw_intensity = [f['Intensity_vs_q'][:,i] for i in range(np.shape(f['Intensity_vs_q'])[1])]
+        intensity = [(x-bg_avg) for x in raw_intensity]
         sl = slice((np.abs(np.array(q) - 1.70)).argmin(), (np.abs(np.array(q) - 3.1)).argmin())
         avg_rows = 20
         
