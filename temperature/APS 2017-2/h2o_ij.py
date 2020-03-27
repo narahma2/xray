@@ -83,7 +83,7 @@ ij_mapping_T = {}
 
 for i, scan in enumerate(scan_no):
 	y_loc = y_location[i]
-	folder = project_folder + '/Processed/Water/IJ Mixing/Scan' + str(scan)
+	folder = project_folder + '/Processed/Water/IJ Mixing/y' + '{0:05.2f}'.format(y_location[i]).replace('.', 'p')
 	if not os.path.exists(folder + '/Curves'):
 		os.makedirs(folder + '/Curves')
 	if not os.path.exists(folder + '/Temperature'):
@@ -126,7 +126,7 @@ for i, scan in enumerate(scan_no):
 		plt.gca().set_ylim([0, 1.02])
 		plt.minorticks_on()
 		plt.tick_params(which='both',direction='in')
-		plt.title('Scan ' + str(scan))
+		plt.title(str(y_location[i]) + ' mm')
 		plt.tight_layout()
 		plt.savefig(folder + '/Curves/' + str(j).zfill(3) + '.png')
 		plt.close()
