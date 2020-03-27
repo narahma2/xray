@@ -69,7 +69,6 @@ for scan in scans:
     reduced_q = q[sl]
     reduced_intensity = [x[sl] for x in filtered_intensity]
     reduced_intensity = [y/np.trapz(y, x=reduced_q) for y in reduced_intensity]
-    reduced_intensity /= np.max(reduced_intensity)
     
     structure_factor = [ItoS(np.array(reduced_q), x) for x in reduced_intensity]
 
