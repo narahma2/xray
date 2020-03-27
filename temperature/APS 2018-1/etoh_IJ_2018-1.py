@@ -49,15 +49,16 @@ for scan in scans:
     bg = np.mean(bg, axis=0)
 
     #%% Intensity correction
-    perpendicular = [1137, 1138, 1139, 1140, 1141, 1142, 1143]
+    perpendicular = [1138, 1139, 1140, 1141, 1142, 1143]
     transverse = [1145, 1146, 1148, 1149, 1150, 1151]
-    y_loc = [2, 5, 8, 11, 14, 17, 20]
-    
+     
     if 'Perpendicular' in scan:
         files = perpendicular
+        y_loc = [5, 8, 11, 14, 17, 20]
     elif 'Transverse' in scan:
         files = transverse
-        
+        y_loc = [2, 5, 8, 11, 14, 17] 
+ 
     files = [glob.glob(project_folder + '/Q Space/Ethanol_ImpingingJet/*' + str(x) + '*') for x in files]
     
     intensity = [np.mean([np.loadtxt(x, usecols=1)-bg for x in y], axis=0) for y in files]    
@@ -70,7 +71,7 @@ for scan in scans:
     reduced_intensity = [x[sl] for x in filtered_intensity]
     reduced_intensity = [y/np.trapz(y, x=reduced_q) for y in reduced_intensity]
 
-    temperature_processing(test.rsplit('/')[0], folder + scan, test.rsplit('/')[1], reduced_intensity, reduced_q, temperature=None, structure_factor=None, y=y, ramping=False)
+    temperature_processing('Ethanol', project_folder + '/Processed/Ethanol/IJ65C/', scan, reduced_intensity, reduced_q, temperature=None, structure_factor=None, y=y_loc, ramping=False)
     
     plt.figure()
     [plt.plot(reduced_q, x, color='C'+str(i), label='y = ' + str(y_loc[i]) + ' mm') for i,x in enumerate(reduced_intensity)]
