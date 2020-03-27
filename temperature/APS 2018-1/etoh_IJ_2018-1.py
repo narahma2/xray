@@ -36,6 +36,10 @@ if not os.path.exists(folder):
 scans = ['/Perpendicular', '/Transverse']
 
 for scan in scans:
+    # Create folders
+    if not os.path.exists(folder + scan):
+        os.makedirs(folder + scan)
+
     #%% Load background
     bg = glob.glob(project_folder + '/Q Space/Ethanol_ImpingingJet/*Scan1152*')
     q = np.loadtxt(bg[0], usecols=0)                    # Load q
@@ -75,6 +79,7 @@ for scan in scans:
 #    plt.ylim([0.1, 1.1])
     plt.title(scan)
     plt.tight_layout()
+    plt.savefig(folder + scan + '/superimposed.png')
        
     if 'Perpendicular' in scan:
         intensity_perp = reduced_intensity
@@ -97,6 +102,7 @@ handles, labels = ax.get_legend_handles_labels()
 fig.legend(handles, labels, loc='upper right', prop={'size': 'medium'})
 fig.suptitle('Ethanol Impinging Jet @ 65 °C', fontsize=18, weight='bold')
 fig.subplots_adjust(top=0.82)
+fig.savefig(folder + '/combined.png')
         
         
         
