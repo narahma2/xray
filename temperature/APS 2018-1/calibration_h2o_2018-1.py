@@ -9,18 +9,17 @@ Created on Thu Jan 16 17:08:33 2020
 
 import sys
 if sys.platform == 'win32':
-	sys.path.append('E:/GitHub/xray/general')
-	sys.path.append('E:/GitHub/xray/temperature')
-	sys_folder = 'R:/'
+    sys.path.append('E:/GitHub/xray/general')
+    sys.path.append('E:/GitHub/xray/temperature')
+    sys_folder = 'R:/'
 elif sys.platform == 'linux':
-	sys.path.append('/mnt/e/GitHub/xray/general')
-	sys.path.append('/mnt/e/GitHub/xray/temperature')
-	sys_folder = '/mnt/r/'
+    sys.path.append('/mnt/e/GitHub/xray/general')
+    sys.path.append('/mnt/e/GitHub/xray/temperature')
+    sys_folder = '/mnt/r/'
 
-import os
 import glob
 import numpy as np
-import matplotlib.pyplot as plt
+from scipy.constants import convert_temperature
 from scipy.signal import savgol_filter
 from Form_Factor.xray_factor import ItoS
 from temperature_processing import main as temperature_processing
@@ -59,6 +58,7 @@ for scan in scans:
         
     files = [glob.glob(project_folder + '/Q Space/Water_700umNozzle/*' + str(x) + '*') for x in files]
     temperature = np.array([float(x[0].rsplit('Target')[-1].rsplit('_')[0].replace('p','.')) for x in files])
+    temperature = convert_temperature(temperature, 'Celsius', 'Kelvin')
     
     intensity = [np.mean([np.loadtxt(x, usecols=1)-bg for x in y], axis=0) for y in files]    
             
