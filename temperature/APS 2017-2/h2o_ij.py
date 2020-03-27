@@ -85,7 +85,8 @@ for n, calib_folder in enumerate(calib_folders):
 	calib = calibrations[n]
 	for i, scan in enumerate(scan_no):
 		y_loc = y_location[i]
-		folder = project_folder + '/Processed/Water/IJ Mixing/' + calib + 'y' + '{0:05.2f}'.format(y_location[i]).replace('.', 'p')
+		folder = project_folder + '/Processed/Water/IJ Mixing/' + calib + '/y' + '{0:05.2f}'.format(y_location[i]).replace('.', 'p') + 
+		'_' + 'scan' + str(scan)
 		if not os.path.exists(folder + '/Curves'):
 			os.makedirs(folder + '/Curves')
 		if not os.path.exists(folder + '/Temperature'):
