@@ -43,6 +43,7 @@ def main(test, scan):
 
     # Convert temperature from Celsius to Kelvin
     temperature = convert_temperature(temperature, 'Celsius', 'Kelvin')
+
     q = list(f['q'])
     
     #%% 2017 Water
@@ -104,7 +105,7 @@ def main(test, scan):
         bg_avg = np.mean(bg, axis=0)
         raw_intensity = [f['Intensity_vs_q'][:,i] for i in range(np.shape(f['Intensity_vs_q'])[1])]
         intensity = [(x-bg_avg) for x in raw_intensity]
-        sl = slice(43, 452)
+        sl = slice((np.abs(np.array(q) - 0.6)).argmin(), (np.abs(np.array(q) - 1.75)).argmin())
         avg_rows = 24
         
     if scan == 415:
@@ -113,7 +114,7 @@ def main(test, scan):
         bg_avg = np.mean(bg, axis=0)
         raw_intensity = [f['Intensity_vs_q'][:,i] for i in range(np.shape(f['Intensity_vs_q'])[1])]
         intensity = [(x-bg_avg) for x in raw_intensity]
-        sl = slice(43, 452)
+        sl = slice((np.abs(np.array(q) - 0.6)).argmin(), (np.abs(np.array(q) - 1.75)).argmin())
         avg_rows = 6
     
     #%% Intensity correction
@@ -146,7 +147,7 @@ def main(test, scan):
     else:
         structure_factor = None
     
-    temperature_processing(test, folder, scan, reduced_intensity, reduced_q, temperature_avg, structure_factor)
+    temperature_processing(test, folder, scan, reduced_intensity, reduced_q, temperature_avg, structure_factor, scatter=f['Scatter_images'], background=g['Scatter_images'])
     
     
     rr = np.array([(x-min(temperature))/(max(temperature)-min(temperature)) for x in temperature])
