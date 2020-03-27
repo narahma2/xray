@@ -46,11 +46,13 @@ for test in tests:
 
     intensities = []
     temperatures = []
-    for scan in scans:
+    scatter = []
+    for n, scan in enumerate(scans):
         f = h5py.File(project_folder + '/RawData/Scan_' + str(scan) + '.hdf5', 'r')
         q = list(f['q'])
         intensity = [f['Intensity_vs_q'][:,i] for i in range(np.shape(f['Intensity_vs_q'])[1])]
         intensities.append(np.mean(intensity, axis=0))
+        scatter.append(f['Scatter_images'][n])
     
     sl = slice((np.abs(np.array(q) - 0.6)).argmin(), (np.abs(np.array(q) - 1.75)).argmin())
     intensities = [(x-bg_avg) for x in intensities]
@@ -59,4 +61,4 @@ for test in tests:
     reduced_intensity = [x[sl] for x in filtered_intensity]
     reduced_intensity = [y/np.trapz(y, x=reduced_q) for y in reduced_intensity]
 
-    temperature_processing(test.rsplit('/')[0], folder, test.rsplit('/')[1], reduced_intensity, reduced_q, temperature=None, structure_factor=None, y=y, ramping=False)
+    temperature_processing(test.rsplit('/')[0], folder, test.rsplit('/')[1], reduced_intensity, reduced_q, temperature=None, structure_factor=None, y=y, ramping=False, scatter=scatter, background=g['Scatter_images'])

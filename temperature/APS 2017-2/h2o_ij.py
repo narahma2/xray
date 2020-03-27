@@ -27,7 +27,7 @@ from scipy.constants import convert_temperature
 from scipy.signal import savgol_filter, find_peaks
 from scipy import stats
 from calc_statistics import comparefit
-from temperature_processing import saveimg, main as temperature_processing
+from temperature_processing import saveimage, main as temperature_processing
 
 #%% Plotting functions
 def calibrate(folder, calib_folder, name, ij_mapping_T, profile, x_loc):
