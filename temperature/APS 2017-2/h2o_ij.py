@@ -179,7 +179,7 @@ def temperature_plot(T, Ttype):
 	
 	plt.show()
 	plt.tight_layout()
-	plt.savefig(folder.rsplit('Scan')[0] + Ttype + '.png')
+	plt.savefig(folder.rsplit('/y')[0] + '/' + Ttype + '.png')
 	plt.close()
 
 [temperature_plot(zv[x], x) for x in keys]
