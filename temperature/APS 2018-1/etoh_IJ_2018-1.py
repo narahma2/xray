@@ -27,7 +27,7 @@ from temperature_processing import main as temperature_processing
 #%% Setup
 project_folder = sys_folder + '/X-ray Temperature/APS 2018-1/'
 
-test = 'Ethanol_IJ65C'
+test = 'Ethanol/IJ65C'
 
 folder = project_folder + 'Processed/' + test
 if not os.path.exists(folder):
@@ -69,7 +69,8 @@ for scan in scans:
     reduced_q = q[sl]
     reduced_intensity = [x[sl] for x in filtered_intensity]
     reduced_intensity = [y/np.trapz(y, x=reduced_q) for y in reduced_intensity]
-#    reduced_intensity = [x/np.max(x) for x in reduced_intensity]
+
+    temperature_processing(test.rsplit('/')[0], folder + scan, test.rsplit('/')[1], reduced_intensity, reduced_q, temperature=None, structure_factor=None, y=y, ramping=False)
     
     plt.figure()
     [plt.plot(reduced_q, x, color='C'+str(i), label='y = ' + str(y_loc[i]) + ' mm') for i,x in enumerate(reduced_intensity)]
