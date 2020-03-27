@@ -18,6 +18,7 @@ elif sys.platform == 'linux':
 
 import glob
 import numpy as np
+import os
 from scipy.constants import convert_temperature
 from scipy.signal import savgol_filter
 from Form_Factor.xray_factor import ItoS
