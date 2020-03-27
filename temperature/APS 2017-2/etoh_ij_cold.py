@@ -39,14 +39,17 @@ q = list(f['q'])
 intensity = [f['Intensity_vs_q'][:,i] for i in range(np.shape(f['Intensity_vs_q'])[1])]
 intensity = [(x-bg_avg) for x in intensity]
 intensity = intensity[:50]
-y = list(f['7bmb1:aero:m1.VAL'])    
 
+# Grab vertical locations
+y = np.array(list(f['7bmb1:aero:m1.VAL']))
+
+# Crop down q space to Ethanol calibration range
 sl = slice((np.abs(np.array(q) - 0.6)).argmin(), (np.abs(np.array(q) - 1.75)).argmin())
 
+# Final processing steps
 filtered_intensity = [savgol_filter(x, 55, 3) for x in intensity]
 reduced_q = np.array(q[sl])
 reduced_intensity = [x[sl] for x in filtered_intensity]
-reduced_intensity = [y/np.trapz(y, x=reduced_q) for y in reduced_intensity]
-reduced_intensity = [z/np.max(z) for z in reduced_intensity]
+reduced_intensity = np.array([y/np.trapz(y, x=reduced_q) for y in reduced_intensity])
 
-temperature_processing(test.rsplit('/')[0], folder, test.rsplit('/')[1], reduced_intensity, reduced_q, temperature=[], structure_factor=None, y=y, IJ=True)
+temperature_processing(test.rsplit('/')[0], folder, test.rsplit('/')[1], reduced_intensity, reduced_q, temperature=[], structure_factor=None, y=y, ramping=False)

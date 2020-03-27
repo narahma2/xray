@@ -63,11 +63,11 @@ def profile(name, fit_var, profile, profiles_folder, stats_folder, test, plots_f
     plt.plot(profile, profile_polyfit['function'](profile), 'k', linewidth=2.0, label='y = ' + '%0.2f'%profile_polyfit['polynomial'][0] + 'x + ' + '%0.2f'%profile_polyfit['polynomial'][1])
     plt.title(test + ' ' + name + ' - R$^2$ = ' + str(round(profile_polyfit['determination'],4)))
     plt.legend()
-    if 'IJ Ramping/Temperature' in profiles_folder or 'IJ Ambient' in profiles_folder or 'IJ65C' in profiles_folder:
+    if any(x in profiles_folder for x in ['IJ Ramping/Temperature', 'IJ Ambient', 'IJ65', 'Cold']):
         plt.ylabel('Y Location (mm)')
     else:
         plt.ylabel('Temperature (K)')
-    plt.xlabel(name)
+    plt.xlabel(name)0
     plt.autoscale(enable=True, axis='x', tight=True)
     plt.minorticks_on()
     plt.tick_params(which='both',direction='in')
