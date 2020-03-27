@@ -27,7 +27,7 @@ from scipy.constants import convert_temperature
 from scipy.signal import savgol_filter, find_peaks
 from scipy import stats
 from calc_statistics import comparefit
-from temperature_processing import main as temperature_processing
+from temperature_processing import saveimg, main as temperature_processing
 
 #%% Plotting functions
 def calibrate(folder, calib_folder, name, ij_mapping_T, profile, x_loc):
@@ -92,9 +92,12 @@ for n, calib_folder in enumerate(calib_folders):
 			os.makedirs(folder + '/Temperature')
 		if not os.path.exists(folder + '/Statistics'):
 			os.makedirs(folder + '/Statistics')
+		if not os.path.exists(folder + '/Images'):
+			os.makedirs(folder + '/Images')
 		
 		f = h5py.File(project_folder + '/RawData/Scan_' + str(scan) + '.hdf5', 'r')
 		x_loc = list(f['7bmb1:aero:m2.VAL'])
+		saveimage(folder + '/Images', x_loc, f['Scatter_images'], g['Scatter_images'])
 		q = list(f['q'])
 		sl = slice((np.abs(np.array(q) - 1.70)).argmin(), (np.abs(np.array(q) - 3.1)).argmin())
 		pinned_sl = np.abs(np.array(q) - 2.78).argmin()
