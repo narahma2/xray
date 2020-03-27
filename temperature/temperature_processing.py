@@ -25,6 +25,7 @@ import matplotlib.font_manager as fm
 fm._rebuild()
 import matplotlib.pyplot as plt
 plt.style.use(gh_fld + '/python/matplotlib/stylelib/paper.mplstyle')
+from PIL import Image
 from scipy.signal import savgol_filter, find_peaks
 from scipy.optimize import curve_fit
 from scipy import stats
@@ -93,8 +94,33 @@ def density(test, q_spacing, T):
     density_data = pd.read_csv(density_file, sep="\t")
     temp = density_data["T_" + test[0:3].lower()]
     dens = density_data["rho" + test[0:3].lower()]
+
+def saveimage(image_folder, fit_var, scatter, background):
+    """
+    Saves the scatter and background images as 16 bit TIF.
+    =============
+    --VARIABLES--
+    image_folder:       Save location of the TIF files.
+    fit_var:            Temperature or y location variable.
+    scatter:            Array containing scatter images.
+    background:         Array containing background images.
+    """
+
+    # Average the background array
+    background = np.mean(background, axis=0)
+
+    # Do background subtraction (unless IJ Cold)
+    if 'IJ Cold' not in image_folder:
+        scatter = scatter - background
+
+    # Save background
+    Image.asarray(background).save(image_folder + '/BG.tif')
+
+    # Save images
+    [Image.asarray(x).save(image_folder + '/' + '%03i'%i + '_' + ('%06.2'%fit_var[i]).replace('.', 'p') + '.tif') for i, x in enumerate(scatter)]
+
     
-def main(test, folder, scan, reduced_intensity, reduced_q, temperature=None, structure_factor=None, y=None, ramping=False):
+def main(test, folder, scan, reduced_intensity, reduced_q, temperature=None, structure_factor=None, y=None, ramping=False, scatter=False, background=False):
     """
     Processes data sets, create statistical fits, and outputs plots.
     =============
@@ -129,6 +155,10 @@ def main(test, folder, scan, reduced_intensity, reduced_q, temperature=None, str
     curves_folder = folder + '/' + str(scan) + '/Curves/'
     if not os.path.exists(curves_folder):
         os.makedirs(curves_folder)
+
+    images_folder = folder + '/' + str(scan) + '/Images/'
+    if not os.path.exists(images_folder):
+        os.makedirs(images_folder)
         
     if structure_factor:
         structure_factor_folder = folder + '/' + str(scan) + '/Structure Factor/'
@@ -148,6 +178,7 @@ def main(test, folder, scan, reduced_intensity, reduced_q, temperature=None, str
         
     pinned_q = reduced_q[pinned_pts] #[reduced_q[int(x)] for x in pinned_pts]
 
+    # Designate fit_var
     if y is not None:
         fit_var = y
         np.savetxt(profiles_folder + '/positions.txt', y)
@@ -156,6 +187,10 @@ def main(test, folder, scan, reduced_intensity, reduced_q, temperature=None, str
         fit_var = temperature
         np.savetxt(profiles_folder + '/temperature.txt', temperature)
         np.savetxt(stats_folder + '/temperature.txt', temperature)
+
+    # Save images if scatter and background arrays are passed
+    if scatter:
+        saveimage(image_folder, fit_var, scatter, background)
     
     profile('peak', fit_var, [np.max(x) for x in reduced_intensity], profiles_folder, stats_folder, test, plots_folder)
     profile('peakq', fit_var, [reduced_q[np.argmax(x)] for x in reduced_intensity], profiles_folder, stats_folder, test, plots_folder)

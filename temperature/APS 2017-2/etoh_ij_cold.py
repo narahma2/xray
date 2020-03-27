@@ -52,4 +52,4 @@ reduced_q = np.array(q[sl])
 reduced_intensity = [x[sl] for x in filtered_intensity]
 reduced_intensity = np.array([y/np.trapz(y, x=reduced_q) for y in reduced_intensity])
 
-temperature_processing(test.rsplit('/')[0], folder, test.rsplit('/')[1], reduced_intensity, reduced_q, temperature=[], structure_factor=None, y=y, ramping=False)
+temperature_processing(test.rsplit('/')[0], folder, test.rsplit('/')[1], reduced_intensity, reduced_q, temperature=[], structure_factor=None, y=y, ramping=False, scatter=f['Scatter_images'][:50], background=g['Scatter_images'][:50])
