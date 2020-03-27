@@ -139,52 +139,52 @@ for n, calib_folder in enumerate(calib_folders):
 		with open(folder + '/' + str(scan) + '_data.pckl', 'wb') as f:
 			pickle.dump([x_loc, reduced_q, reduced_intensity, peakq], f)
 	
-#%% Create density map of temperature
-xx = np.linspace(-2,2,81)
-yy = np.linspace(0, 12, 25)
-xv, yv = np.meshgrid(xx, yy)
-keys = list(ij_mapping_T.keys())
-zv = {key: np.zeros(xv.shape) for key in keys}
+	#%% Create density map of temperature
+	xx = np.linspace(-2,2,81)
+	yy = np.linspace(0, 12, 25)
+	xv, yv = np.meshgrid(xx, yy)
+	keys = list(ij_mapping_T.keys())
+	zv = {key: np.zeros(xv.shape) for key in keys}
 
-for ycount, _ in enumerate(ij_mapping_Y):
-	jj = np.sum(np.square(np.abs(yv-ij_mapping_Y[ycount])),1).argmin()
-	for xcount, _ in enumerate(ij_mapping_X[ycount]):
-		for key in ij_mapping_T.keys():
-			ii = np.abs(xv-ij_mapping_X[ycount][xcount]).argmin()
-			zv[key][jj,ii] = ij_mapping_T[key][ycount][xcount]
-			if not (250 <= zv[key][jj,ii] <= 320):
-				zv[key][jj,ii] = 0
+	for ycount, _ in enumerate(ij_mapping_Y):
+		jj = np.sum(np.square(np.abs(yv-ij_mapping_Y[ycount])),1).argmin()
+		for xcount, _ in enumerate(ij_mapping_X[ycount]):
+			for key in ij_mapping_T.keys():
+				ii = np.abs(xv-ij_mapping_X[ycount][xcount]).argmin()
+				zv[key][jj,ii] = ij_mapping_T[key][ycount][xcount]
+				if not (250 <= zv[key][jj,ii] <= 320):
+					zv[key][jj,ii] = 0
 
-def temperature_plot(T, Ttype):    
-	fig, ax = plt.subplots()
-	pc = ax.pcolormesh(xv, yv, T, cmap=plt.cm.bwr, vmin=250, vmax=320)
-	cbar = fig.colorbar(pc)
-	cbar.set_label('Temperature (K)')
-	plt.gca().invert_yaxis()
-	plt.xlabel('X Position (mm)')
-	plt.ylabel('Y Position (mm)')
-	plt.title(Ttype)
-	
-	def format_coord(xx, yy):
-		xarr = xv[0,:]
-		yarr = yv[:,0]
-		if ((xx > xarr.min()) & (xx <= xarr.max()) & 
-			(yy > yarr.min()) & (yy <= yarr.max())):
-			col = np.searchsorted(xarr, xx)-1
-			row = np.searchsorted(yarr, yy)-1
-			zz = T[row, col]
-			return f'x={xx:1.4f}, y={yy:1.4f}, z={zz:1.4f}   [{row},{col}]'
-		else:
-			return f'x={xx:1.4f}, y={yy:1.4f}'
-	
-	ax.format_coord = format_coord
-	
-	plt.show()
-	plt.tight_layout()
-	plt.savefig(folder.rsplit('/y')[0] + '/' + Ttype + '.png')
-	plt.close()
+	def temperature_plot(T, Ttype):    
+		fig, ax = plt.subplots()
+		pc = ax.pcolormesh(xv, yv, T, cmap=plt.cm.bwr, vmin=250, vmax=320)
+		cbar = fig.colorbar(pc)
+		cbar.set_label('Temperature (K)')
+		plt.gca().invert_yaxis()
+		plt.xlabel('X Position (mm)')
+		plt.ylabel('Y Position (mm)')
+		plt.title(Ttype)
+		
+		def format_coord(xx, yy):
+			xarr = xv[0,:]
+			yarr = yv[:,0]
+			if ((xx > xarr.min()) & (xx <= xarr.max()) & 
+				(yy > yarr.min()) & (yy <= yarr.max())):
+				col = np.searchsorted(xarr, xx)-1
+				row = np.searchsorted(yarr, yy)-1
+				zz = T[row, col]
+				return f'x={xx:1.4f}, y={yy:1.4f}, z={zz:1.4f}   [{row},{col}]'
+			else:
+				return f'x={xx:1.4f}, y={yy:1.4f}'
+		
+		ax.format_coord = format_coord
+		
+		plt.show()
+		plt.tight_layout()
+		plt.savefig(folder.rsplit('/y')[0] + '/' + Ttype + '.png')
+		plt.close()
 
-[temperature_plot(zv[x], x) for x in keys]
+	[temperature_plot(zv[x], x) for x in keys]
 	
 	
 	
