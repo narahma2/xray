@@ -125,7 +125,7 @@ for n, calib_folder in enumerate(calib_folders):
 			plt.xlabel('q (Å$^{-1}$)')
 			plt.ylabel('Intensity (arb. units)')
 			plt.autoscale(enable=True, axis='x', tight=True)
-			plt.gca().set_ylim([0, 1.02])
+			# plt.gca().set_ylim([0, 1.02])
 			plt.minorticks_on()
 			plt.tick_params(which='both',direction='in')
 			plt.title(str(y_location[i]) + ' mm')
