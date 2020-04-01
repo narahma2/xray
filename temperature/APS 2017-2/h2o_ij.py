@@ -141,6 +141,8 @@ for n, calib_folder in enumerate(calib_folders):
 		
 		with open(folder + '/' + str(scan) + '_data.pckl', 'wb') as f:
 			pickle.dump([x_loc, reduced_q, reduced_intensity, peakq], f)
+		with open(folder + '/' + str(scan) + '_log.txt', 'a+') as f:
+			f.write(datetime.now().strftime("%d-%b-%Y %I:%M:%S %p"))
 	
 	#%% Create density map of temperature
 	xx = np.linspace(-2,2,81)
