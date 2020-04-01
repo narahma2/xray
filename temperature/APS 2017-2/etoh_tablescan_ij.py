@@ -95,7 +95,7 @@ for i in range(len(reduced_intensity)):
 for x, i in enumerate(positions[0]):
 	y = y_loc[18*x:18*(x+1)]
 	temperature = np.mean(nozzle_T[18*x:18*(x+1)])
-	temperature_processing(test.rsplit('/')[0], folder, test.rsplit('/')[1] + '/Temperature/T' + '{0:05.2f}'.format(temperature).replace('.', 'p'), reduced_intensity[18*x:18*(x+1)], reduced_q, temperature=None, structure_factor=None, y=y, ramping=True)
+	temperature_processing(test.rsplit('/')[0], folder, test.rsplit('/')[1] + '/Temperature/T' + '{0:05.2f}'.format(temperature).replace('.', 'p'), reduced_intensity[18*x:18*(x+1)], reduced_q, temperature=None, structure_factor=None, y=y, ramping=True, scatter=f['Scatter_images'][18*x:18*(x+1)], background=g['Scatter_images'])
 
 for x, i in enumerate(positions):
 	y = y_locs[x]
