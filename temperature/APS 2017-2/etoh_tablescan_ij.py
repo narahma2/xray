@@ -92,11 +92,14 @@ for i in range(len(reduced_intensity)):
 	find_yposition = (np.abs(y_loc[i] - np.array(y_locs))).argmin()
 	reduced_intensity[i] = reduced_intensity[i] / maxVal[find_yposition]
 
+# Constant temperature plots (variable position)
 for x, i in enumerate(positions[0]):
-	y = y_loc[18*x:18*(x+1)]
-	temperature = np.mean(nozzle_T[18*x:18*(x+1)])
-	temperature_processing(test.rsplit('/')[0], folder, test.rsplit('/')[1] + '/Temperature/T' + '{0:05.2f}'.format(temperature).replace('.', 'p'), reduced_intensity[18*x:18*(x+1)], reduced_q, temperature=None, structure_factor=None, y=y, ramping=True, scatter=f['Scatter_images'][18*x:18*(x+1)], background=g['Scatter_images'])
+	if i > 1.9:
+		y = y_loc[18*x:18*(x+1)]
+		temperature = np.mean(nozzle_T[18*x:18*(x+1)])
+		temperature_processing(test.rsplit('/')[0], folder, test.rsplit('/')[1] + '/Temperature/T' + '{0:05.2f}'.format(temperature).replace('.', 'p'), reduced_intensity[18*x:18*(x+1)], reduced_q, temperature=None, structure_factor=None, y=y, ramping=True, scatter=f['Scatter_images'][18*x:18*(x+1)], background=g['Scatter_images'])
 
+# Constant position plots (variable temperature)
 for x, i in enumerate(positions):
 	y = y_locs[x]
 	temperature_processing(test.rsplit('/')[0], folder, test.rsplit('/')[1] + '/Positions/y' + '{0:05.2f}'.format(y).replace('.', 'p'), reduced_intensity[i], reduced_q, temperature=nozzle_T[i], structure_factor=None, y=None, ramping=True)
