@@ -97,7 +97,7 @@ def density(test, q_spacing, T):
 
 def saveimage(images_folder, fit_var, scatter, background):
     """
-    Saves the scatter and background images as 16 bit TIF.
+    Saves the scatter (w/o subtraction) and background images as 16 bit TIF.
     =============
     --VARIABLES--
     images_folder:       Save location of the TIF files.
@@ -108,10 +108,6 @@ def saveimage(images_folder, fit_var, scatter, background):
 
     # Average the background array
     background = np.mean(background, axis=0)
-
-    # Do background subtraction (unless IJ Cold)
-    if 'IJ Cold' not in images_folder:
-        scatter = scatter - background
 
     # Save background
     Image.fromarray(background).save(images_folder + '/BG.tif')
