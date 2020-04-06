@@ -94,10 +94,11 @@ for i in range(len(reduced_intensity)):
 
 # Constant temperature plots (variable position)
 for x, i in enumerate(positions[0]):
-	if i > 1.9:
-		y = y_loc[18*x:18*(x+1)]
-		temperature = np.mean(nozzle_T[18*x:18*(x+1)])
-		temperature_processing(test.rsplit('/')[0], folder, test.rsplit('/')[1] + '/Temperature/T' + '{0:05.2f}'.format(temperature).replace('.', 'p'), reduced_intensity[18*x:18*(x+1)], reduced_q, temperature=None, structure_factor=None, y=y, ramping=True, scatter=f['Scatter_images'][18*x:18*(x+1)], background=g['Scatter_images'])
+	ij_ind = [j for j, v in enumerate(y_loc[18*x:18*(x+1)]) if v > 1.9]
+	ij_sl = slice(ij_ind[0], ij_ind[-1]+1)
+	y = y_loc[ij_sl]
+	temperature = np.mean(nozzle_T[ij_sl])
+	temperature_processing(test.rsplit('/')[0], folder, test.rsplit('/')[1] + '/Temperature/T' + '{0:05.2f}'.format(temperature).replace('.', 'p'), reduced_intensity[ij_sl], reduced_q, temperature=None, structure_factor=None, y=y, ramping=True, scatter=f['Scatter_images'][ij_sl], background=g['Scatter_images'])
 
 # Constant position plots (variable temperature)
 for x, i in enumerate(positions):
