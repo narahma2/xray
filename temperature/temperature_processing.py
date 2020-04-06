@@ -292,18 +292,18 @@ def main(test, folder, scan, reduced_intensity, reduced_q, temperature=None, str
 		with open(folder + '/' + str(scan) + '/' + str(scan) + '_data.pckl', 'wb') as f:
 			pickle.dump([temperature, reduced_q, reduced_intensity], f)
 		with open(folder + '/' + str(scan) + '/' + str(scan) + '_log.txt', 'a+') as f:
-			f.write(datetime.now().strftime("%d-%b-%Y %I:%M:%S %p"))
+			f.write(datetime.now().strftime("\n%d-%b-%Y %I:%M:%S %p"))
 
 	# Save the ethanol (cold/ambient/hot) and water impinging jet data sets and log the date/time processing was done
 	elif y is not None and ramping is False:
 		with open(folder + '/' + str(scan) + '/' + str(scan) + '_data.pckl', 'wb') as f:
 			pickle.dump([y, reduced_q, reduced_intensity], f)
 		with open(folder + '/' + str(scan) + '/' + str(scan) + '_log.txt', 'a+') as f:
-			f.write(datetime.now().strftime("%d-%b-%Y %I:%M:%S %p"))
+			f.write(datetime.now().strftime("\n%d-%b-%Y %I:%M:%S %p"))
 
 	# Save the ethanol ramping impinging jet data set and log the date/time processing was done
 	elif ramping is True:
 		with open(folder + '/' + str(scan) + '/' + str(scan).rsplit('/')[-1] + '_data.pckl', 'wb') as f:
 			pickle.dump([temperature, y, reduced_q, reduced_intensity], f)
 		with open(folder + '/' + str(scan) + '/' + str(scan).rsplit('/')[-1] + '_log.txt', 'a+') as f:
-			f.write(datetime.now().strftime("%d-%b-%Y %I:%M:%S %p"))
+			f.write(datetime.now().strftime("\n%d-%b-%Y %I:%M:%S %p"))
