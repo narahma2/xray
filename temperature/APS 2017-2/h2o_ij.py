@@ -163,7 +163,7 @@ for n, calib_folder in enumerate(calib_folders):
 
 	def temperature_plot(T, Ttype):    
 		fig, ax = plt.subplots()
-		pc = ax.pcolormesh(xv, yv, T, cmap=plt.cm.bwr, vmin=250, vmax=320)
+		pc = ax.pcolormesh(xv, yv, T, cmap=plt.cm.bwr, vmin=270, vmax=300)
 		cbar = fig.colorbar(pc)
 		cbar.set_label('Temperature (K)')
 		plt.gca().invert_yaxis()
