@@ -40,7 +40,7 @@ calibrations = ['408', '409', 'Combined']
 flds = glob.glob(folder + '/IJ Ramping/Positions/y*/')
 
 # Positions array
-positions = np.loadtxt(folder + '/IJ Ramping/Temperature/T281p13/positions.txt')
+positions = np.loadtxt(folder + '/IJ Ramping/Temperature/T281p62/positions.txt')
 
 ## Load in and process data sets
 # Iterate through each selected calibration jet
@@ -66,9 +66,11 @@ for calibration in calibrations:
 			os.makedirs(plots_folder)
 
 		# Load in Positions
+		pos_y = []
 		for i, fld in enumerate(flds):
 			# Y position string (y00p25, y00p05, etc.)
 			yp = fld.rsplit('/')[-2]
+			pos_y.append(float(yp[1:].replace('p','.')))
 
 			# Profile data for the IJ Ramping Positions
 			data = np.loadtxt(fld + '/Profiles/profile_' + profile + '.txt')
@@ -114,7 +116,7 @@ for calibration in calibrations:
 
 	# Plot summaries
 	plt.figure()
-	[plt.plot(positions, summary_rmse[:,j], linewidth=2.0, label=profiles[j]) for j in range(len(profiles))]
+	[plt.plot(pos_y, summary_rmse[:,j], linewidth=2.0, label=profiles[j]) for j in range(len(profiles))]
 	plt.legend()
 	plt.ylabel('RMSE (K)')
 	plt.xlabel('Vertical Location (mm)')
@@ -123,7 +125,7 @@ for calibration in calibrations:
 	plt.close()
 
 	plt.figure()
-	[plt.plot(positions, summary_mape[:,j], linewidth=2.0, label=profiles[j]) for j in range(len(profiles))]
+	[plt.plot(pos_y, summary_mape[:,j], linewidth=2.0, label=profiles[j]) for j in range(len(profiles))]
 	plt.legend()
 	plt.ylabel('MAPE (%)')
 	plt.xlabel('Vertical Location (mm)')
@@ -132,7 +134,7 @@ for calibration in calibrations:
 	plt.close()
 
 	plt.figure()
-	[plt.plot(positions, summary_zeta[:,j], linewidth=2.0, label=profiles[j]) for j in range(len(profiles))]
+	[plt.plot(pos_y, summary_zeta[:,j], linewidth=2.0, label=profiles[j]) for j in range(len(profiles))]
 	plt.legend()
 	plt.ylabel('$\zeta$ (%)')
 	plt.xlabel('Vertical Location (mm)')
@@ -141,7 +143,7 @@ for calibration in calibrations:
 	plt.close()
 
 	plt.figure()
-	[plt.plot(positions, summary_mdlq[:,j], linewidth=2.0, label=profiles[j]) for j in range(len(profiles))]
+	[plt.plot(pos_y, summary_mdlq[:,j], linewidth=2.0, label=profiles[j]) for j in range(len(profiles))]
 	plt.legend()
 	plt.ylabel('MdLQ (-)')
 	plt.xlabel('Vertical Location (mm)')
