@@ -2,7 +2,7 @@
 # @Author: naveed
 # @Date:   2020-04-07 13:37:46
 # @Last Modified by:   naveed
-# @Last Modified time: 2020-04-07 13:50:10
+# @Last Modified time: 2020-04-07 13:54:17
 
 import sys
 if sys.platform == 'win32':
@@ -23,7 +23,7 @@ from Statistics.calc_statistics import polyfit
 
 ## Setup initial parameters
 project_folder = sys_folder + '/X-ray Temperature/APS 2018-1'
-folder = project_folder + '/Processed/Ethanol/IJ65C'
+folder = project_folder + '/Processed/Ethanol'
 
 # Select profiles to be used as thermometers
 profiles = ['aratio', 'peak', 'peakq', 'var', 'skew', 'kurt']
@@ -32,7 +32,7 @@ profiles = ['aratio', 'peak', 'peakq', 'var', 'skew', 'kurt']
 calibration = 'Combined'
 
 # Load in IJ Ramping folders
-flds = ['/Perpendicular', '/Transverse']
+flds = ['/IJ65C/Perpendicular', '/IJ65C/Transverse']
 
 ## Load in and process data sets
 # Iterate through each selected profile
