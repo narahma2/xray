@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: naveed
 # @Date:   2020-04-07 13:37:46
-# @Last Modified by:   naveed
-# @Last Modified time: 2020-04-07 13:54:17
+# @Last Modified by:   rahmann
+# @Last Modified time: 2020-04-07 16:15:34
 
 import sys
 if sys.platform == 'win32':
@@ -68,6 +68,6 @@ for j, profile in enumerate(profiles):
 		plt.xlabel('Y Location (mm)')
 		plt.ylabel('Interpolated Temperature (K)')
 		plt.tight_layout()
-		plt.ylim([280, 350])
+		plt.ylim([270, 350])
 		plt.savefig(plots_folder + '/' + profile + '.png')
 		plt.close()
