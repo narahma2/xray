@@ -78,19 +78,8 @@ reduced_intensity = [x[sl] for x in filtered_intensity]
 # Normalize intensity by the area (same process as the Nature paper)
 reduced_intensity = [y/np.trapz(y, x=reduced_q) for y in reduced_intensity]
 
-# Normalize intensities by the curve's maximum
-# reduced_intensity = [z/np.max(z) for z in reduced_intensity]
-
 # Convert reduced_intensity to numpy array
 reduced_intensity = np.array(reduced_intensity)
-
-maxVal = []
-for i in range(len(positions)):
-	maxVal.append(np.max([reduced_intensity[z] for z in positions[i]]))
-
-for i in range(len(reduced_intensity)):
-	find_yposition = (np.abs(y_loc[i] - np.array(y_locs))).argmin()
-	reduced_intensity[i] = reduced_intensity[i] / maxVal[find_yposition]
 
 # Constant temperature plots (variable position)
 for x, i in enumerate(positions[0]):
