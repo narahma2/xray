@@ -9,7 +9,7 @@ This script tests how much the temperature changes at the different positions.
 @Last Modified time: 2020-04-07 12:37:33
 """
 
-mport sys
+import sys
 if sys.platform == 'win32':
 	sys.path.append('E:/GitHub/xray/general')
 	sys.path.append('E:/GitHub/xray/temperature')
@@ -73,8 +73,6 @@ for calibration in calibrations:
 			nozzleT = T[-1]
 			# Interpolated temperature
 			interpT = p(data)
-			# Fit a linear line of interpT vs. nozzleT
-			fit = polyfit(interpT, nozzleT, 1)
 
 			# Plot results
 			plt.figure()
@@ -84,5 +82,6 @@ for calibration in calibrations:
 			plt.xlabel('Y Location (mm)')
 			plt.ylabel('Interpolated Temperature (K)')
 			plt.tight_layout()
+			plt.ylim([280, 350])
 			plt.savefig(plots_folder + '/' + Tp + '.png')
 			plt.close()
