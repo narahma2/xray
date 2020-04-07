@@ -20,6 +20,7 @@ import os
 import glob
 import numpy as np
 import matplotlib.pyplot as plt
+import pickle
 from scipy.signal import savgol_filter
 from Form_Factor.xray_factor import ItoS
 from temperature_processing import main as temperature_processing
@@ -34,6 +35,13 @@ if not os.path.exists(folder):
     os.makedirs(folder)
     
 scans = ['/Perpendicular', '/Transverse']
+
+# Load calibration data set
+with open(glob.glob(project_folder + '/Processed/Ethanol_700umNozzle/Combined/*.pckl')[0], 'rb') as f:
+    temperature_cal, reduced_q_cal, reduced_intensity_cal = pickle.load(f)
+
+# Select the 65 C temperature case from the calibration set
+cal_intensity_338 = reduced_intensity_cal[np.argmin(abs(temperature_cal - 338))]
 
 for scan in scans:
     # Create folders
@@ -75,11 +83,12 @@ for scan in scans:
     
     plt.figure()
     [plt.plot(reduced_q, x, color='C'+str(i), label='y = ' + str(y_loc[i]) + ' mm') for i,x in enumerate(reduced_intensity)]
+    plt.plot(reduced_q_cal, cal_intensity_338, color='k', linestyle='--', label='Calib. Jet')
     plt.legend()
     plt.xlabel('q (Å$^{-1}$)')
     plt.ylabel('Intensity (a.u.)')
 #    plt.ylim([0.1, 1.1])
-    plt.title(scan)
+    plt.title(scan[1:])
     plt.tight_layout()
     plt.savefig(folder + scan + '/superimposed.png')
        
@@ -93,6 +102,7 @@ for i,_ in enumerate(intensity_tran):
     plt.subplot(2,3,i+1)
     plt.plot(reduced_q, intensity_perp[i], color='k', label='Perpendicular', linestyle='--')
     plt.plot(reduced_q, intensity_tran[i], color='k', label='Transverse', linestyle='-')
+    plt.plot(reduced_q_cal, cal_intensity_338, color='r', label='Calib. Jet')
     plt.title('y = ' + str(y_loc[i]) + ' mm', fontdict = {'fontsize' : 18})
     plt.xlim([0.6, 1.75])
     plt.ylim([0.2, 2])
@@ -101,7 +111,7 @@ for i,_ in enumerate(intensity_tran):
     plt.tight_layout()
 ax = plt.gca()
 handles, labels = ax.get_legend_handles_labels()
-fig.legend(handles, labels, loc='upper right', prop={'size': 'medium'})
+fig.legend(handles, labels, loc='lower right', prop={'size': 'small'})
 fig.suptitle('Ethanol Impinging Jet @ 65 °C', fontsize=18, weight='bold')
 fig.subplots_adjust(top=0.82)
 fig.savefig(folder + '/combined.png')
