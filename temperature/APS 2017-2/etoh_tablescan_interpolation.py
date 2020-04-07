@@ -31,7 +31,7 @@ project_folder = sys_folder + '/X-ray Temperature/APS 2017-2'
 folder = project_folder + '/Processed/Ethanol'
 
 # Select profiles to be used as thermometers
-profiles = ['aratio', 'peakq', 'var', 'skew', 'kurt']
+profiles = ['aratio', 'peak', 'peakq', 'var', 'skew', 'kurt']
 
 # Select calibration data sets
 calibrations = ['408', '409', 'Combined']

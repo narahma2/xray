@@ -112,14 +112,15 @@ for n, calib_folder in enumerate(calib_folders):
 		concavity = [savgol_filter(j, 55, 3) for j in concavity]
 		peak_locs = [find_peaks(k, height=0.00001, distance=100)[0] for k in concavity]
 		
+		# Create profiles
+		peak, ij_mapping_T = calibrate(folder, calib_folder, 'peak', ij_mapping_T, np.array([reduced_intensity[x[0]] for x in peak_locs]), x_loc)
 		peakq, ij_mapping_T = calibrate(folder, calib_folder, 'peakq', ij_mapping_T, np.array([reduced_q[x[0]] for x in peak_locs]), x_loc)
-		# q2, ij_mapping_T = calibrate(folder, calib_folder, 'q2', ij_mapping_T, np.array([reduced_q[x[1]] if len(x) == 2 else np.nan for x in peak_locs]), x_loc)
 		_, ij_mapping_T = calibrate(folder, calib_folder, 'aratio', ij_mapping_T, [np.trapz(x[:pinned_sl], reduced_q[:pinned_sl]) / np.trapz(x[pinned_sl:], reduced_q[pinned_sl:]) for x in reduced_intensity], x_loc)
 		_, ij_mapping_T = calibrate(folder, calib_folder, 'var', ij_mapping_T, [stats.skew(k) for k in reduced_intensity], x_loc)
 		_, ij_mapping_T = calibrate(folder, calib_folder, 'skew', ij_mapping_T, [np.var(k) for k in reduced_intensity], x_loc)
 		_, ij_mapping_T = calibrate(folder, calib_folder, 'kurt', ij_mapping_T, [stats.kurtosis(k) for k in reduced_intensity], x_loc)
 		
-			
+		# Plot intensity curves
 		for j,_ in enumerate(reduced_intensity):
 			plt.figure()
 			plt.plot(reduced_q, reduced_intensity[j], color='k', linewidth=2.0, label='x = ' + str(round(x_loc[j],2)) + ' mm')
@@ -143,7 +144,7 @@ for n, calib_folder in enumerate(calib_folders):
 		with open(folder + '/' + str(scan) + '_data.pckl', 'wb') as f:
 			pickle.dump([x_loc, reduced_q, reduced_intensity, peakq], f)
 		with open(folder + '/' + str(scan) + '_log.txt', 'a+') as f:
-			f.write(datetime.now().strftime("%d-%b-%Y %I:%M:%S %p"))
+			f.write(datetime.now().strftime("\n%d-%b-%Y %I:%M:%S %p"))
 	
 	#%% Create density map of temperature
 	xx = np.linspace(-2,2,81)
