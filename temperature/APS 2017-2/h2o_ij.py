@@ -113,7 +113,7 @@ for n, calib_folder in enumerate(calib_folders):
 		peak_locs = [find_peaks(k, height=0.00001, distance=100)[0] for k in concavity]
 		
 		# Create profiles
-		peak, ij_mapping_T = calibrate(folder, calib_folder, 'peak', ij_mapping_T, np.array([reduced_intensity[x[0]] for x in peak_locs]), x_loc)
+		peak, ij_mapping_T = calibrate(folder, calib_folder, 'peak', ij_mapping_T, np.array([reduced_intensity[n][x[0]] for n, x in enumerate(peak_locs)]), x_loc)
 		peakq, ij_mapping_T = calibrate(folder, calib_folder, 'peakq', ij_mapping_T, np.array([reduced_q[x[0]] for x in peak_locs]), x_loc)
 		_, ij_mapping_T = calibrate(folder, calib_folder, 'aratio', ij_mapping_T, [np.trapz(x[:pinned_sl], reduced_q[:pinned_sl]) / np.trapz(x[pinned_sl:], reduced_q[pinned_sl:]) for x in reduced_intensity], x_loc)
 		_, ij_mapping_T = calibrate(folder, calib_folder, 'var', ij_mapping_T, [stats.skew(k) for k in reduced_intensity], x_loc)
