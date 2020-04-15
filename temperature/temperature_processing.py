@@ -48,7 +48,7 @@ def profile(name, fit_var, profile, profiles_folder, stats_folder, test, plots_f
 	=============
 	--VARIABLES--
 	name:               Profile name ('peak', 'q1', etc.)
-	fit_var:            Y axis variable (temperature or y location)
+	fit_var:            Y axis variable (temperature, y location, or index)
 	profile:            X axis variable ('peak', 'q1', etc.)
 	profiles_folder:    Location where profiles (X axis values) will be saved.
 	stats_folder:       Location where statistics (polynomial fit) will be saved.
@@ -56,26 +56,29 @@ def profile(name, fit_var, profile, profiles_folder, stats_folder, test, plots_f
 	plots_folder        Location where plots will be saved.
 	"""
 
-	profile_polyfit = polyfit(profile, fit_var, 1)
 	np.savetxt(profiles_folder + '/profile_' + name + '.txt', profile)
-	np.savetxt(stats_folder + '/' + name + '_polynomial.txt', profile_polyfit['polynomial'])
-	
-	plt.figure()
-	plt.plot(profile, fit_var, ' o', markerfacecolor='none', markeredgecolor='b', label='Data')
-	plt.plot(profile, profile_polyfit['function'](profile), 'k', linewidth=2.0, label='y = ' + '%0.2f'%profile_polyfit['polynomial'][0] + 'x + ' + '%0.2f'%profile_polyfit['polynomial'][1])
-	plt.title(test + ' ' + name + ' - R$^2$ = ' + str(round(profile_polyfit['determination'],4)))
-	plt.legend()
-	if any(x in profiles_folder for x in ['IJ Ramping/Temperature', 'IJ Ambient', 'IJ65', 'Cold']):
-		plt.ylabel('Y Location (mm)')
-	else:
-		plt.ylabel('Temperature (K)')
-	plt.xlabel(name)
-	plt.autoscale(enable=True, axis='x', tight=True)
-	plt.minorticks_on()
-	plt.tick_params(which='both',direction='in')
-	plt.tight_layout()
-	plt.savefig(plots_folder + name + '.png')
-	plt.close()
+
+	# Do fitting and plots only for the temperature/y location folders (not for the pooled IJ ramping case)
+	if fit_var[-1] != 252:	
+		profile_polyfit = polyfit(profile, fit_var, 1)
+		np.savetxt(stats_folder + '/' + name + '_polynomial.txt', profile_polyfit['polynomial'])
+		
+		plt.figure()
+		plt.plot(profile, fit_var, ' o', markerfacecolor='none', markeredgecolor='b', label='Data')
+		plt.plot(profile, profile_polyfit['function'](profile), 'k', linewidth=2.0, label='y = ' + '%0.2f'%profile_polyfit['polynomial'][0] + 'x + ' + '%0.2f'%profile_polyfit['polynomial'][1])
+		plt.title(test + ' ' + name + ' - R$^2$ = ' + str(round(profile_polyfit['determination'],4)))
+		plt.legend()
+		if any(x in profiles_folder for x in ['IJ Ramping/Temperature', 'IJ Ambient', 'IJ65', 'Cold']):
+			plt.ylabel('Y Location (mm)')
+		else:
+			plt.ylabel('Temperature (K)')
+		plt.xlabel(name)
+		plt.autoscale(enable=True, axis='x', tight=True)
+		plt.minorticks_on()
+		plt.tick_params(which='both',direction='in')
+		plt.tight_layout()
+		plt.savefig(plots_folder + name + '.png')
+		plt.close()
 	
 def density(test, q_spacing, T):
 	"""
@@ -117,7 +120,7 @@ def saveimage(images_folder, fit_var, scatter, background):
 	[Image.fromarray(x).save(images_folder + '/' + '%03i'%n + '_' + ('%06.2f'%fit_var[n]).replace('.', 'p') + '.tif') for n, x in enumerate(scatter)]
 
 	
-def main(test, folder, scan, reduced_intensity, reduced_q, temperature=None, structure_factor=None, y=None, ramping=False, scatter=None, background=None):
+def main(test, folder, scan, reduced_intensity, reduced_q, temperature=None, structure_factor=None, y=None, ramping=False, scatter=None, background=None, pooled=False):
 	"""
 	Processes data sets, create statistical fits, and outputs plots.
 	=============
@@ -131,6 +134,7 @@ def main(test, folder, scan, reduced_intensity, reduced_q, temperature=None, str
 	structure_factor    Structure factor profiles (water only).
 	y                   Vertical location in spray (IJ only).
 	ramping             Ramping IJ case (True/False).
+	pooled 				Ramping IJ pooled case (True/False)
 	"""
 
 	profiles_folder = folder + '/' + str(scan) + '/Profiles/'
@@ -158,10 +162,10 @@ def main(test, folder, scan, reduced_intensity, reduced_q, temperature=None, str
 		if not os.path.exists(structure_factor_folder):
 			os.makedirs(structure_factor_folder)
 	
-	#reduced_intensity = np.array([x / np.max(x) for x in reduced_intensity])
-
-	if 'IJ' in test and 'Ethanol' in test:
+	if 'IJ' in str(scan) and 'Ethanol' in test:
 		pinned_pts = np.abs(reduced_q - 1.40).argmin()
+	elif 'IJ' in str(scan) and 'Water' in test:
+		pinned_pts = np.abs(reduced_q - 2.79).argmin()
 	else:
 		## Find pinned points in the curves (least variation)
 		intensity_std = np.std(reduced_intensity, axis=0)
@@ -172,21 +176,27 @@ def main(test, folder, scan, reduced_intensity, reduced_q, temperature=None, str
 	pinned_q = reduced_q[pinned_pts] #[reduced_q[int(x)] for x in pinned_pts]
 
 	# Designate fit_var
-	if y is not None:
-		fit_var = y
-		np.savetxt(profiles_folder + '/positions.txt', y)
-		np.savetxt(stats_folder + '/positions.txt', y)
-	elif temperature is not None:
-		fit_var = temperature
-		np.savetxt(profiles_folder + '/temperature.txt', temperature)
-		np.savetxt(stats_folder + '/temperature.txt', temperature)
-
+	if pooled:
+		index = np.linspace(1, len(reduced_intensity), len(reduced_intensity))
+		fit_var = index
+		data_label = ''
+	else:
+		if y is not None:
+			fit_var = y
+			data_label = ' mm'
+			np.savetxt(profiles_folder + '/positions.txt', y)
+			np.savetxt(stats_folder + '/positions.txt', y)
+		elif temperature is not None:
+			fit_var = temperature
+			data_label = ' K'
+			np.savetxt(profiles_folder + '/temperature.txt', temperature)
+			np.savetxt(stats_folder + '/temperature.txt', temperature)
+		
 	# Save images if scatter and background arrays are passed
 	if scatter is not None:
 		images_folder = folder + '/' + str(scan) + '/Images/'
 		if not os.path.exists(images_folder):
 			os.makedirs(images_folder)
-
 		saveimage(images_folder, fit_var, scatter, background)
 	
 	profile('peak', fit_var, [np.max(x) for x in reduced_intensity], profiles_folder, stats_folder, test, plots_folder)
@@ -219,7 +229,7 @@ def main(test, folder, scan, reduced_intensity, reduced_q, temperature=None, str
 		
 		# Create intensity plots with q values of interest highlighted
 		plt.figure()
-		plt.plot(reduced_q, reduced_intensity[i], linestyle='-', color=(rr[i],0,bb[i]), linewidth=2.0, label=str(round(fit_var[i],1)) + ' K')
+		plt.plot(reduced_q, reduced_intensity[i], linestyle='-', color=(rr[i],0,bb[i]), linewidth=2.0, label=str(round(fit_var[i],1)) + data_label)
 		plt.axvline(x=profile_peakq[i], linestyle='--', color='C1', label='peakq = ' + str(round(profile_peakq[i],2)))
 		plt.legend(loc='upper right')
 		plt.xlabel('q (Å$^{-1}$)')
@@ -233,14 +243,12 @@ def main(test, folder, scan, reduced_intensity, reduced_q, temperature=None, str
 		plt.savefig(curves_folder +  '/curves_' + str(round(fit_var[i],1)) + '.png')
 		plt.close()
 			
-	
-	# if IJ is False:
 	if structure_factor:    
 		for i,_ in enumerate(structure_factor):
 			np.savetxt(tests_folder + '/' + f"{i:02d}" + '_' + str(round(temperature[i],2)).replace('.','p') + 'K' + '.txt', structure_factor[i])
 			
 			plt.figure()
-			plt.plot(reduced_q, structure_factor[i], linestyle='-', color=(rr[i],0,bb[i]), linewidth=2.0, label=str(round(temperature[i],1)) + ' K')
+			plt.plot(reduced_q, structure_factor[i], linestyle='-', color=(rr[i],0,bb[i]), linewidth=2.0, label=str(round(temperature[i],1)) + data_label)
 			plt.legend(loc='upper right')
 			plt.xlabel('q (Å$^{-1}$)')
 			plt.ylabel('Structure Factor (a.u.)')
@@ -253,13 +261,17 @@ def main(test, folder, scan, reduced_intensity, reduced_q, temperature=None, str
 			plt.close()
 			
 	np.savetxt(folder + '/' + str(scan) + '/q_range.txt', reduced_q)
-	if temperature is not None:
+	if pooled:
 		np.savetxt(folder + '/' + str(scan) + '/temperature.txt', temperature)
-	elif y is not None:
 		np.savetxt(folder + '/' + str(scan) + '/positions.txt', y)
+	else:
+		if temperature is not None:
+			np.savetxt(folder + '/' + str(scan) + '/temperature.txt', temperature)
+		elif y is not None:
+			np.savetxt(folder + '/' + str(scan) + '/positions.txt', y)
 	#%%
 	
-	if not ramping:
+	if 'IJ' not in str(scan):
 		# Standard deviation plot of all intensities
 		plt.figure()
 		plt.plot(reduced_q, intensity_std, linewidth='2.0')
@@ -288,7 +300,7 @@ def main(test, folder, scan, reduced_intensity, reduced_q, temperature=None, str
 	plt.close()
 	
 	# Save the calibration data sets and log the date/time processing was done
-	if temperature is not None and ramping is False:
+	if temperature is not None and ramping is False and 'IJ' not in str(scan):
 		with open(folder + '/' + str(scan) + '/' + str(scan) + '_data.pckl', 'wb') as f:
 			pickle.dump([temperature, reduced_q, reduced_intensity], f)
 		with open(folder + '/' + str(scan) + '/' + str(scan) + '_log.txt', 'a+') as f:
