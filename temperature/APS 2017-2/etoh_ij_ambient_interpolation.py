@@ -32,7 +32,7 @@ folder = project_folder + '/Processed/Ethanol'
 profiles = ['aratio', 'peak', 'peakq', 'var', 'skew', 'kurt']
 
 # Select calibration data sets
-calibration = '409'
+calibration = 'Combined'
 
 # Load in IJ Ramping folders
 flds = ['/IJ Ambient']
@@ -42,7 +42,7 @@ flds = ['/IJ Ambient']
 for j, profile in enumerate(profiles):
 	# Create polynomial object based on selected profile & calibration jet
 	# Load APS 2018-1 for 'Combined'
-	p = np.poly1d(np.loadtxt(folder + '/' + calibration + '/Statistics/' + profile + '_polynomial.txt'))
+	p = np.poly1d(np.loadtxt(folder.replace('APS 2017-2', 'APS 2018-1').replace('Ethanol', 'Ethanol_700umNozzle') + '/' + calibration + '/Statistics/' + profile + '_polynomial.txt'))
 
 	# Load in Positions
 	T = []
@@ -65,7 +65,7 @@ for j, profile in enumerate(profiles):
 
 		# Plot results
 		plt.figure()
-		plt.plot(positions, interpT, ' o', markerfacecolor='none', markeredgecolor='b', label='Data')
+		plt.plot(positions, interpT, '-o', markerfacecolor='none', markeredgecolor='b', label='Data')
 		plt.title('T = 298 K - ' + calibration + ': ' + profile)
 		plt.legend()
 		plt.xlabel('Y Location (mm)')
