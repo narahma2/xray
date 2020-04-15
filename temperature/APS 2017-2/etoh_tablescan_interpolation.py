@@ -34,22 +34,22 @@ folder = project_folder + '/Processed/Ethanol'
 profiles = ['aratio', 'peak', 'peakq', 'var', 'skew', 'kurt']
 
 # Select calibration data sets
-calibrations = ['408', '409', 'Combined']
+calibrations = ['408','409','Combined']
 
 # Load in IJ Ramping folders
 flds = glob.glob(folder + '/IJ Ramping/Positions/y*/')
 
 # Positions array
-positions = np.loadtxt(folder + '/IJ Ramping/Temperature/T281p62/positions.txt')
+positions = np.loadtxt(glob.glob(folder + '/IJ Ramping/Temperature/T*')[0] + '/positions.txt')
 
 ## Load in and process data sets
 # Iterate through each selected calibration jet
 for calibration in calibrations:
 	# Initialize summary arrays
-	summary_rmse = np.zeros((len(flds), len(profiles)))
-	summary_mape = np.zeros((len(flds), len(profiles)))
-	summary_zeta = np.zeros((len(flds), len(profiles)))
-	summary_mdlq = np.zeros((len(flds), len(profiles)))
+	summary_rmse = np.nan * np.zeros((len(flds), len(profiles)))
+	summary_mape = np.nan * np.zeros((len(flds), len(profiles)))
+	summary_zeta = np.nan * np.zeros((len(flds), len(profiles)))
+	summary_mdlq = np.nan * np.zeros((len(flds), len(profiles)))
 
 	# Iterate through each selected profile
 	for j, profile in enumerate(profiles):
@@ -64,6 +64,9 @@ for calibration in calibrations:
 		plots_folder = folder + '/IJ Ramping/PositionsInterp/' + calibration + '_' + profile
 		if not os.path.exists(plots_folder):
 			os.makedirs(plots_folder)
+
+		summary_nozzleT = []
+		summary_interpT = []
 
 		# Load in Positions
 		pos_y = []
@@ -100,6 +103,8 @@ for calibration in calibrations:
 			summary_mape[i,j] = mape
 			summary_zeta[i,j] = zeta
 			summary_mdlq[i,j] = mdlq
+			summary_nozzleT.append(nozzleT)
+			summary_interpT.append(interpT)
 
 			# Plot results
 			plt.figure()
@@ -113,6 +118,18 @@ for calibration in calibrations:
 			plt.tight_layout()
 			plt.savefig(plots_folder + '/' + yp + '.png')
 			plt.close()
+
+		slices = [1, 3, 5, 7, 9, 11, 12, 13]
+		plt.figure()
+		[plt.plot(summary_nozzleT[i], summary_interpT[i], linewidth=2.0, label=str(pos_y[i]) + ' mm') for i in slices]
+		plt.legend()
+		plt.xlim([270, 350])
+		plt.ylim([270, 350])
+		plt.ylabel('Interpolated Temperature (K)')
+		plt.xlabel('Nozzle Temperature (K)')
+		plt.title(calibration + ': ' + profile)
+		plt.savefig(plots_folder + '/temperatures.png')
+		plt.close()
 
 	# Plot summaries
 	plt.figure()

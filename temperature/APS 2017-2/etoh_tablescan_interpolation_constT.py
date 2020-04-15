@@ -34,13 +34,13 @@ folder = project_folder + '/Processed/Ethanol'
 profiles = ['aratio', 'peak', 'peakq', 'var', 'skew', 'kurt']
 
 # Select calibration data sets
-calibrations = ['408', '409', 'Combined']
+calibrations = ['408','409','Combined']
 
 # Load in IJ Ramping folders
 flds = glob.glob(folder + '/IJ Ramping/Temperature/T*/')
 
 # Positions array
-positions = np.loadtxt(folder + '/IJ Ramping/Temperature/T281p62/positions.txt')
+positions = np.loadtxt(glob.glob(folder + '/IJ Ramping/Temperature/T*')[0] + '/positions.txt')
 
 ## Load in and process data sets
 # Iterate through each selected calibration jet
@@ -61,6 +61,8 @@ for calibration in calibrations:
 
 		# Load in Positions
 		T = []
+		combined_nozzleT = []
+		combined_interpT = []
 		for i, fld in enumerate(flds):
 			# Y position string (y00p25, y00p05, etc.)
 			Tp = fld.rsplit('/')[-2]
@@ -74,6 +76,9 @@ for calibration in calibrations:
 			# Interpolated temperature
 			interpT = p(data)
 
+			combined_nozzleT.append(T[-1])
+			combined_interpT.append(interpT)
+
 			# Plot results
 			plt.figure()
 			plt.plot(positions, interpT, ' o', markerfacecolor='none', markeredgecolor='b', label='Data')
@@ -85,3 +90,16 @@ for calibration in calibrations:
 			plt.ylim([280, 350])
 			plt.savefig(plots_folder + '/' + Tp + '.png')
 			plt.close()
+
+		slices = [2, 3, 6, 9, 10, 13]
+		# Plot combined results
+		plt.figure()
+		[plt.plot(positions, combined_interpT[x], '-o', color='C'+str(i), label=str(round(combined_nozzleT[x])) + ' K') for i, x in enumerate(slices)]
+		plt.title(calibration + ': ' + profile)
+		plt.legend(title='Nozzle T', loc='upper right')
+		plt.xlabel('Y Location (mm)')
+		plt.ylabel('Interpolated Temperature (K)')
+		plt.tight_layout()
+		plt.ylim([260, 350])
+		plt.savefig(plots_folder + '/combined.png')
+		plt.close()
