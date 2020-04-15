@@ -31,8 +31,10 @@ project_folder = sys_folder + '/X-ray Temperature/APS 2017-2/'
 # Water: 400, 401, 403
 # Ethanol: 404, 408, 409
 # Dodecane: 414, 415
-scans = [397, 398, 400, 401, 403, 404, 408, 409, 414, 415]
-tests = ['Water','Water','Water','Water','Water', 'Ethanol','Ethanol','Ethanol', 'Dodecane','Dodecane']
+# scans = [397, 398, 400, 401, 403, 404, 408, 409, 414, 415]
+# tests = ['Water','Water','Water','Water','Water', 'Ethanol','Ethanol','Ethanol', 'Dodecane','Dodecane']
+scans = [400, 401, 403, 408,409, 414, 415]
+tests = ['Water','Water','Water', 'Ethanol','Ethanol', 'Dodecane','Dodecane']
 
 def main(test, scan):
     folder = project_folder + 'Processed/' + test
@@ -52,7 +54,6 @@ def main(test, scan):
         bg = [g['Intensity_vs_q'][:,i] for i in range(np.shape(g['Intensity_vs_q'])[1])]
         bg_avg = np.mean(bg, axis=0)
         raw_intensity = [f['Intensity_vs_q'][:,i] for i in range(np.shape(f['Intensity_vs_q'])[1])]
-        intensity = [(x-bg_avg) for x in raw_intensity]
         sl = slice((np.abs(np.array(q) - 1.70)).argmin(), (np.abs(np.array(q) - 3.1)).argmin())
         avg_rows = 12
 
@@ -61,7 +62,6 @@ def main(test, scan):
         bg = [g['Intensity_vs_q'][:,i] for i in range(np.shape(g['Intensity_vs_q'])[1])]
         bg_avg = np.mean(bg, axis=0)
         raw_intensity = [f['Intensity_vs_q'][:,i] for i in range(np.shape(f['Intensity_vs_q'])[1])]
-        intensity = [(x-bg_avg) for x in raw_intensity]
         sl = slice((np.abs(np.array(q) - 1.70)).argmin(), (np.abs(np.array(q) - 3.1)).argmin())
         avg_rows = 20
         
@@ -72,7 +72,6 @@ def main(test, scan):
         bg = [g['Intensity_vs_q'][:,i] for i in range(np.shape(g['Intensity_vs_q'])[1])]
         bg_avg = np.mean(bg, axis=0)
         raw_intensity = [f['Intensity_vs_q'][:,i] for i in range(np.shape(f['Intensity_vs_q'])[1])]
-        intensity = [(x-bg_avg) for x in raw_intensity]
         sl = slice((np.abs(np.array(q) - 1.70)).argmin(), (np.abs(np.array(q) - 3.1)).argmin())
         avg_rows = 20
         
@@ -82,7 +81,6 @@ def main(test, scan):
         bg = [g['Intensity_vs_q'][:,i] for i in range(np.shape(g['Intensity_vs_q'])[1])]
         bg_avg = np.mean(bg, axis=0)
         raw_intensity = [f['Intensity_vs_q'][:,i] for i in range(np.shape(f['Intensity_vs_q'])[1])]
-        intensity = [(x-bg_avg) for x in raw_intensity]
         sl = slice((np.abs(np.array(q) - 0.6)).argmin(), (np.abs(np.array(q) - 1.75)).argmin())
         avg_rows = 5 
         
@@ -91,7 +89,6 @@ def main(test, scan):
         bg = [g['Intensity_vs_q'][:,i] for i in range(np.shape(g['Intensity_vs_q'])[1])]
         bg_avg = np.mean(bg, axis=0)
         raw_intensity = [f['Intensity_vs_q'][:,i] for i in range(np.shape(f['Intensity_vs_q'])[1])]
-        intensity = [(x-bg_avg) for x in raw_intensity]
         sl = slice((np.abs(np.array(q) - 0.6)).argmin(), (np.abs(np.array(q) - 1.75)).argmin())
         avg_rows = 5
         
@@ -101,7 +98,6 @@ def main(test, scan):
         bg = [g['Intensity_vs_q'][:,i] for i in range(np.shape(g['Intensity_vs_q'])[1])]
         bg_avg = np.mean(bg, axis=0)
         raw_intensity = [f['Intensity_vs_q'][:,i] for i in range(np.shape(f['Intensity_vs_q'])[1])]
-        intensity = [(x-bg_avg) for x in raw_intensity]
         sl = slice((np.abs(np.array(q) - 0.6)).argmin(), (np.abs(np.array(q) - 1.75)).argmin())
         avg_rows = 24
         
@@ -110,10 +106,13 @@ def main(test, scan):
         bg = [g['Intensity_vs_q'][:,i] for i in range(np.shape(g['Intensity_vs_q'])[1])]
         bg_avg = np.mean(bg, axis=0)
         raw_intensity = [f['Intensity_vs_q'][:,i] for i in range(np.shape(f['Intensity_vs_q'])[1])]
-        intensity = [(x-bg_avg) for x in raw_intensity]
         sl = slice((np.abs(np.array(q) - 0.6)).argmin(), (np.abs(np.array(q) - 1.75)).argmin())
         avg_rows = 6
     
+    # Background subtraction
+    intensity = [(x-bg_avg) for x in raw_intensity]
+    # intensity = raw_intensity
+
     #%% Intensity correction
     intensity_avg = []
     temperature_avg = []
@@ -136,7 +135,6 @@ def main(test, scan):
     reduced_q = np.array(q[sl])
     reduced_intensity = [x[sl] for x in filtered_intensity]
     reduced_intensity = [y/np.trapz(y, x=reduced_q) for y in reduced_intensity]
-    #reduced_intensity /= np.max(reduced_intensity)
     
     if test == 'Water':
         structure_factor = [ItoS(np.array(reduced_q), x) for x in reduced_intensity]
@@ -175,7 +173,7 @@ def main(test, scan):
     plt.close()
   
 # Run all tests      
-#[main(tests[i], scans[i]) for i,_ in enumerate(scans)]
+[main(tests[i], scans[i]) for i,_ in enumerate(scans)]
     
 # Run select tests (only ethanol & dodecane)
-[main(tests[i], scans[i]) for i in [j for j,_ in enumerate(tests) if tests[j] == 'Ethanol']] 
+# [main(tests[i], scans[i]) for i in [j for j,_ in enumerate(tests) if tests[j] == 'Water']] 
