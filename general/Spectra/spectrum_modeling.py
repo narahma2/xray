@@ -1,19 +1,21 @@
-# -*- coding: utf-8 -*-
 """
-Created on Tue May 23 16:05:35 2018
-
-@author: rahmann
+-*- coding: utf-8 -*-
 
 Imports XOP (power) spectrum, which is saved as a .dat file (XYZ).
 Returns either  a) multiple spectra for white-beam (vertical variation) setup
                 b) singular spectrum
+
+@Author: Naveed (archHarbinger)
+@Date:   Tue May 23 16:05:35 2018
+@Last Modified by:   Naveed (archHarbinger)
+@Last Modified time: 2020-04-03 15:40:47
 """
 
 import pandas as pd
 import numpy as np
 
 
-def multi_angle(xop_path="D:/Naveed/X-ray Chris/Spectrum_Input/xop_power.dat"):
+def multi_angle(xop_path):
     """Used for modeling vertical variation in synchrotron spectra"""
     # [Angle (mrad), Energy (eV), Spectrosc. Power (Watts/eV/mrad)]
     spectrum = pd.read_csv(xop_path, sep='\s+', header=None)
@@ -32,7 +34,7 @@ def multi_angle(xop_path="D:/Naveed/X-ray Chris/Spectrum_Input/xop_power.dat"):
 
     return xop_spectrum
 
-def tube_xop(xop_path="R:/XrayTomo/Spectra Model/80kV_flux.txt"):
+def tube_xop(xop_path):
     """Used for modeling the tube source spectra"""
     # [Energy (eV), Flux (photons/1keV(bw)/mA/mm^2(@1m)/sec)]
     spectrum = pd.read_csv(xop_path, sep='\s+', names=["Energy", "Flux"], skiprows=4)
