@@ -122,7 +122,6 @@ def ideal_ellipse(y, relative_width, relative_max, dx, units='cm'):
     
     x = np.linspace(start=-(len(y)*dx)/2, stop=(len(y)*dx)/2, num=len(y))
     y = y - relative_max
-#    y = savgol_filter(y, 105, 7)
     
     area = np.trapz(y, dx=dx)
     if units == 'cm':
@@ -144,7 +143,7 @@ def ideal_ellipse(y, relative_width, relative_max, dx, units='cm'):
     
     return fitted_radius, fitted_graph, data_graph
 
-def plot_ellipse(data_graph, fitted_graph):
+def plot_ellipse(data_graph, fitted_graph, save_path=None):
     t = np.linspace(0, np.pi)
     a = fitted_graph["a"]
     b = fitted_graph["b"]
@@ -158,3 +157,5 @@ def plot_ellipse(data_graph, fitted_graph):
     plt.title('Ellipse Fitting to EPL Scan')
     plt.xlabel('Horizontal Location [cm]')
     plt.ylabel('EPL [cm]')
+    if save_path is not None:
+        plt.savefig(save_path)
