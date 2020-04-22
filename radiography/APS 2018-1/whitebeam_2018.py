@@ -60,6 +60,35 @@ def spectra_angles(flat='{0}/X-ray Radiography/APS 2018-1/Images/Uniform_Jets/Me
 
 	return angles_mrad
 
+
+def averaged_plots(x_var, y_var, ylabel, xlabel, yscale, name, project_folder, scintillator):
+	"""
+	Creates plots of the averaged variables.
+	=============
+	--VARIABLES--
+	x_var:          	Path to the flat field .TIFF file.
+	y_var:				Y axis variable.
+	ylabel:				Y axis label.
+	xlabel:				X axis label.
+	yscale:				Y scale ('log' or 'linear').
+	name:				Save name for the plot.
+	project_folder:		Location of project folder.
+	scintillator:		Scintillator being used.
+	"""
+	plt.figure()
+	plt.plot(x_var[0], y_var[0], color='k', linewidth=2.0, label='Water')
+	plt.plot(x_var[1], y_var[1], marker='x', markevery=50, linewidth=2.0, label='1.6% KI')
+	plt.plot(x_var[2], y_var[2], linestyle='--', linewidth=2.0, label='3.4% KI')
+	plt.plot(x_var[3], y_var[3], linestyle='-.', linewidth=2.0, label='4.8% KI')
+	plt.plot(x_var[4], y_var[4], linestyle=':', linewidth=2.0, label='8.0% KI')
+	plt.plot(x_var[5], y_var[5], marker='^', markevery=50, linewidth=2.0, label='10.0% KI')
+	plt.plot(x_var[6], y_var[6], linestyle='--', linewidth=2.0, label='11.1% KI')
+	plt.legend()
+	plt.ylabel(ylabel)
+	plt.xlabel(xlabel)
+	plt.yscale(yscale)
+	plt.savefig('{0}/Figures/Averaged_Figures/{1}_{2}.png'.format(project_folder, scintillator, name))
+
 if __name__ == '__main__':
 	# Location of APS 2018-1 data
 	project_folder = '{0}/X-ray Radiography/APS 2018-1/'.format(sys_folder)
@@ -109,7 +138,7 @@ if __name__ == '__main__':
 	LuAG_epl = 0.01     # 100 um
 
 	# Spray EPL
-	spray_epl = np.linspace(0, 1, 1000)
+	spray_epl = np.linspace(0.001, 0.82, 820)
 
 	## Density in g/cm^3
 	# Air density
@@ -190,16 +219,21 @@ if __name__ == '__main__':
 		Transmission_LuAG = [x1/x2 for (x1, x2) in zip(I_LuAG, I0_LuAG)]
 		Transmission_YAG = [x1/x2 for (x1, x2) in zip(I_YAG, I0_YAG)]
 		
-		# Cubic spline fitting of Transmission vs. spray_epl curves (needs to be reversed b/c of monotonically increasing
-		# restriction on 'x', however this does not change the interpolation call)
-		cs_LuAG = [CubicSpline(vertical_px[::-1], spray_epl[::-1]) for vertical_px in Transmission_LuAG]
-		cs_YAG = [CubicSpline(vertical_px[::-1], spray_epl[::-1]) for vertical_px in Transmission_YAG]
+		## Cubic spline fitting of Transmission vs. spray_epl curves (needs to be reversed b/c of monotonically increasing
+		## restriction on 'x', however this does not change the interpolation call)
+		# Function that takes in transmission value (I/I0) and outputs EPL (cm)
+		TtoEPL_LuAG = [CubicSpline(vertical_pix[::-1], spray_epl[::-1]) for vertical_pix in Transmission_LuAG]
+		TtoEPL_YAG = [CubicSpline(vertical_pix[::-1], spray_epl[::-1]) for vertical_pix in Transmission_YAG]
+
+		# Function that takes in EPL (cm) value and outputs transmission value (I/I0)
+		EPLtoT_LuAG = [CubicSpline(spray_epl[::-1], vertical_pix[::-1]) for vertical_pix in Transmission_LuAG]
+		EPLtoT_YAG = [CubicSpline(spray_epl[::-1], vertical_pix[::-1]) for vertical_pix in Transmission_YAG]
 		
 		with open('{0}/Model/{1}_model_LuAG.pckl'.format(project_folder, m), 'wb') as f:
-			pickle.dump([cs_LuAG, spray_epl, Transmission_LuAG], f)
+			pickle.dump([TtoEPL_LuAG, EPLtoT_LuAG, spray_epl, Transmission_LuAG], f)
 
 		with open('{0}/Model/{1}_model_YAG.pckl'.format(project_folder, m), 'wb') as f:
-			pickle.dump([cs_YAG, spray_epl, Transmission_YAG], f)
+			pickle.dump([TtoEPL_YAG, EPLtoT_YAG, spray_epl, Transmission_YAG], f)
 		
 		atten_avg_LuAG[i] = np.nanmean([-np.log(x)/spray_epl for x in Transmission_LuAG], axis=0)
 		trans_avg_LuAG[i] = np.nanmean(Transmission_LuAG, axis=0)
@@ -217,62 +251,9 @@ if __name__ == '__main__':
 	atten_avg = [atten_avg_LuAG, atten_avg_YAG]
 	trans_avg = [trans_avg_LuAG, trans_avg_YAG]
 
+
 	for i, scintillator in enumerate(['LuAG', 'YAG']):
-		plt.figure()
-		plt.plot(trans_avg[i][0], atten_avg[i][0], color='k', linewidth=2.0, label='Water')
-		plt.plot(trans_avg[i][1], atten_avg[i][1], marker='x', markevery=50, linewidth=2.0, label='1.6% KI')
-		plt.plot(trans_avg[i][2], atten_avg[i][2], linestyle='--', linewidth=2.0, label='3.4% KI')
-		plt.plot(trans_avg[i][3], atten_avg[i][3], linestyle='-.', linewidth=2.0, label='4.8% KI')
-		plt.plot(trans_avg[i][4], atten_avg[i][4], linestyle=':', linewidth=2.0, label='8.0% KI')
-		plt.plot(trans_avg[i][5], atten_avg[i][5], marker='^', markevery=50, linewidth=2.0, label='10.0% KI')
-		plt.plot(trans_avg[i][6], atten_avg[i][6], linestyle='--', linewidth=2.0, label='11.1% KI')
-		plt.legend()
-		plt.ylabel('Beam Avg. Atten. Coeff. [1/cm]')
-		plt.xlabel('Transmission')
-		plt.yscale('log')
-		# plt.ylim([0.05, 10.95])
-		plt.xlim([0, 1])
-		plt.savefig('{0}/Figures/Averaged_Figures/{1}_coeff_vs_trans.png'.format(project_folder, scintillator))
-
-		plt.figure()
-		plt.plot(10*np.array(spray_epl), atten_avg[i][0], color='k', linewidth=2.0, label='Water')
-		plt.plot(10*np.array(spray_epl), atten_avg[i][1], marker='x', markevery=50, linewidth=2.0, label='1.6% KI')
-		plt.plot(10*np.array(spray_epl), atten_avg[i][2], linestyle='--', linewidth=2.0, label='3.4% KI')
-		plt.plot(10*np.array(spray_epl), atten_avg[i][3], linestyle='-.', linewidth=2.0, label='4.8% KI')
-		plt.plot(10*np.array(spray_epl), atten_avg[i][4], linestyle=':', linewidth=2.0, label='8.0% KI')
-		plt.plot(10*np.array(spray_epl), atten_avg[i][5], marker='^', markevery=50, linewidth=2.0, label='10.0% KI')
-		plt.plot(10*np.array(spray_epl), atten_avg[i][6], linestyle='--', linewidth=2.0, label='11.1% KI')
-		plt.legend()
-		plt.ylabel('Beam Avg. Atten. Coeff. [1/cm]')
-		plt.xlabel('EPL [mm]')
-		plt.yscale('log')
-		# plt.ylim([0.05, 10.95])
-		plt.savefig('{0}/Figures/Averaged_Figures/{1}_coeff_vs_epl.png'.format(project_folder, scintillator))
-
-		plt.figure()
-		plt.plot(10*np.array(spray_epl), 1-np.array(trans_avg[i][0]), color='k', linewidth=2.0, label='Water')
-		plt.plot(10*np.array(spray_epl), 1-np.array(trans_avg[i][1]), marker='x', markevery=50, linewidth=2.0, label='1.6% KI')
-		plt.plot(10*np.array(spray_epl), 1-np.array(trans_avg[i][2]), linestyle='--', linewidth=2.0, label='3.4% KI')
-		plt.plot(10*np.array(spray_epl), 1-np.array(trans_avg[i][3]), linestyle='-.', linewidth=2.0, label='4.8% KI')
-		plt.plot(10*np.array(spray_epl), 1-np.array(trans_avg[i][4]), linestyle=':', linewidth=2.0, label='8.0% KI')
-		plt.plot(10*np.array(spray_epl), 1-np.array(trans_avg[i][5]), marker='^', markevery=50, linewidth=2.0, label='10.0% KI')
-		plt.plot(10*np.array(spray_epl), 1-np.array(trans_avg[i][6]), linestyle='--', linewidth=2.0, label='11.1% KI')
-		plt.legend()
-		plt.ylabel('Attenuation')
-		plt.xlabel('EPL [mm]')
-		plt.ylim([0, 1])
-		plt.savefig('{0}/Figures/Averaged_Figures/{1}_atten_vs_epl.png'.format(project_folder, scintillator))
-
-		plt.figure()
-		plt.plot(10*np.array(spray_epl), np.array(trans_avg[i][0]), color='k', linewidth=2.0, label='Water')
-		plt.plot(10*np.array(spray_epl), np.array(trans_avg[i][1]), marker='x', markevery=50, linewidth=2.0, label='1.6% KI')
-		plt.plot(10*np.array(spray_epl), np.array(trans_avg[i][2]), linestyle='--', linewidth=2.0, label='3.4% KI')
-		plt.plot(10*np.array(spray_epl), np.array(trans_avg[i][3]), linestyle='-.', linewidth=2.0, label='4.8% KI')
-		plt.plot(10*np.array(spray_epl), np.array(trans_avg[i][4]), linestyle=':', linewidth=2.0, label='8.0% KI')
-		plt.plot(10*np.array(spray_epl), np.array(trans_avg[i][5]), marker='^', markevery=50, linewidth=2.0, label='10.0% KI')
-		plt.plot(10*np.array(spray_epl), np.array(trans_avg[i][6]), linestyle='--', linewidth=2.0, label='11.1% KI')
-		plt.legend()
-		plt.ylabel('Transmission')
-		plt.xlabel('EPL [mm]')
-		plt.ylim([0, 1])
-		plt.savefig('{0}/Figures/Averaged_Figures/{1}_trans_vs_epl.png'.format(project_folder, scintillator))
+		averaged_plots(trans_avg[i], atten_avg[i], 'Beam Avg. Atten. Coeff. [1/cm]', 'Transmission', 'log', 'coeff_vs_trans', project_folder, scintillator)
+		averaged_plots(np.tile(10*np.array(spray_epl), [7, 1]), atten_avg[i], 'Beam Avg. Atten. Coeff. [1/cm]', 'EPL [mm]', 'log', 'coeff_vs_epl', project_folder, scintillator)
+		averaged_plots(np.tile(10*np.array(spray_epl), [7, 1]), 1-np.array(trans_avg[i]), 'Attenuation', 'EPL [mm]', 'linear', 'atten_vs_epl', project_folder, scintillator)
+		averaged_plots(np.tile(10*np.array(spray_epl), [7, 1]), trans_avg[i], 'Transmission', 'EPL [mm]', 'linear', 'trans_vs_epl', project_folder, scintillator)
