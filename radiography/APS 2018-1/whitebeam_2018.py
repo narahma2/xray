@@ -89,6 +89,65 @@ def averaged_plots(x_var, y_var, ylabel, xlabel, yscale, name, project_folder, s
 	plt.yscale(yscale)
 	plt.savefig('{0}/Figures/Averaged_Figures/{1}_{2}.png'.format(project_folder, scintillator, name))
 
+
+def spray_model(input_folder, input_spectra, m, spray_epl, visible_LuAG_hardened, visible_YAG_hardened, I0_LuAG, I0_YAG, project_folder):
+	# Spray attenuation curves
+	liquid_atten = xcom('{0}/{1}.txt'.format(input_folder, m), att_column=5)
+	liquid_atten = xcom_reshape(liquid_atten, input_spectra['Energy'])
+
+	# Spray densities
+	if m == 'water':
+		spray_den = 1.0                         # KI 0%
+	if m == 'KI1p6':
+		spray_den = density_KIinH2O(1.6)        # KI 1.6%
+	if m == 'KI3p4':
+		spray_den = density_KIinH2O(3.4)        # KI 3.4%
+	if m == 'KI4p8':
+		spray_den = density_KIinH2O(4.8)        # KI 4.8%
+	if m == 'KI8p0':
+		spray_den = density_KIinH2O(8)          # KI 8.0%
+	if m == 'KI10p0':
+		spray_den = density_KIinH2O(10)         # KI 10.0%
+	if m == 'KI11p1':
+		spray_den = density_KIinH2O(11.1)       # KI 11.1%
+	
+	## Add in the spray
+	spray_LuAG = [beer_lambert_unknown(incident, liquid_atten['Attenuation'], spray_den, spray_epl) for incident in visible_LuAG_hardened]
+	spray_YAG = [beer_lambert_unknown(incident, liquid_atten['Attenuation'], spray_den, spray_epl) for incident in visible_YAG_hardened]
+
+	# Spray
+	I_LuAG = [np.trapz(x, input_spectra['Energy']) for x in spray_LuAG]
+	I_YAG = [np.trapz(x, input_spectra['Energy']) for x in spray_YAG]
+	
+	## LHS of Beer-Lambert Law
+	Transmission_LuAG = [x1/x2 for (x1, x2) in zip(I_LuAG, I0_LuAG)]
+	Transmission_YAG = [x1/x2 for (x1, x2) in zip(I_YAG, I0_YAG)]
+	
+	## Cubic spline fitting of Transmission and spray_epl curves (needs to be reversed b/c of monotonically increasing
+	## restriction on 'x', however this does not change the interpolation call)
+	# Function that takes in transmission value (I/I0) and outputs EPL (cm)
+	TtoEPL_LuAG = [CubicSpline(vertical_pix[::-1], spray_epl[::-1]) for vertical_pix in Transmission_LuAG]
+	TtoEPL_YAG = [CubicSpline(vertical_pix[::-1], spray_epl[::-1]) for vertical_pix in Transmission_YAG]
+	
+	# Function that takes in EPL (cm) value and outputs transmission value (I/I0)
+	EPLtoT_LuAG = [CubicSpline(spray_epl, vertical_pix) for vertical_pix in Transmission_LuAG]
+	EPLtoT_YAG = [CubicSpline(spray_epl, vertical_pix) for vertical_pix in Transmission_YAG]
+	
+	with open('{0}/Model/{1}_model_LuAG.pckl'.format(project_folder, m), 'wb') as f:
+		pickle.dump([TtoEPL_LuAG, EPLtoT_LuAG, spray_epl, Transmission_LuAG], f)
+
+	with open('{0}/Model/{1}_model_YAG.pckl'.format(project_folder, m), 'wb') as f:
+		pickle.dump([TtoEPL_YAG, EPLtoT_YAG, spray_epl, Transmission_YAG], f)
+
+	atten_avg_LuAG = np.nanmean([-np.log(x)/spray_epl for x in Transmission_LuAG], axis=0)
+	trans_avg_LuAG = np.nanmean(Transmission_LuAG, axis=0)
+
+	atten_avg_YAG = np.nanmean([-np.log(x)/spray_epl for x in Transmission_YAG], axis=0)
+	trans_avg_YAG = np.nanmean(Transmission_YAG, axis=0)
+
+	return atten_avg_LuAG, trans_avg_LuAG, atten_avg_YAG, trans_avg_YAG
+
+
 if __name__ == '__main__':
 	# Location of APS 2018-1 data
 	project_folder = '{0}/X-ray Radiography/APS 2018-1/'.format(sys_folder)
@@ -187,59 +246,7 @@ if __name__ == '__main__':
 	I0_YAG = [np.trapz(x, input_spectra['Energy']) for x in visible_YAG_hardened]
 
 	for i, m in enumerate(model):
-		# Spray attenuation curves
-		liquid_atten = xcom('{0}/{1}.txt'.format(input_folder, m), att_column=5)
-		liquid_atten = xcom_reshape(liquid_atten, input_spectra['Energy'])
-
-		# Spray densities
-		if m == 'water':
-			spray_den = 1.0                         # KI 0%
-		if m == 'KI1p6':
-			spray_den = density_KIinH2O(1.6)        # KI 1.6%
-		if m == 'KI3p4':
-			spray_den = density_KIinH2O(3.4)        # KI 3.4%
-		if m == 'KI4p8':
-			spray_den = density_KIinH2O(4.8)        # KI 4.8%
-		if m == 'KI8p0':
-			spray_den = density_KIinH2O(8)          # KI 8.0%
-		if m == 'KI10p0':
-			spray_den = density_KIinH2O(10)         # KI 10.0%
-		if m == 'KI11p1':
-			spray_den = density_KIinH2O(11.1)       # KI 11.1%
-		
-		## Add in the spray
-		spray_LuAG = [beer_lambert_unknown(incident, liquid_atten['Attenuation'], spray_den, spray_epl) for incident in visible_LuAG_hardened]
-		spray_YAG = [beer_lambert_unknown(incident, liquid_atten['Attenuation'], spray_den, spray_epl) for incident in visible_YAG_hardened]
-
-		# Spray
-		I_LuAG = [np.trapz(x, input_spectra['Energy']) for x in spray_LuAG]
-		I_YAG = [np.trapz(x, input_spectra['Energy']) for x in spray_YAG]
-		
-		## LHS of Beer-Lambert Law
-		Transmission_LuAG = [x1/x2 for (x1, x2) in zip(I_LuAG, I0_LuAG)]
-		Transmission_YAG = [x1/x2 for (x1, x2) in zip(I_YAG, I0_YAG)]
-		
-		## Cubic spline fitting of Transmission vs. spray_epl curves (needs to be reversed b/c of monotonically increasing
-		## restriction on 'x', however this does not change the interpolation call)
-		# Function that takes in transmission value (I/I0) and outputs EPL (cm)
-		TtoEPL_LuAG = [CubicSpline(vertical_pix[::-1], spray_epl[::-1]) for vertical_pix in Transmission_LuAG]
-		TtoEPL_YAG = [CubicSpline(vertical_pix[::-1], spray_epl[::-1]) for vertical_pix in Transmission_YAG]
-
-		# Function that takes in EPL (cm) value and outputs transmission value (I/I0)
-		EPLtoT_LuAG = [CubicSpline(spray_epl[::-1], vertical_pix[::-1]) for vertical_pix in Transmission_LuAG]
-		EPLtoT_YAG = [CubicSpline(spray_epl[::-1], vertical_pix[::-1]) for vertical_pix in Transmission_YAG]
-		
-		with open('{0}/Model/{1}_model_LuAG.pckl'.format(project_folder, m), 'wb') as f:
-			pickle.dump([TtoEPL_LuAG, EPLtoT_LuAG, spray_epl, Transmission_LuAG], f)
-
-		with open('{0}/Model/{1}_model_YAG.pckl'.format(project_folder, m), 'wb') as f:
-			pickle.dump([TtoEPL_YAG, EPLtoT_YAG, spray_epl, Transmission_YAG], f)
-		
-		atten_avg_LuAG[i] = np.nanmean([-np.log(x)/spray_epl for x in Transmission_LuAG], axis=0)
-		trans_avg_LuAG[i] = np.nanmean(Transmission_LuAG, axis=0)
-
-		atten_avg_YAG[i] = np.nanmean([-np.log(x)/spray_epl for x in Transmission_YAG], axis=0)
-		trans_avg_YAG[i] = np.nanmean(Transmission_YAG, axis=0)
+		[atten_avg_LuAG[i], trans_avg_LuAG[i], atten_avg_YAG[i], trans_avg_YAG[i]] = spray_model(input_folder, input_spectra, m, spray_epl, visible_LuAG_hardened, visible_YAG_hardened, I0_LuAG, I0_YAG, project_folder)
 		
 	with open('{0}/Model/averaged_variables_LuAG.pckl'.format(project_folder), 'wb') as f:
 		pickle.dump([spray_epl, atten_avg_LuAG, trans_avg_LuAG], f)
@@ -250,7 +257,6 @@ if __name__ == '__main__':
 	#%% Plot
 	atten_avg = [atten_avg_LuAG, atten_avg_YAG]
 	trans_avg = [trans_avg_LuAG, trans_avg_YAG]
-
 
 	for i, scintillator in enumerate(['LuAG', 'YAG']):
 		averaged_plots(trans_avg[i], atten_avg[i], 'Beam Avg. Atten. Coeff. [1/cm]', 'Transmission', 'log', 'coeff_vs_trans', project_folder, scintillator)
