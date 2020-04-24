@@ -10,6 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 from scipy.signal import savgol_filter, find_peaks, peak_widths
+from scipy.optimize import curve_fit
 
 #%% EPL conversion
 def convert2EPL(test_path, offset, model_pckl, cm_pix, dark_path, flat_path, cropped_view=None, plot=False):
@@ -151,11 +152,21 @@ def plot_ellipse(data_graph, fitted_graph, save_path=None):
     yc = fitted_graph["center"][1]
     
     plt.figure()
-    plt.plot(data_graph["x"], data_graph["y"], label="Data w/ Full Width = " + str(round(a*2,2)) + " cm")
-    plt.plot(xc+a*np.cos(t), yc+b*np.sin(t), label="Fitted Ellipse w/ Diameter = " + str(round(b,2)) + " cm")
+    plt.plot(10*data_graph["x"], 10*data_graph["y"], label="Data w/ Full Width = " + str(round(a*2,2)) + " mm")
+    plt.plot(10*(xc+a*np.cos(t)), 10*(yc+b*np.sin(t)), label="Fitted Ellipse w/ Diameter = " + str(round(b,2)) + " mm")
     plt.legend()
     plt.title('Ellipse Fitting to EPL Scan')
-    plt.xlabel('Horizontal Location [cm]')
-    plt.ylabel('EPL [cm]')
+    plt.xlabel('Horizontal Location (mm)')
+    plt.ylabel('EPL (mm)')
+    if save_path is not None:
+        plt.savefig(save_path)
+
+def plot_widths(ydata, peaks, relative_max, lpos, rpos, save_path):
+    plt.figure()
+    plt.plot(ydata, color='blue')
+    plt.plot(peaks, ydata[peaks], 'x', color='orange')
+    plt.hlines(relative_max, xmin=lpos, xmax=rpos, color='red')
+    plt.title('EPL Scan Widths, Peak = {0:0.2f}'.format(ydata[peaks[0]]))
+    plt.ylabel('EPL (cm)')
     if save_path is not None:
         plt.savefig(save_path)
