@@ -15,6 +15,7 @@ elif sys.platform == 'linux':
 	sys.path.append('/mnt/e/GitHub/xray/temperature')
 	sys_folder = '/mnt/r/'
 
+import os
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
@@ -34,6 +35,9 @@ def spectra_angles(flat='{0}/X-ray Radiography/APS 2018-1/Images/Uniform_Jets/Me
 	"""
 	# Load in the flat field into an array
 	flatfield = np.array(Image.open(flat))
+
+	# Average the flat field horizontally
+	flatfield_avg = np.mean(flatfield, axis=1)
 
 	# Initialize the array to find the vertical middle of the beam
 	beam_middle = np.zeros((flatfield.shape[1]))
@@ -58,7 +62,7 @@ def spectra_angles(flat='{0}/X-ray Radiography/APS 2018-1/Images/Uniform_Jets/Me
 	vertical_indices -= beam_middle_avg
 	angles_mrad = np.arctan((vertical_indices*cm_pix) / length) * 1000
 
-	return angles_mrad
+	return angles_mrad, flatfield_avg
 
 
 def averaged_plots(x_var, y_var, ylabel, xlabel, yscale, name, project_folder, scintillator):
@@ -90,7 +94,61 @@ def averaged_plots(x_var, y_var, ylabel, xlabel, yscale, name, project_folder, s
 	plt.savefig('{0}/Figures/Averaged_Figures/{1}_{2}.png'.format(project_folder, scintillator, name))
 
 
-def spray_model(input_folder, input_spectra, m, spray_epl, visible_LuAG_hardened, visible_YAG_hardened, I0_LuAG, I0_YAG, project_folder):
+def scintillator_response2D(spectra_linfit, scintillator_atten, scintillator_den, scintillator_epl):
+	## Scintillator response
+	# Use the middle spectrum (highest peak) for the scintillator response curve (assume indep. of spectral intensity)
+	# Scintillator response curves were verified in a previous commit to be the same vertically (center = edge)
+	spectra_middle = spectra_linfit(0)
+
+	# Find the transmitted spectrum through the scintillators at middle location
+	scintillator_transmitted = beer_lambert(spectra_middle, scintillator_atten['Attenuation'], scintillator_den, scintillator_epl)
+
+	# Find the detected visible light emission from the scintillator (absorbed spectrum)
+	scintillator_detected = visible_light(spectra_middle, scintillator_transmitted)
+
+	# Find the scintillator response at middle
+	scintillator_response = scintillator_detected / spectra_middle
+
+	return scintillator_response
+
+
+def filtered_spectra(input_folder, input_spectra, spectra, scintillator_response):
+	# Load NIST XCOM attenuation curves
+	air_atten = xcom(input_folder + '/air.txt', att_column=5)
+	Be_atten = xcom(input_folder + '/Be.txt', att_column=5)
+
+	# Reshape XCOM x-axis to match XOP
+	air_atten = xcom_reshape(air_atten, input_spectra['Energy'])
+	Be_atten = xcom_reshape(Be_atten, input_spectra['Energy'])
+
+	## EPL in cm
+	# Air EPL
+	air_epl = 70
+
+	# Be window EPL
+	# See Alan's 'Spray Diagnostics at the Advanced Photon Source 7-BM Beamline' (3 Be windows)
+	Be_epl = 0.075
+
+	## Density in g/cm^3
+	# Air density
+	air_den = 0.001275
+
+	# Beryllium density
+	Be_den = 1.85
+
+	# Apply air filter
+	spectra_filtered = beer_lambert(spectra, air_atten['Attenuation'], air_den, air_epl)
+
+	# Apply Be window filter
+	spectra_filtered = beer_lambert(spectra_filtered, Be_atten['Attenuation'], Be_den, Be_epl)
+
+	# Find detected spectra
+	spectra_detected = spectra_filtered * scintillator_response
+
+	return spectra_filtered, spectra_detected
+
+
+def spray_model(input_folder, input_spectra, m, spray_epl, scintillator, scintillator_detected, I0, project_folder):
 	# Spray attenuation curves
 	liquid_atten = xcom('{0}/{1}.txt'.format(input_folder, m), att_column=5)
 	liquid_atten = xcom_reshape(liquid_atten, input_spectra['Energy'])
@@ -112,43 +170,38 @@ def spray_model(input_folder, input_spectra, m, spray_epl, visible_LuAG_hardened
 		spray_den = density_KIinH2O(11.1)       # KI 11.1%
 	
 	## Add in the spray
-	spray_LuAG = [beer_lambert_unknown(incident, liquid_atten['Attenuation'], spray_den, spray_epl) for incident in visible_LuAG_hardened]
-	spray_YAG = [beer_lambert_unknown(incident, liquid_atten['Attenuation'], spray_den, spray_epl) for incident in visible_YAG_hardened]
+	spray_detected = [beer_lambert_unknown(incident, liquid_atten['Attenuation'], spray_den, spray_epl) for incident in scintillator_detected]
 
 	# Spray
-	I_LuAG = [np.trapz(x, input_spectra['Energy']) for x in spray_LuAG]
-	I_YAG = [np.trapz(x, input_spectra['Energy']) for x in spray_YAG]
+	I = [np.trapz(x, input_spectra['Energy']) for x in spray_detected]
 	
 	## LHS of Beer-Lambert Law
-	Transmission_LuAG = [x1/x2 for (x1, x2) in zip(I_LuAG, I0_LuAG)]
-	Transmission_YAG = [x1/x2 for (x1, x2) in zip(I_YAG, I0_YAG)]
+	Transmission = [x1/x2 for (x1, x2) in zip(I, I0)]
 	
 	## Cubic spline fitting of Transmission and spray_epl curves (needs to be reversed b/c of monotonically increasing
 	## restriction on 'x', however this does not change the interpolation call)
 	# Function that takes in transmission value (I/I0) and outputs EPL (cm)
-	TtoEPL_LuAG = [CubicSpline(vertical_pix[::-1], spray_epl[::-1]) for vertical_pix in Transmission_LuAG]
-	TtoEPL_YAG = [CubicSpline(vertical_pix[::-1], spray_epl[::-1]) for vertical_pix in Transmission_YAG]
+	TtoEPL = [CubicSpline(vertical_pix[::-1], spray_epl[::-1]) for vertical_pix in Transmission]
 	
 	# Function that takes in EPL (cm) value and outputs transmission value (I/I0)
-	EPLtoT_LuAG = [CubicSpline(spray_epl, vertical_pix) for vertical_pix in Transmission_LuAG]
-	EPLtoT_YAG = [CubicSpline(spray_epl, vertical_pix) for vertical_pix in Transmission_YAG]
+	EPLtoT = [CubicSpline(spray_epl, vertical_pix) for vertical_pix in Transmission]
 	
-	with open('{0}/Model/{1}_model_LuAG.pckl'.format(project_folder, m), 'wb') as f:
-		pickle.dump([TtoEPL_LuAG, EPLtoT_LuAG, spray_epl, Transmission_LuAG], f)
+	# Save model
+	model_folder = '{0}/Model/'.format(project_folder)
+	if not os.path.exists(model_folder):
+		os.makedirs(model_folder)
 
-	with open('{0}/Model/{1}_model_YAG.pckl'.format(project_folder, m), 'wb') as f:
-		pickle.dump([TtoEPL_YAG, EPLtoT_YAG, spray_epl, Transmission_YAG], f)
+	with open(model_folder + '/{0}_model_{1}.pckl'.format(m, scintillator), 'wb') as f:
+		pickle.dump([TtoEPL, EPLtoT, spray_epl, Transmission], f)
 
-	atten_avg_LuAG = np.nanmean([-np.log(x)/spray_epl for x in Transmission_LuAG], axis=0)
-	trans_avg_LuAG = np.nanmean(Transmission_LuAG, axis=0)
+	# Calculate average attenuation and transmission
+	atten_avg = np.nanmean([-np.log(x)/spray_epl for x in Transmission], axis=0)
+	trans_avg = np.nanmean(Transmission, axis=0)
 
-	atten_avg_YAG = np.nanmean([-np.log(x)/spray_epl for x in Transmission_YAG], axis=0)
-	trans_avg_YAG = np.nanmean(Transmission_YAG, axis=0)
-
-	return atten_avg_LuAG, trans_avg_LuAG, atten_avg_YAG, trans_avg_YAG
+	return atten_avg, trans_avg
 
 
-if __name__ == '__main__':
+def main():
 	# Location of APS 2018-1 data
 	project_folder = '{0}/X-ray Radiography/APS 2018-1/'.format(sys_folder)
 
@@ -163,34 +216,22 @@ if __name__ == '__main__':
 	input_spectra = xop('{0}/xsurface1.dat'.format(input_folder))
 
 	# Find the angles corresponding to the 2018-1 image vertical pixels
-	angles_mrad = spectra_angles()
+	angles_mrad, _ = spectra_angles()
 
 	# Create an interpolation object based on angle
 	# Passing in an angle in mrad will output an interpolated spectra (w/ XOP as reference) 
 	spectra_linfit = interp1d(input_spectra['Angle'], input_spectra['Power'], axis=0)
-
+	
 	# Create an array containing spectra corresponding to each row of the 2018-1 images
 	spectra2D = spectra_linfit(angles_mrad)
 
 	# Load NIST XCOM attenuation curves
-	air_atten = xcom('{0}/air.txt'.format(input_folder), att_column=5)
-	Be_atten = xcom('{0}/Be.txt'.format(input_folder), att_column=5)
-	YAG_atten = xcom('{0}/YAG.txt'.format(input_folder), att_column=3)
-	LuAG_atten = xcom('{0}/Al5Lu3O12.txt'.format(input_folder), att_column=3)
+	YAG_atten = xcom(input_folder + '/YAG.txt', att_column=3)
+	LuAG_atten = xcom(input_folder + '/Al5Lu3O12.txt', att_column=3)
 
 	# Reshape XCOM x-axis to match XOP
-	air_atten = xcom_reshape(air_atten, input_spectra['Energy'])
-	Be_atten = xcom_reshape(Be_atten, input_spectra['Energy'])
 	YAG_atten = xcom_reshape(YAG_atten, input_spectra['Energy'])
 	LuAG_atten = xcom_reshape(LuAG_atten, input_spectra['Energy'])
-
-	## EPL in cm
-	# Air EPL
-	air_epl = 70
-
-	# Be window EPL
-	# See Alan's 'Spray Diagnostics at the Advanced Photon Source 7-BM Beamline' (3 Be windows)
-	Be_epl = 0.075
 
 	# Scintillator EPL
 	YAG_epl = 0.05      # 500 um
@@ -199,54 +240,32 @@ if __name__ == '__main__':
 	# Spray EPL
 	spray_epl = np.linspace(0.001, 0.82, 820)
 
-	## Density in g/cm^3
-	# Air density
-	air_den = 0.001275
-
-	# Beryllium density
-	Be_den = 1.85
-
 	# Scintillator densities from Crytur <https://www.crytur.cz/materials/yagce/>
 	YAG_den =  4.57
 	LuAG_den = 6.73
 
 	### Apply Beer-Lambert law
 	## Scintillator response
-	# Use the middle spectrum (highest peak) for the scintillator response curve (assume indep. of spectral intensity)
-	spectra_middle = spectra_linfit(0)
+	LuAG_response = scintillator_response2D(spectra_linfit, LuAG_atten, LuAG_den, LuAG_epl)
+	YAG_response = scintillator_response2D(spectra_linfit, YAG_atten, YAG_den, YAG_epl)
 
-	# Find the detected spectra through the scintillators (transmitted spectra)
-	LuAG_detected = beer_lambert(spectra_middle, LuAG_atten['Attenuation'], LuAG_den, LuAG_epl)
-	YAG_detected = beer_lambert(spectra_middle, YAG_atten['Attenuation'], YAG_den, YAG_epl)
+	# Apply filters and find detected visible light emission
+	LuAG = map(lambda x: filtered_spectra(input_folder, input_spectra, x, LuAG_response), spectra2D)
+	LuAG = list(LuAG)
+	LuAG_detected = np.swapaxes(LuAG, 0, 1)[1]
 
-	# Find the scintillator response
-	LuAG_response = LuAG_detected / spectra_middle
-	YAG_response = YAG_detected / spectra_middle
-
-	## Visible spectra (no spray)
-	visible_LuAG = spectra2D * LuAG_response
-	visible_YAG = spectra2D * YAG_response
-
-	## Hardened visible spectra
-	# Air
-	visible_LuAG_hardened = [beer_lambert(incident, air_atten['Attenuation'], air_den, air_epl) for incident in visible_LuAG]
-	visible_YAG_hardened = [beer_lambert(incident, air_atten['Attenuation'], air_den, air_epl) for incident in visible_YAG]
-
-	# Be windows
-	visible_LuAG_hardened = [beer_lambert(incident, Be_atten['Attenuation'], Be_den, Be_epl) for incident in visible_LuAG_hardened]
-	visible_YAG_hardened = [beer_lambert(incident, Be_atten['Attenuation'], Be_den, Be_epl) for incident in visible_YAG_hardened]
-
-	# Correction filter (using air, as Ben did)
-	# visible_LuAG_hardened = [beer_lambert(incident, air_atten['Attenuation'], air_den, 50) for incident in visible_LuAG_hardened]
-	# visible_YAG_hardened = [beer_lambert(incident, air_atten['Attenuation'], air_den, 50) for incident in visible_YAG_hardened]
+	YAG = map(lambda x: filtered_spectra(input_folder, input_spectra, x, YAG_response), spectra2D)
+	YAG = list(YAG)
+	YAG_detected = np.swapaxes(YAG, 0, 1)[1]
 
 	## Total intensity calculations
 	# Flat field
-	I0_LuAG = [np.trapz(x, input_spectra['Energy']) for x in visible_LuAG_hardened]
-	I0_YAG = [np.trapz(x, input_spectra['Energy']) for x in visible_YAG_hardened]
+	I0_LuAG = [np.trapz(x, input_spectra['Energy']) for x in LuAG_detected]
+	I0_YAG = [np.trapz(x, input_spectra['Energy']) for x in YAG_detected]
 
 	for i, m in enumerate(model):
-		[atten_avg_LuAG[i], trans_avg_LuAG[i], atten_avg_YAG[i], trans_avg_YAG[i]] = spray_model(input_folder, input_spectra, m, spray_epl, visible_LuAG_hardened, visible_YAG_hardened, I0_LuAG, I0_YAG, project_folder)
+		[atten_avg_LuAG[i], trans_avg_LuAG[i]] = spray_model(input_folder, input_spectra, m, spray_epl, 'LuAG', LuAG_detected, I0_LuAG, project_folder)
+		[atten_avg_YAG[i], trans_avg_YAG[i]] = spray_model(input_folder, input_spectra, m, spray_epl, 'YAG', YAG_detected, I0_YAG, project_folder)
 		
 	with open('{0}/Model/averaged_variables_LuAG.pckl'.format(project_folder), 'wb') as f:
 		pickle.dump([spray_epl, atten_avg_LuAG, trans_avg_LuAG], f)
@@ -263,3 +282,8 @@ if __name__ == '__main__':
 		averaged_plots(np.tile(10*np.array(spray_epl), [7, 1]), atten_avg[i], 'Beam Avg. Atten. Coeff. [1/cm]', 'EPL [mm]', 'log', 'coeff_vs_epl', project_folder, scintillator)
 		averaged_plots(np.tile(10*np.array(spray_epl), [7, 1]), 1-np.array(trans_avg[i]), 'Attenuation', 'EPL [mm]', 'linear', 'atten_vs_epl', project_folder, scintillator)
 		averaged_plots(np.tile(10*np.array(spray_epl), [7, 1]), trans_avg[i], 'Transmission', 'EPL [mm]', 'linear', 'trans_vs_epl', project_folder, scintillator)
+
+
+# Run this script
+if __name__ == '__main__':
+	main()
