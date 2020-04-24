@@ -25,7 +25,10 @@ def multi_angle(xop_path):
     spectrum = spectrum.sort_values(["Angle", "Energy"])
     spectrum = spectrum.reset_index(drop=True)
     
-    spectrum["Power"] = spectrum["Power"] * spectrum["Energy"]
+    # spectrum["Power"] = spectrum["Power"] * spectrum["Energy"]
+
+    # Convert to mW/keV
+    spectrum["Power"] *= 1000000
 
     # List of spectrum separated by angle (e.g. if there are 336 unique angles, this returns len(spectrum_list) = 336
     spectrum_list = [v for k, v in spectrum.groupby("Angle")]
