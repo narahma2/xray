@@ -147,7 +147,7 @@ def filtered_spectra(input_folder, input_spectra, spectra, scintillator_response
 	spectra_filtered = beer_lambert(spectra_filtered, Be_atten['Attenuation'], Be_den, Be_epl)
 
 	# Apply correction filter (air)
-	spectra_filtered = beer_lambert(spectra_filtered, air_atten['Attenuation'], air_den, 50)
+	# spectra_filtered = beer_lambert(spectra_filtered, air_atten['Attenuation'], air_den, 50)
 
 	# Find detected spectra
 	spectra_detected = spectra_filtered * scintillator_response
