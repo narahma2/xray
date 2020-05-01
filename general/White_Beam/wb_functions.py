@@ -152,8 +152,8 @@ def plot_ellipse(data_graph, fitted_graph, save_path=None):
     yc = fitted_graph["center"][1]
     
     plt.figure()
-    plt.plot(10*data_graph["x"], 10*data_graph["y"], label="Data w/ Full Width = " + str(round(a*2,2)) + " mm")
-    plt.plot(10*(xc+a*np.cos(t)), 10*(yc+b*np.sin(t)), label="Fitted Ellipse w/ Diameter = " + str(round(b,2)) + " mm")
+    plt.plot(10*data_graph["x"], 10*data_graph["y"], label="Data w/ Full Width = " + str(10*round(a*2,2)) + " mm")
+    plt.plot(10*(xc+a*np.cos(t)), 10*(yc+b*np.sin(t)), label="Fitted Ellipse w/ Diameter = " + str(10*round(b,2)) + " mm")
     plt.legend()
     plt.title('Ellipse Fitting to EPL Scan')
     plt.xlabel('Horizontal Location (mm)')
