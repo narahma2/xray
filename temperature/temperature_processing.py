@@ -31,16 +31,21 @@ from scipy.signal import savgol_filter, find_peaks
 from scipy.optimize import curve_fit
 from scipy import stats
 from Statistics.calc_statistics import polyfit
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
 
 # Functions for intensity profile fitting
 def gauss(x,mu,sigma,A):
 	return A*np.exp(-(x-mu)**2/2/sigma**2)
 
+
 def bimodal(x,mu1,sigma1,A1,mu2,sigma2,A2):
 	return gauss(x,mu1,sigma1,A1)+gauss(x,mu2,sigma2,A2)
 
+
 def poly4(x, c0, c1, c2, c3, c4):
 	return c0*x**4 + c1*x**3 + c2*x**2 + c3*x + c4
+
 
 def profile(name, fit_var, profile, profiles_folder, stats_folder, test, plots_folder):
 	"""
@@ -79,7 +84,8 @@ def profile(name, fit_var, profile, profiles_folder, stats_folder, test, plots_f
 		plt.tight_layout()
 		plt.savefig(plots_folder + name + '.png')
 		plt.close()
-	
+
+
 def density(test, q_spacing, T):
 	"""
 	Computes density based on q spacing data. Serves as a measure of error.
@@ -98,6 +104,7 @@ def density(test, q_spacing, T):
 	density_data = pd.read_csv(density_file, sep="\t")
 	temp = density_data["T_" + test[0:3].lower()]
 	dens = density_data["rho" + test[0:3].lower()]
+
 
 def saveimage(images_folder, fit_var, scatter, background):
 	"""
@@ -118,6 +125,20 @@ def saveimage(images_folder, fit_var, scatter, background):
 
 	# Save images
 	[Image.fromarray(x).save(images_folder + '/' + '%03i'%n + '_' + ('%06.2f'%fit_var[n]).replace('.', 'p') + '.tif') for n, x in enumerate(scatter)]
+
+
+def pca(intensity):
+	# StandardScaler
+	scaler = StandardScaler(with_mean=True, with_std=True)
+	scaler.fit(intensity)
+	scaled_intensity = scaler.transform(intensity)
+
+	# PCA
+	pca = PCA(n_components=3)
+	principalComponents = pca.fit_transform(scaled_intensity)
+	pc1 = principalComponents[:,0]
+
+	return pc1
 
 	
 def main(test, folder, scan, reduced_intensity, reduced_q, temperature=None, structure_factor=None, y=None, ramping=False, scatter=None, background=None, pooled=False):
@@ -157,11 +178,11 @@ def main(test, folder, scan, reduced_intensity, reduced_q, temperature=None, str
 	if not os.path.exists(curves_folder):
 		os.makedirs(curves_folder)
 	
-	if structure_factor:
+	if structure_factor is not None:
 		structure_factor_folder = folder + '/' + str(scan) + '/Structure Factor/'
 		if not os.path.exists(structure_factor_folder):
 			os.makedirs(structure_factor_folder)
-	
+
 	if 'IJ' in str(scan) and 'Ethanol' in test:
 		pinned_pts = np.abs(reduced_q - 1.40).argmin()
 	elif 'IJ' in str(scan) and 'Water' in test:
@@ -198,6 +219,9 @@ def main(test, folder, scan, reduced_intensity, reduced_q, temperature=None, str
 		if not os.path.exists(images_folder):
 			os.makedirs(images_folder)
 		saveimage(images_folder, fit_var, scatter, background)
+
+	# Save intensities in tests_folder
+	[np.savetxt('{0}/{1:03.0f}.txt'.format(tests_folder, i), x) for i,x in enumerate(reduced_intensity)]
 	
 	profile('peak', fit_var, [np.max(x) for x in reduced_intensity], profiles_folder, stats_folder, test, plots_folder)
 	profile('peakq', fit_var, [reduced_q[np.argmax(x)] for x in reduced_intensity], profiles_folder, stats_folder, test, plots_folder)
@@ -206,7 +230,7 @@ def main(test, folder, scan, reduced_intensity, reduced_q, temperature=None, str
 	profile('var', fit_var, [np.var(x) for x in reduced_intensity], profiles_folder, stats_folder, test, plots_folder)
 	profile('skew', fit_var, [stats.skew(x) for x in reduced_intensity], profiles_folder, stats_folder, test, plots_folder)
 	profile('kurt', fit_var, [stats.kurtosis(x) for x in reduced_intensity], profiles_folder, stats_folder, test, plots_folder)
-	
+	profile('pca', fit_var, pca(reduced_intensity), profiles_folder, stats_folder, test, plots_folder)
 	profile_peakq = np.loadtxt(profiles_folder + '/profile_peakq.txt')
 
 	rr = np.array([(x-min(fit_var))/(max(fit_var)-min(fit_var)) for x in fit_var])
@@ -243,7 +267,7 @@ def main(test, folder, scan, reduced_intensity, reduced_q, temperature=None, str
 		plt.savefig(curves_folder +  '/curves_' + str(round(fit_var[i],1)) + '.png')
 		plt.close()
 			
-	if structure_factor:    
+	if structure_factor is not None:    
 		for i,_ in enumerate(structure_factor):
 			np.savetxt(tests_folder + '/' + f"{i:02d}" + '_' + str(round(temperature[i],2)).replace('.','p') + 'K' + '.txt', structure_factor[i])
 			
