@@ -29,7 +29,7 @@ from scipy.interpolate import CubicSpline
 from scipy.signal import savgol_filter
 from scipy.interpolate import interp1d
 from whitebeam_2018 import spectra_angles, scintillator_response2D, filtered_spectra
-
+from jet_processing import create_folder
 
 def main():
 	# Location of APS 2018-1 data
@@ -92,9 +92,7 @@ def main():
 	YAG_detected = np.swapaxes(YAG, 0, 1)[1]
 
 	## Plot figures
-	plot_folder = project_folder + '/Figures/Energy_Spectra'
-	if not os.path.exists(plot_folder):
-	    os.makedirs(plot_folder)
+	plot_folder = create_folder(project_folder + '/Figures/Energy_Spectra')
 
 	# Create vertical integrated power curves
 	integrated_xray = np.trapz(spectra2D, input_spectra['Energy'], axis=1)
