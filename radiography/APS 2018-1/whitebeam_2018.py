@@ -25,6 +25,7 @@ from Spectra.spectrum_modeling import multi_angle as xop, xcom, xcom_reshape, de
 from scipy.interpolate import CubicSpline
 from scipy.signal import savgol_filter
 from scipy.interpolate import interp1d
+from jet_processing import create_folder
 
 def spectra_angles(flat='{0}/X-ray Radiography/APS 2018-1/Images/Uniform_Jets/Mean/AVG_Jet_flat2.tif'.format(sys_folder)):
 	"""
@@ -79,6 +80,9 @@ def averaged_plots(x_var, y_var, ylabel, xlabel, yscale, name, project_folder, s
 	project_folder:		Location of project folder.
 	scintillator:		Scintillator being used.
 	"""
+
+	averaged_folder = create_folder('{0}/Figures/Averaged_Figures'.format(project_folder))
+
 	plt.figure()
 	plt.plot(x_var[0], y_var[0], color='k', linewidth=2.0, label='Water')
 	plt.plot(x_var[1], y_var[1], marker='x', markevery=50, linewidth=2.0, label='1.6% KI')
@@ -91,7 +95,7 @@ def averaged_plots(x_var, y_var, ylabel, xlabel, yscale, name, project_folder, s
 	plt.ylabel(ylabel)
 	plt.xlabel(xlabel)
 	plt.yscale(yscale)
-	plt.savefig('{0}/Figures/Averaged_Figures/{1}_{2}.png'.format(project_folder, scintillator, name))
+	plt.savefig(averaged_folder + '/{0}_{1}.png'.format(scintillator, name))
 
 
 def scintillator_response2D(spectra_linfit, scintillator_atten, scintillator_den, scintillator_epl):
@@ -142,6 +146,9 @@ def filtered_spectra(input_folder, input_spectra, spectra, scintillator_response
 	# Apply Be window filter
 	spectra_filtered = beer_lambert(spectra_filtered, Be_atten['Attenuation'], Be_den, Be_epl)
 
+	# Apply correction filter (air)
+	spectra_filtered = beer_lambert(spectra_filtered, air_atten['Attenuation'], air_den, 50)
+
 	# Find detected spectra
 	spectra_detected = spectra_filtered * scintillator_response
 
@@ -187,9 +194,7 @@ def spray_model(input_folder, input_spectra, m, spray_epl, scintillator, scintil
 	EPLtoT = [CubicSpline(spray_epl, vertical_pix) for vertical_pix in Transmission]
 	
 	# Save model
-	model_folder = '{0}/Model/'.format(project_folder)
-	if not os.path.exists(model_folder):
-		os.makedirs(model_folder)
+	model_folder = create_folder('{0}/Model/'.format(project_folder))
 
 	with open(model_folder + '/{0}_model_{1}.pckl'.format(m, scintillator), 'wb') as f:
 		pickle.dump([TtoEPL, EPLtoT, spray_epl, Transmission], f)
