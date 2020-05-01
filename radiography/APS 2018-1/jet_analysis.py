@@ -178,8 +178,7 @@ def main():
 		# Calculate the mean values as needed
 		pivot_mean_peakT = mean_matrix.pivot_table(values='Ratio Peak T', index=['KI %'], columns=['Nozzle Diameter (um)'], aggfunc=np.nanmean)
 		pivot_mean_ellipseT = mean_matrix.pivot_table(values='Ratio Ellipse T', index=['KI %'], columns=['Nozzle Diameter (um)'], aggfunc=np.nanmean)
-		
-		# Create arrays from the pivot tables 
+				# Create arrays from the pivot tables 
 		# Could plot directly from the pivot table but I didn't want to delve too deep into that
 		mean_peakT_700 = pivot_mean_peakT[700]
 		peakT_700_fit = polyfit(KI_conc, mean_peakT_700, 1)
@@ -238,6 +237,13 @@ def main():
 		ellipseT_combined_fit = polyfit(KI_conc, mean_ellipseT_combined, 1)
 		ellipseT_combined_fit_r2 = ellipseT_combined_fit['determination']
 		ellipseT_combined_fit_label = 'y = {0:0.3f}x + {1:0.3f}; R$^2$ {2:0.0f}%'.format(ellipseT_combined_fit['polynomial'][0], ellipseT_combined_fit['polynomial'][1], 100*ellipseT_combined_fit_r2)
+		
+		# Save the linear fitted correction factors
+		with open('{0}/Processed/{1}/{1}_peakT_cf.txt'.format(project_folder, scintillator), 'wb') as f:
+			np.savetxt(f, peakT_combined_fit['function'](KI_conc))
+
+		with open('{0}/Processed/{1}/{1}_ellipseT_cf.txt'.format(project_folder, scintillator), 'wb') as f:
+			np.savetxt(f, ellipseT_combined_fit['function'](KI_conc))
 
 		plt.figure()
 		plt.plot(KI_conc, mean_peakT_combined, color='lightcoral', marker='s', linestyle='', label='Ratio Peak T', zorder=2)
