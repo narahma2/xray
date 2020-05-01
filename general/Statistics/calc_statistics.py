@@ -9,30 +9,68 @@ import numpy as np
 
 # Polynomial regression
 def polyfit(x, y, degree):
-    results = {}
-    
-    coeffs = np.polyfit(x, y, degree)
-    
-    # Polynomial coefficients
-    results['polynomial'] = coeffs.tolist()
-    
-    # r-squared
-    p = np.poly1d(coeffs)
-    results['function'] = p
-    yhat = p(x)
-    ybar = np.sum(y) / len(y)
-    ssreg = np.sum((yhat - ybar)**2)
-    sstot = np.sum((y - ybar)**2)
-    results['determination'] = ssreg / sstot
-    
-    return results
+	results = {}
+	
+	coeffs = np.polyfit(x, y, degree)
+	
+	# Polynomial coefficients
+	results['polynomial'] = coeffs.tolist()
+	
+	# r-squared
+	p = np.poly1d(coeffs)
+	results['function'] = p
+	yhat = p(x)
+	ybar = np.sum(y) / len(y)
+	ssreg = np.sum((yhat - ybar)**2)
+	sstot = np.sum((y - ybar)**2)
+	results['determination'] = ssreg / sstot
+	
+	return results
+
 
 # Compare fit to data
 def comparefit(data, fit):    
-    yhat = fit
-    ybar = np.sum(data) / len(data)
-    ssreg = np.sum((yhat - ybar)**2)
-    sstot = np.sum((data - ybar)**2)
-    determination = ssreg / sstot
-    
-    return determination
+	yhat = fit
+	ybar = np.sum(data) / len(data)
+	ssreg = np.sum((yhat - ybar)**2)
+	sstot = np.sum((data - ybar)**2)
+	determination = ssreg / sstot
+	
+	return determination
+
+
+# Calculate RMSE (root mean squared error)
+def rmse(experimental, theoretical):
+	experimental = np.array(experimental)
+	theoretical = np.array(theoretical)
+	rmse = np.sqrt(((experimental - theoretical)**2).mean())
+
+	return rmse
+
+
+# Calculate MAPE (mean absolute percentage error)
+def mape(experimental, theoretical):
+	experimental = np.array(experimental)
+	theoretical = np.array(theoretical)
+	mape = 100*np.sum(np.abs((experimental - theoretical)/theoretical)) / len(theoretical)
+
+	return mape
+
+
+# Calculate median symmetric accuracy
+def zeta(experimental, theoretical):
+	experimental = np.array(experimental)
+	theoretical = np.array(theoretical)
+	zeta = 100*np.exp(np.median(np.abs(np.log(experimental/theoretical))) - 1)
+
+	return zeta
+
+
+# Calculate MdLQ (median log accuracy ratio)
+# Positive/negative: systematic (over/under)-prediction
+def mdlq(experimental, theoretical):
+	experimental = np.array(experimental)
+	theoretical = np.array(theoretical)
+	mdlq = np.median(np.log(experimental/theoretical))
+
+	return mdlq
