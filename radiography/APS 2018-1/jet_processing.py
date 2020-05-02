@@ -54,8 +54,8 @@ def normalize_jets(project_folder, dark, flatfield, test_matrix, norm_folder):
 		warnings.filterwarnings('default')
 
 		# Correct the Transmission values
-		offset_norm = np.nanmedian(data_norm[offset_sl_x, offset_sl_y])
-		data_norm -= offset_norm
+		offset_norm = 1 - np.nanmedian(data_norm[offset_sl_x, offset_sl_y])
+		data_norm += offset_norm
 
 		# Save Transmission images
 		im = Image.fromarray(data_norm)
@@ -64,18 +64,18 @@ def normalize_jets(project_folder, dark, flatfield, test_matrix, norm_folder):
 
 def process_jet(cm_px, save_folder, scintillator, index, test_name, test_path, TtoEPL, EPLtoT, offset_sl_x, offset_sl_y, data_norm):
 	# Create folders
-	epl_folder = create_folder(save_folder + scintillator + '/EPL')
-	summary_folder = create_folder(save_folder + scintillator + '/Summary')
-	ratio_ellipse_folder = create_folder(save_folder + scintillator + '/RatioEllipse')
-	ratio_peak_folder = create_folder(save_folder + scintillator + '/RatioPeak')
-	vertical_ellipse_folder = create_folder(save_folder + scintillator + '/EllipseVertical')
-	vertical_peak_folder = create_folder(save_folder + scintillator + '/PeakVertical')
-	vertical_optical_folder = create_folder(save_folder + scintillator + '/OpticalVertical')
-	ratio_ellipseT_folder = create_folder(save_folder + scintillator + '/RatioEllipseT')
-	ratio_peakT_folder = create_folder(save_folder + scintillator + '/RatioPeakT')
-	boundary_folder = create_folder(save_folder + scintillator + '/Boundaries')
-	graph_folder = create_folder(save_folder + scintillator + '/Graphs/' + test_name)
-	width_folder = create_folder(save_folder + scintillator + '/Widths/' + test_name)
+	epl_folder = create_folder(save_folder + '/EPL')
+	summary_folder = create_folder(save_folder + '/Summary')
+	ratio_ellipse_folder = create_folder(save_folder + '/RatioEllipse')
+	ratio_peak_folder = create_folder(save_folder + '/RatioPeak')
+	vertical_ellipse_folder = create_folder(save_folder + '/EllipseVertical')
+	vertical_peak_folder = create_folder(save_folder + '/PeakVertical')
+	vertical_optical_folder = create_folder(save_folder + '/OpticalVertical')
+	ratio_ellipseT_folder = create_folder(save_folder + '/RatioEllipseT')
+	ratio_peakT_folder = create_folder(save_folder + '/RatioPeakT')
+	boundary_folder = create_folder(save_folder + '/Boundaries')
+	graph_folder = create_folder(save_folder + '/Graphs/' + test_name)
+	width_folder = create_folder(save_folder + '/Widths/' + test_name)
 
 	# Construct EPL mapping
 	data_epl = np.zeros(np.shape(data_norm), dtype=float)
@@ -276,9 +276,6 @@ def main():
 	# Normalize the images and save them
 	normalize_jets(project_folder, dark, flatfield, test_matrix, norm_folder)
 
-	# Top-level save folder
-	save_folder = project_folder + '/Processed/'
-
 	# Scintillator
 	scintillators = ['LuAG', 'YAG']
 
@@ -311,6 +308,9 @@ def main():
 		f = open(project_folder + '/Model/KI11p1_model_' + scintillator + '.pckl', 'rb')
 		KI11p1_model = pickle.load(f)
 		f.close()
+
+		# Top-level save folder
+		save_folder = '{0}/Processed/{1}/'.format(project_folder, scintillator)
 
 		KI_conc = [0, 1.6, 3.4, 4.8, 8, 10, 11.1]
 		models = [water_model, KI1p6_model, KI3p4_model, KI4p8_model, KI8p0_model, KI10p0_model, KI11p1_model]
