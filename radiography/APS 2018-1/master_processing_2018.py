@@ -45,8 +45,7 @@ start = time.time()
 jet_correction()
 jc_time = timedelta(seconds=(time.time() - start))
 print('5/6: jet_correction finished ({0}).'.format(jc_time))
-sdsadasd
-# Apply the correction factors (from jet_analysis) to the uniform jets
+#Apply the correction factors (from jet_analysis) to the uniform jets
 start = time.time()
 jet_errors()
 je_time = timedelta(seconds=(time.time() - start))
