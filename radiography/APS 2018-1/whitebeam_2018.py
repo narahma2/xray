@@ -147,8 +147,7 @@ def filtered_spectra(input_folder, input_spectra, spectra, scintillator_response
         spectra_filtered = beer_lambert(spectra_filtered, Be_atten['Attenuation'], Be_den, Be_epl)
 
         # Apply correction filter (air)
-#        spectra_filtered = beer_lambert(spectra_filtered,
-#                air_atten['Attenuation'], air_den, 100)
+        spectra_filtered = beer_lambert(spectra_filtered, air_atten['Attenuation'], air_den, 70)
 
         # Find detected spectra
         spectra_detected = spectra_filtered * scintillator_response
@@ -176,24 +175,24 @@ def spray_model(input_folder, input_spectra, m, spray_epl, scintillator, scintil
                 spray_den = density_KIinH2O(10)         # KI 10.0%
         if m == 'KI11p1':
                 spray_den = density_KIinH2O(11.1)       # KI 11.1%
-        
+
         ## Add in the spray
         spray_detected = [beer_lambert_unknown(incident, liquid_atten['Attenuation'], spray_den, spray_epl) for incident in scintillator_detected]
 
         # Spray
         I = [np.trapz(x, input_spectra['Energy']) for x in spray_detected]
-        
+
         ## LHS of Beer-Lambert Law
         Transmission = [x1/x2 for (x1, x2) in zip(I, I0)]
-        
+
         ## Cubic spline fitting of Transmission and spray_epl curves (needs to be reversed b/c of monotonically increasing
         ## restriction on 'x', however this does not change the interpolation call)
         # Function that takes in transmission value (I/I0) and outputs EPL (cm)
         TtoEPL = [CubicSpline(vertical_pix[::-1], spray_epl[::-1]) for vertical_pix in Transmission]
-        
+
         # Function that takes in EPL (cm) value and outputs transmission value (I/I0)
         EPLtoT = [CubicSpline(spray_epl, vertical_pix) for vertical_pix in Transmission]
-        
+
         # Save model
         model_folder = create_folder('{0}/Model/'.format(project_folder))
 
@@ -227,7 +226,7 @@ def main():
         # Create an interpolation object based on angle
         # Passing in an angle in mrad will output an interpolated spectra (w/ XOP as reference) 
         spectra_linfit = interp1d(input_spectra['Angle'], input_spectra['Power'], axis=0)
-        
+
         # Create an array containing spectra corresponding to each row of the 2018-1 images
         spectra2D = spectra_linfit(angles_mrad)
 
@@ -272,7 +271,7 @@ def main():
         for i, m in enumerate(model):
                 [atten_avg_LuAG[i], trans_avg_LuAG[i]] = spray_model(input_folder, input_spectra, m, spray_epl, 'LuAG', LuAG_detected, I0_LuAG, project_folder)
                 [atten_avg_YAG[i], trans_avg_YAG[i]] = spray_model(input_folder, input_spectra, m, spray_epl, 'YAG', YAG_detected, I0_YAG, project_folder)
-                
+
         with open('{0}/Model/averaged_variables_LuAG.pckl'.format(project_folder), 'wb') as f:
                 pickle.dump([spray_epl, atten_avg_LuAG, trans_avg_LuAG], f)
 
