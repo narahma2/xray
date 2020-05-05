@@ -111,6 +111,7 @@ def main():
 		linecolors = ['dimgray', 'firebrick', 'goldenrod', 'mediumseagreen', 'steelblue', 'mediumpurple', 'hotpink']
 		linelabels = ['0%', '1.6%', '3.4%', '4.8%', '8%', '10%', '11.1%']
 
+		warnings.filterwarnings('ignore')
 		# Vertical peakT plot
 		fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
 		fig.set_size_inches(12, 6)
@@ -141,6 +142,7 @@ def main():
 		fig.legend(ax1, labels=linelabels, loc="center right", borderaxespad=0.1, title='KI %')
 		plt.subplots_adjust(wspace = 0.05, top = 0.90)
 		plt.savefig('{0}/{1}_vert_ellipseT.png'.format(plots_folder, scintillator))
+		warnings.filterwarnings('default')
 
 		#############################################################################
 
