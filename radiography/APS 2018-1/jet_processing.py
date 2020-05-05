@@ -54,8 +54,8 @@ def normalize_jets(project_folder, dark, flatfield, test_matrix, norm_folder):
 		warnings.filterwarnings('default')
 
 		# Correct the Transmission values
-		offset_norm = 1 - np.nanmedian(data_norm[offset_sl_x, offset_sl_y])
-		data_norm += offset_norm
+		# offset_norm = 1 - np.nanmedian(data_norm[offset_sl_x, offset_sl_y])
+		# data_norm += offset_norm
 
 		# Save Transmission images
 		im = Image.fromarray(data_norm)
