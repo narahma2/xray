@@ -62,7 +62,7 @@ def normalize_jets(project_folder, dark, flatfield, test_matrix, norm_folder):
                 im.save(norm_folder + '/' + test_path.rsplit('/')[-1].replace('AVG', 'Norm'))
 
 
-def process_jet(cm_px, save_folder, scintillator, index, test_name, test_path, TtoEPL, EPLtoT, offset_sl_x, offset_sl_y, data_norm):
+def process_jet(cm_px, save_folder, scint, index, test_name, test_path, TtoEPL, EPLtoT, offset_sl_x, offset_sl_y, data_norm):
         # Create folders
         epl_folder = create_folder(save_folder + '/EPL')
         summary_folder = create_folder(save_folder + '/Summary')
@@ -76,6 +76,7 @@ def process_jet(cm_px, save_folder, scintillator, index, test_name, test_path, T
         boundary_folder = create_folder(save_folder + '/Boundaries')
         graph_folder = create_folder(save_folder + '/Graphs/' + test_name)
         width_folder = create_folder(save_folder + '/Widths/' + test_name)
+        scans_folder = create_folder(save_folder + '/Scans/')
 
         # Construct EPL mapping
         data_epl = np.zeros(np.shape(data_norm), dtype=float)
@@ -93,7 +94,7 @@ def process_jet(cm_px, save_folder, scintillator, index, test_name, test_path, T
 
         # Save EPL images
         im = Image.fromarray(data_epl)
-        im.save(epl_folder + '/' + test_path.rsplit('/')[-1].replace('AVG', scintillator))
+        im.save(epl_folder + '/' + test_path.rsplit('/')[-1].replace('AVG', scint))
 
         left_bound = len(cropped_view) * [np.nan]
         right_bound = len(cropped_view) * [np.nan]
@@ -139,10 +140,10 @@ def process_jet(cm_px, save_folder, scintillator, index, test_name, test_path, T
                         # Plot the fitted and EPL graphs
                         if z % 15 == 0:
                                 # Ellipse
-                                plot_ellipse(epl_graph[z], fitted_graph[z], graph_folder + '/' + scintillator + '_{0:03.0f}'.format(k) + '.png')
+                                plot_ellipse(epl_graph[z], fitted_graph[z], graph_folder + '/' + scint + '_{0:03.0f}'.format(k) + '.png')
                                 plt.close()
 
-                                plot_widths(data_epl[k, :], peaks, relative_max, lpos[0], rpos[0], width_folder + '/' + scintillator + '_{0:03.0f}'.format(k) + '.png')
+                                plot_widths(data_epl[k, :], peaks, relative_max, lpos[0], rpos[0], width_folder + '/' + scint + '_{0:03.0f}'.format(k) + '.png')
                                 plt.close()
 
         if len(peaks) == 1:
@@ -178,8 +179,18 @@ def process_jet(cm_px, save_folder, scintillator, index, test_name, test_path, T
                           'Ellipse Errors': ellipse_errors, 'Peak Errors': peak_errors, 'Transmission Ratios': [ratio_ellipseT, ratio_peakT],
                           'EPL Ratios': [ratio_peak, ratio_ellipse]}
 
-        with open(summary_folder + '/' + scintillator + '_' + test_name + '.pckl', 'wb') as f:
-                pickle.dump(processed_data, f)
+        with open(summary_folder + '/' + scint + '_' + test_name + '.pckl', 'wb') as f:
+            pickle.dump(processed_data, f)
+
+        with open('{0}/{1}_{2}_y170.pckl'.format(scans_folder, scint,
+                                                 test_name), 'wb') as f:
+            pickle.dump([data_epl[170, :],
+                         savgol_filter(data_epl[170, :], 105, 7)], f)
+
+        with open('{0}/{1}_{2}_y60.pckl'.format(scans_folder, scint,
+                                                 test_name), 'wb') as f:
+            pickle.dump([data_epl[60, :],
+                         savgol_filter(data_epl[60, :], 105, 7)], f)
 
         # Boundary plot
         plt.figure()
@@ -198,7 +209,7 @@ def process_jet(cm_px, save_folder, scintillator, index, test_name, test_path, T
         plt.ylabel('Ellipse Diameter (mm)')
         plt.ylim([0.4, 2.15])
         plt.title(test_name)
-        plt.savefig('{0}/{1}_{2}.png'.format(vertical_ellipse_folder, scintillator, test_name))
+        plt.savefig('{0}/{1}_{2}.png'.format(vertical_ellipse_folder, scint, test_name))
         plt.close()
 
         # Vertical peak variation
@@ -208,7 +219,7 @@ def process_jet(cm_px, save_folder, scintillator, index, test_name, test_path, T
         plt.ylabel('Peak Diameter (mm)')
         plt.ylim([0.4, 2.15])
         plt.title(test_name)
-        plt.savefig('{0}/{1}_{2}.png'.format(vertical_peak_folder, scintillator, test_name))
+        plt.savefig('{0}/{1}_{2}.png'.format(vertical_peak_folder, scint, test_name))
         plt.close()
 
         # Vertical optical variation
@@ -218,7 +229,7 @@ def process_jet(cm_px, save_folder, scintillator, index, test_name, test_path, T
         plt.ylabel('Optical Diameter (mm)')
         plt.ylim([0.4, 2.15])
         plt.title(test_name)
-        plt.savefig('{0}/{1}_{2}.png'.format(vertical_optical_folder, scintillator, test_name))
+        plt.savefig('{0}/{1}_{2}.png'.format(vertical_optical_folder, scint, test_name))
         plt.close()
 
         # Vertical EPL ratio (ellipse)
@@ -227,7 +238,7 @@ def process_jet(cm_px, save_folder, scintillator, index, test_name, test_path, T
         plt.xlabel('Axial Position (px)')
         plt.ylabel('Ellipse/Optical EPL Ratio')
         plt.ylim([0.4, 1.1])
-        plt.savefig('{0}/{1}_{2}.png'.format(ratio_ellipse_folder, scintillator, test_name))
+        plt.savefig('{0}/{1}_{2}.png'.format(ratio_ellipse_folder, scint, test_name))
         plt.close()
 
         # Vertical EPL ratio (peak)
@@ -236,7 +247,7 @@ def process_jet(cm_px, save_folder, scintillator, index, test_name, test_path, T
         plt.xlabel('Axial Position (px)')
         plt.ylabel('Peak/Optical EPL Ratio')
         plt.ylim([0.4, 1.1])
-        plt.savefig('{0}/{1}_{2}.png'.format(ratio_peak_folder, scintillator, test_name))
+        plt.savefig('{0}/{1}_{2}.png'.format(ratio_peak_folder, scint, test_name))
         plt.close()
 
         # Vertical transmission ratio (ellipse)
@@ -246,7 +257,7 @@ def process_jet(cm_px, save_folder, scintillator, index, test_name, test_path, T
         plt.ylabel('Ellipse/Optical Transmission Ratio')
         plt.ylim([0.8, 1.3])
         plt.title(test_name)
-        plt.savefig('{0}/{1}_{2}.png'.format(ratio_ellipseT_folder, scintillator, test_name))
+        plt.savefig('{0}/{1}_{2}.png'.format(ratio_ellipseT_folder, scint, test_name))
         plt.close()
 
         # Vertical transmission ratio (peak)
@@ -256,7 +267,7 @@ def process_jet(cm_px, save_folder, scintillator, index, test_name, test_path, T
         plt.ylabel('Peak/Optical Transmission Ratio')
         plt.ylim([0.8, 1.3])
         plt.title(test_name)
-        plt.savefig('{0}/{1}_{2}.png'.format(ratio_peakT_folder, scintillator, test_name))
+        plt.savefig('{0}/{1}_{2}.png'.format(ratio_peakT_folder, scint, test_name))
         plt.close()
 
 
@@ -280,38 +291,38 @@ def main():
         # Scintillator
         scintillators = ['LuAG', 'YAG']
 
-        for scintillator in scintillators:
+        for scint in scintillators:
                 #%% Load models from the whitebeam_2018-1 script
-                f = open(project_folder + '/Model/water_model_' + scintillator + '.pckl', 'rb')
+                f = open(project_folder + '/Model/water_model_' + scint + '.pckl', 'rb')
                 water_model = pickle.load(f)
                 f.close()
 
-                f = open(project_folder + '/Model/KI1p6_model_' + scintillator + '.pckl', 'rb')
+                f = open(project_folder + '/Model/KI1p6_model_' + scint + '.pckl', 'rb')
                 KI1p6_model = pickle.load(f)
                 f.close()
 
-                f = open(project_folder + '/Model/KI3p4_model_' + scintillator + '.pckl', 'rb')
+                f = open(project_folder + '/Model/KI3p4_model_' + scint + '.pckl', 'rb')
                 KI3p4_model = pickle.load(f)
                 f.close()
 
-                f = open(project_folder + '/Model/KI4p8_model_' + scintillator + '.pckl', 'rb')
+                f = open(project_folder + '/Model/KI4p8_model_' + scint + '.pckl', 'rb')
                 KI4p8_model = pickle.load(f)
                 f.close()
 
-                f = open(project_folder + '/Model/KI8p0_model_' + scintillator + '.pckl', 'rb')
+                f = open(project_folder + '/Model/KI8p0_model_' + scint + '.pckl', 'rb')
                 KI8p0_model = pickle.load(f)
                 f.close()
 
-                f = open(project_folder + '/Model/KI10p0_model_' + scintillator + '.pckl', 'rb')
+                f = open(project_folder + '/Model/KI10p0_model_' + scint + '.pckl', 'rb')
                 KI10p0_model = pickle.load(f)
                 f.close()
 
-                f = open(project_folder + '/Model/KI11p1_model_' + scintillator + '.pckl', 'rb')
+                f = open(project_folder + '/Model/KI11p1_model_' + scint + '.pckl', 'rb')
                 KI11p1_model = pickle.load(f)
                 f.close()
 
                 # Top-level save folder
-                save_folder = '{0}/Processed/{1}/'.format(project_folder, scintillator)
+                save_folder = '{0}/Processed/{1}/'.format(project_folder, scint)
 
                 KI_conc = [0, 1.6, 3.4, 4.8, 8, 10, 11.1]
                 models = [water_model, KI1p6_model, KI3p4_model, KI4p8_model, KI8p0_model, KI10p0_model, KI11p1_model]
@@ -333,7 +344,7 @@ def main():
                         data_norm = np.array(Image.open(test_path))
 
                         # Process the jet file
-                        process_jet(cm_px, save_folder, scintillator, index, test_name, test_path, TtoEPL, EPLtoT, offset_sl_x, offset_sl_y, data_norm)
+                        process_jet(cm_px, save_folder, scint, index, test_name, test_path, TtoEPL, EPLtoT, offset_sl_x, offset_sl_y, data_norm)
 
 # Run this script
 if __name__ == '__main__':
