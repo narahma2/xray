@@ -360,7 +360,8 @@ def main():
     inp_spectra = xop('{0}/xsurface1.dat'.format(inp_fld))
 
     # Find the angles corresponding to the 2018-1 image vertical pixels
-    angles_mrad, _ = spectra_angles()
+    angles_mrad, _ = spectra_angles('{0}/Images/Uniform_Jets/Mean/AVG_ \
+                                    Jet_flat2.tif'.format(prj_fld))
 
     # Create an interpolation object based on angle
     # Passing in an angle in mrad will output an interp spectra (XOP as ref.) 
