@@ -249,12 +249,12 @@ def filtered_spectra(energy, spectra, scint_resp):
                                     )
 
     # Apply correction filter (air)
-    spectra_filtered = beer_lambert(
-                                    incident=spectra_filtered,
-                                    attenuation=air_atten['Attenuation'],
-                                    density=air_den,
-                                    epl=70
-                                    )
+    #spectra_filtered = beer_lambert(
+    #                                incident=spectra_filtered,
+    #                                attenuation=air_atten['Attenuation'],
+    #                                density=air_den,
+    #                                epl=70
+    #                                )
 
     # Find detected spectra
     spectra_det = spectra_filtered * scint_resp
@@ -262,7 +262,7 @@ def filtered_spectra(energy, spectra, scint_resp):
     return spectra_filtered, spectra_det
 
 
-def spray_model(spray_epl, energy, model, scint, det, I0):
+def spray_model(spray_epl, energy, model, scint, I0, wfct):
     """
     Applies the spray to the filtered X-ray spectra.
     =============
@@ -271,8 +271,8 @@ def spray_model(spray_epl, energy, model, scint, det, I0):
     energy:     Energy values from XOP.
     model:      Model type (water/KI%).
     scint:      Scintillator name (LuAG/YAG).
-    det:        Detected spectra from the scintillator.
-    I0:         Flat field total intensity.
+    I0:         Detected flat field spectra.
+    wfct:       Weighting function for T calculation.
     """
     global prj_fld
     global inp_fld
@@ -297,22 +297,29 @@ def spray_model(spray_epl, energy, model, scint, det, I0):
     elif model == 'KI11p1':
         spray_den = density_KIinH2O(11.1)       # KI 11.1%
 
-    ## Add in the spray
-    spray_det = [
-                 bl_unk(
-                        incident=incident,
-                        attenuation=liq_atten['Attenuation'],
-                        density=spray_den,
-                        epl=spray_epl
-                        )
-                 for incident in det
-                 ]
+    ## Detected spray spectra I 
+    I = [
+         bl_unk(
+                incident=incident,
+                attenuation=liq_atten['Attenuation'],
+                density=spray_den,
+                epl=spray_epl
+                )
+         for incident in I0
+         ]
+
+    # Swap the axes of I so that it's EPL (len(spray_epl)) x Row (352) x
+    #   Intensity (1991)
+    I = np.swapaxes(I, 0, 1)
 
     # Spray
-    I = [np.trapz(x, energy) for x in spray_det]
+    #I = [np.trapz(x, energy) for x in spray_det]
 
-    ## LHS of Beer-Lambert Law
-    Transmission = [x1/x2 for (x1, x2) in zip(I, I0)]
+    ## LHS of Beer-Lambert Law based on weighted sum
+    Transmission = [np.sum((x/I0)*wfct, axis=1) for x in I]
+
+    # Swap axes so that it's Row x EPL
+    Transmission = np.swapaxes(Transmission, 0, 1)
 
     # Cubic spline fitting of Transmission and spray_epl curves 
     #   Needs to be reversed b/c of monotonically increasing
@@ -374,8 +381,11 @@ def main():
                          axis=0
                          )
 
-    # Array containing spectra corresponding the to rows of the 2018-1 images
+    # Array containing spectra corresponding to the rows of the 2018-1 images
     spectra2D = sp_linfit(angles_mrad)
+
+    # Array containing the weighting functions for each row
+    weights2D = np.array([x/np.sum(x) for x in spectra2D])
 
     # Load NIST XCOM attenuation curves
     YAG_atten = xcom(inp_fld + '/YAG.txt', att_column=3)
@@ -415,8 +425,8 @@ def main():
 
     ## Total intensity calculations
     # Flat field
-    I0_LuAG = [np.trapz(x, energy) for x in LuAG_det]
-    I0_YAG = [np.trapz(x, energy) for x in YAG_det]
+    #I0_LuAG = [np.trapz(x, energy) for x in LuAG_det]
+    #I0_YAG = [np.trapz(x, energy) for x in YAG_det]
 
     # Spray EPL
     spray_epl = np.linspace(0.001, 0.82, 820)
@@ -427,16 +437,16 @@ def main():
                                                              energy=energy,
                                                              model=m,
                                                              scint='LuAG',
-                                                             det=LuAG_det,
-                                                             I0=I0_LuAG
+                                                             I0=LuAG_det,
+                                                             wfct=weights2D
                                                              )
         [atten_avg_YAG[i], trans_avg_YAG[i]] = spray_model(
                                                            spray_epl,
                                                            energy=energy,
                                                            model=m,
                                                            scint='YAG',
-                                                           det=YAG_det,
-                                                           I0=I0_YAG
+                                                           I0=YAG_det,
+                                                           wfct=weights2D
                                                            )
 
     with open('{0}/Model/avg_var_LuAG.pckl'.format(prj_fld), 'wb') as f:
