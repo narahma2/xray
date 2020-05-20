@@ -13,26 +13,25 @@ import pickle
 import numpy as np
 import warnings
 
-import _paths
 import matplotlib.pyplot as plt
 from PIL import Image
 from scipy.interpolate import CubicSpline
 from scipy.signal import savgol_filter
 from scipy.interpolate import interp1d
-from Spectra.spectrum_modeling import (
-    multi_angle as xop,
-    xcom,
-    xcom_reshape,
-    density_KIinH2O,
-    beer_lambert,
-    visible_light,
-    beer_lambert_unknown as bl_unk
-    )
-from jet_processing import create_folder
+from general.Spectra.spectrum_modeling import (
+                                               multi_angle as xop,
+                                               xcom,
+                                               xcom_reshape,
+                                               density_KIinH2O,
+                                               beer_lambert,
+                                               visible_light,
+                                               beer_lambert_unknown as bl_unk
+                                               )
+from general.misc import create_folder
 
 
 # Location of APS 2018-1 data
-prj_fld = '{0}/X-ray Radiography/APS 2018-1/'.format(sys_folder)
+prj_fld = '/mnt/r/X-ray Radiography/APS 2018-1/'
 inp_fld = '{0}/Spectra_Inputs'.format(prj_fld)
 
 def spectra_angles(flat):
@@ -98,8 +97,8 @@ def averaged_plots(x, y, ylbl, xlbl, scale, name, scint):
 
     # Water
     plt.plot(
-             x= [0],
-             y=y[0],
+             x[0],
+             y[0],
              color='k',
              linewidth=2.0,
              label='Water'
@@ -107,8 +106,8 @@ def averaged_plots(x, y, ylbl, xlbl, scale, name, scint):
 
     # 1.6% KI
     plt.plot(
-             x=x[1],
-             y=y[1],
+             x[1],
+             y[1],
              marker='x',
              markevery=50,
              linewidth=2.0,
@@ -117,8 +116,8 @@ def averaged_plots(x, y, ylbl, xlbl, scale, name, scint):
 
     # 3.4% KI
     plt.plot(
-             x=x[2],
-             y=y[2],
+             x[2],
+             y[2],
              linestyle='--',
              linewidth=2.0,
              label='3.4% KI'
@@ -126,8 +125,8 @@ def averaged_plots(x, y, ylbl, xlbl, scale, name, scint):
 
     # 4.8% KI
     plt.plot(
-             x=x[3],
-             y=y[3],
+             x[3],
+             y[3],
              linestyle='-.',
              linewidth=2.0,
              label='4.8% KI'
@@ -135,8 +134,8 @@ def averaged_plots(x, y, ylbl, xlbl, scale, name, scint):
 
     # 8.0% KI
     plt.plot(
-             x=x[4],
-             y=y[4],
+             x[4],
+             y[4],
              linestyle=':',
              linewidth=2.0,
              label='8.0% KI'
@@ -144,8 +143,8 @@ def averaged_plots(x, y, ylbl, xlbl, scale, name, scint):
 
     # 10.0% KI
     plt.plot(
-             x=x[5],
-             y=y[5],
+             x[5],
+             y[5],
              marker='^',
              markevery=50,
              linewidth=2.0,
@@ -154,8 +153,8 @@ def averaged_plots(x, y, ylbl, xlbl, scale, name, scint):
 
     # 11.1% KI
     plt.plot(
-             x=x[6],
-             y=y[6],
+             x[6],
+             y[6],
              linestyle='--',
              linewidth=2.0,
              label='11.1% KI'
@@ -198,11 +197,12 @@ def scint_respfn(sp_linfit, scint_atten, scint_den, scint_epl):
     return scint_resp
 
 
-def filtered_spectra(spectra, scint_resp):
+def filtered_spectra(energy, spectra, scint_resp):
     """
     Applies filters to the X-ray spectra based on 2018-1 setup.
     =============
     --VARIABLES--
+    energy:             Energy values from XOP spectra.
     spectra:            Scintillator density (same units as EPL).
     scint_resp:         Scintillator path length (um/mm/cm).
     """
@@ -213,8 +213,8 @@ def filtered_spectra(spectra, scint_resp):
     Be_atten = xcom(inp_fld + '/Be.txt', att_column=5)
 
     # Reshape XCOM x-axis to match XOP
-    air_atten = xcom_reshape(air_atten, inp_spectra['Energy'])
-    Be_atten = xcom_reshape(Be_atten, inp_spectra['Energy'])
+    air_atten = xcom_reshape(air_atten, energy)
+    Be_atten = xcom_reshape(Be_atten, energy)
 
     ## EPL in cm
     # Air EPL
@@ -249,12 +249,12 @@ def filtered_spectra(spectra, scint_resp):
                                     )
 
     # Apply correction filter (air)
-#    spectra_filtered = beer_lambert(
-#                                    incident=spectra_filtered,
-#                                    attenuation=air_atten['Attenuation'],
-#                                    density=air_den,
-#                                    epl=70
-#                                    )
+    spectra_filtered = beer_lambert(
+                                    incident=spectra_filtered,
+                                    attenuation=air_atten['Attenuation'],
+                                    density=air_den,
+                                    epl=70
+                                    )
 
     # Find detected spectra
     spectra_det = spectra_filtered * scint_resp
@@ -262,11 +262,13 @@ def filtered_spectra(spectra, scint_resp):
     return spectra_filtered, spectra_det
 
 
-def spray_model(model, scint, det, I0):
+def spray_model(spray_epl, energy, model, scint, det, I0):
     """
     Applies the spray to the filtered X-ray spectra.
     =============
     --VARIABLES--
+    spray_epl:  Spray path lengths to iterate through.
+    energy:     Energy values from XOP.
     model:      Model type (water/KI%).
     scint:      Scintillator name (LuAG/YAG).
     det:        Detected spectra from the scintillator.
@@ -276,8 +278,8 @@ def spray_model(model, scint, det, I0):
     global inp_fld
 
     # Spray attenuation curves
-    liq_atten = xcom('{0}/{1}.txt'.format(inp_fld, m), att_column=5)
-    liq_atten = xcom_reshape(liquid_atten, inp_spectra['Energy'])
+    liq_atten = xcom('{0}/{1}.txt'.format(inp_fld, model), att_column=5)
+    liq_atten = xcom_reshape(liq_atten, energy)
 
     # Spray densities
     if model == 'water':
@@ -295,21 +297,19 @@ def spray_model(model, scint, det, I0):
     elif model == 'KI11p1':
         spray_den = density_KIinH2O(11.1)       # KI 11.1%
 
-    # Spray EPL
-    spray_epl = np.linspace(0.001, 0.82, 820)
-
     ## Add in the spray
     spray_det = [
                  bl_unk(
                         incident=incident,
                         attenuation=liq_atten['Attenuation'],
-                        density=spray_den, spray_epl
+                        density=spray_den,
+                        epl=spray_epl
                         )
                  for incident in det
                  ]
 
     # Spray
-    I = [np.trapz(x, inp_spectra['Energy']) for x in spray_det]
+    I = [np.trapz(x, energy) for x in spray_det]
 
     ## LHS of Beer-Lambert Law
     Transmission = [x1/x2 for (x1, x2) in zip(I, I0)]
@@ -332,7 +332,7 @@ def spray_model(model, scint, det, I0):
     # Save model
     mdl_fld = create_folder('{0}/Model/'.format(prj_fld))
 
-    with open('{0}/{1}_model_{2}.pckl'.format(mdl_fld, m, scint), 'wb') as f:
+    with open('{0}/{1}_model_{2}.pckl'.format(mdl_fld, model, scint), 'wb') as f:
         pickle.dump([TtoEPL, EPLtoT, spray_epl, Transmission], f)
 
     # Calculate average attenuation and transmission
@@ -359,9 +359,12 @@ def main():
     # Load XOP spectra
     inp_spectra = xop('{0}/xsurface1.dat'.format(inp_fld))
 
+    # Extract energy
+    energy = inp_spectra['Energy']
+
     # Find the angles corresponding to the 2018-1 image vertical pixels
-    angles_mrad, _ = spectra_angles('{0}/Images/Uniform_Jets/Mean/AVG_ \
-                                    Jet_flat2.tif'.format(prj_fld))
+    angles_mrad, _ = spectra_angles('{0}/Images/Uniform_Jets/Mean/AVG_'
+                                    'Jet_flat2.tif'.format(prj_fld))
 
     # Create an interpolation object based on angle
     # Passing in an angle in mrad will output an interp spectra (XOP as ref.) 
@@ -379,8 +382,8 @@ def main():
     LuAG_atten = xcom(inp_fld + '/Al5Lu3O12.txt', att_column=3)
 
     # Reshape XCOM x-axis to match XOP
-    YAG_atten = xcom_reshape(YAG_atten, inp_spectra['Energy'])
-    LuAG_atten = xcom_reshape(LuAG_atten, inp_spectra['Energy'])
+    YAG_atten = xcom_reshape(YAG_atten, energy)
+    LuAG_atten = xcom_reshape(LuAG_atten, energy)
 
     # Scintillator EPL
     YAG_epl = 0.05      # 500 um
@@ -393,36 +396,43 @@ def main():
 
     # Apply Beer-Lambert law
     # Scintillator response
-    LuAG_response = scint_respfn(
+    LuAG_resp = scint_respfn(
                                  sp_linfit,
-                                 attenuation=LuAG_atten,
-                                 density=LuAG_den,
-                                 epl=LuAG_epl
+                                 scint_atten=LuAG_atten,
+                                 scint_den=LuAG_den,
+                                 scint_epl=LuAG_epl
                                  )
-    YAG_response = scint_respfn(sp_linfit, YAG_atten, YAG_den, YAG_epl)
+    YAG_resp = scint_respfn(sp_linfit, YAG_atten, YAG_den, YAG_epl)
 
     # Apply filters and find detected visible light emission
-    LuAG = map(lambda x: filtered_spectra(x, LuAG_response), spectra2D)
+    LuAG = map(lambda x: filtered_spectra(energy, x, LuAG_resp), spectra2D)
     LuAG = list(LuAG)
     LuAG_det = np.swapaxes(LuAG, 0, 1)[1]
 
-    YAG = map(lambda x: filtered_spectra(x, YAG_response), spectra2D)
+    YAG = map(lambda x: filtered_spectra(energy, x, YAG_resp), spectra2D)
     YAG = list(YAG)
     YAG_det = np.swapaxes(YAG, 0, 1)[1]
 
     ## Total intensity calculations
     # Flat field
-    I0_LuAG = [np.trapz(x, inp_spectra['Energy']) for x in LuAG_det]
-    I0_YAG = [np.trapz(x, inp_spectra['Energy']) for x in YAG_det]
+    I0_LuAG = [np.trapz(x, energy) for x in LuAG_det]
+    I0_YAG = [np.trapz(x, energy) for x in YAG_det]
+
+    # Spray EPL
+    spray_epl = np.linspace(0.001, 0.82, 820)
 
     for i, m in enumerate(model):
         [atten_avg_LuAG[i], trans_avg_LuAG[i]] = spray_model(
+                                                             spray_epl,
+                                                             energy=energy,
                                                              model=m,
                                                              scint='LuAG',
                                                              det=LuAG_det,
                                                              I0=I0_LuAG
                                                              )
         [atten_avg_YAG[i], trans_avg_YAG[i]] = spray_model(
+                                                           spray_epl,
+                                                           energy=energy,
                                                            model=m,
                                                            scint='YAG',
                                                            det=YAG_det,
@@ -441,8 +451,8 @@ def main():
 
     for i, scint in enumerate(['LuAG', 'YAG']):
         averaged_plots(
-                       x=trans_avg[i],
-                       y=atten_avg[i],
+                       trans_avg[i],
+                       atten_avg[i],
                        ylbl='Beam Avg. Atten. Coeff. [1/cm]',
                        xlbl='Transmission',
                        scale='log',
@@ -450,8 +460,8 @@ def main():
                        scint=scint
                        )
         averaged_plots(
-                       x=np.tile(10*np.array(spray_epl), [7, 1]),
-                       y=atten_avg[i],
+                       np.tile(10*np.array(spray_epl), [7, 1]),
+                       atten_avg[i],
                        ylbl='Beam Avg. Atten. Coeff. [1/cm]',
                        xlbl='EPL [mm]',
                        scale='log',
@@ -459,8 +469,8 @@ def main():
                        scint=scint
                        )
         averaged_plots(
-                       x=np.tile(10*np.array(spray_epl), [7, 1]),
-                       y=1-np.array(trans_avg[i]),
+                       np.tile(10*np.array(spray_epl), [7, 1]),
+                       1-np.array(trans_avg[i]),
                        ylbl='Attenuation',
                        xlbl='EPL [mm]',
                        scale='linear',
@@ -468,8 +478,8 @@ def main():
                        scint=scint
                        )
         averaged_plots(
-                       x=np.tile(10*np.array(spray_epl), [7, 1]),
-                       y=trans_avg[i],
+                       np.tile(10*np.array(spray_epl), [7, 1]),
+                       trans_avg[i],
                        ylbl='Transmission',
                        xlbl='EPL [mm]',
                        scale='linear',

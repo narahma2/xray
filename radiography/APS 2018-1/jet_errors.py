@@ -28,11 +28,10 @@ from PIL import Image
 from scipy.signal import savgol_filter, find_peaks, peak_widths
 from skimage.transform import rotate
 from Statistics.calc_statistics import polyfit
-from jet_processing import create_folder
-from timeit import default_timer as timer
+from general.misc import create_folder
 
 # Location of APS 2018-1 data
-prj_fld = '{0}/X-ray Radiography/APS 2018-1/'.format(sys_folder)
+prj_fld = '/mnt/r/X-ray Radiography/APS 2018-1/'
 
 # Save location for the plots
 plt_fld = create_folder('{0}/Figures/Jet_Errors/'.format(prj_fld))
@@ -308,6 +307,8 @@ def main(scint, test_matrix):
 
 
 def run_main():
+    global prj_fld
+
     # Scintillator
     scintillators = ['LuAG', 'YAG']
 
@@ -320,6 +321,81 @@ def run_main():
 
     for scint in scintillators:
         main(scint, test_matrix)
+
+    # Plot overlapped diameter scans
+    types = ['peakT', 'ellipseT']
+    KI = ['0p0', '11p5', '24', '34', '57', '72', '80']
+    KIperc = ['0', '1.6', '3.4', '4.8', '8.0', '10.0', '11.0']
+    for scint in scintillators:
+        for typ in types:
+            scan_fld = '{0}/Corrected/{1}_{2}/Scans'.format(prj_fld, scint,
+                    typ)
+
+            # Plot 700 um jets
+            cases_700_y170 = []
+            for x in KI:
+                with open(glob.glob('{0}/*700-um_{1}*y170.pckl'
+                          .format(scan_fld ,x))[0], 'rb') as f:
+                    cases_700_y170.append(pickle.load(f)[0])
+
+            plt.figure()
+            [plt.plot(x, label=KIperc[i]) for i,x in enumerate(cases_700_y170)]
+            plt.xlabel('X Position (px)')
+            plt.ylabel('EPL (cm)')
+            plt.legend()
+            plt.title('700 um @ y = 170')
+            plt.savefig(prj_fld +
+                '/Figures/Jet_Errors/{0}_{1}_700_y170.png'.format(scint, typ))
+            plt.close()
+
+            cases_700_y60 = []
+            for x in KI:
+                with open(glob.glob('{0}/*700-um_{1}*y60.pckl'
+                          .format(scan_fld ,x))[0], 'rb') as f:
+                    cases_700_y60.append(pickle.load(f)[0])
+
+            plt.figure()
+            [plt.plot(x, label=KIperc[i]) for i,x in enumerate(cases_700_y60)]
+            plt.xlabel('X Position (px)')
+            plt.ylabel('EPL (cm)')
+            plt.legend()
+            plt.title('700 um @ y = 60')
+            plt.savefig(prj_fld +
+                '/Figures/Jet_Errors/{0}_{1}_700_y60.png'.format(scint, typ))
+            plt.close()
+
+            # Plot 2000 um jets
+            cases_2000_y170 = []
+            for x in KI:
+                with open(glob.glob('{0}/*2000-um_{1}*y170.pckl'
+                          .format(scan_fld ,x))[0], 'rb') as f:
+                    cases_2000_y170.append(pickle.load(f)[0])
+
+            plt.figure()
+            [plt.plot(x,label=KIperc[i]) for i,x in enumerate(cases_2000_y170)]
+            plt.xlabel('X Position (px)')
+            plt.ylabel('EPL (cm)')
+            plt.legend()
+            plt.title('2000 um @ y = 170')
+            plt.savefig(prj_fld +
+                '/Figures/Jet_Errors/{0}_{1}_2000_y170.png'.format(scint, typ))
+            plt.close()
+
+            cases_2000_y60 = []
+            for x in KI:
+                with open(glob.glob('{0}/*2000-um_{1}*y60.pckl'
+                          .format(scan_fld ,x))[0], 'rb') as f:
+                    cases_2000_y60.append(pickle.load(f)[0])
+
+            plt.figure()
+            [plt.plot(x, label=KIperc[i]) for i,x in enumerate(cases_2000_y60)]
+            plt.xlabel('X Position (px)')
+            plt.ylabel('EPL (cm)')
+            plt.legend()
+            plt.title('2000 um @ y = 60')
+            plt.savefig(prj_fld +
+                '/Figures/Jet_Errors/{0}_{1}_2000_y60.png'.format(scint, typ))
+            plt.close()
 
 
 if __name__ == '__main__':

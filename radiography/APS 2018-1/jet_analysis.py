@@ -41,6 +41,7 @@ def get_xpos(path):
 
 	return xpos
 
+
 def get_mean_ellipseT(path):
 	with open(path, 'rb') as f:
 		processed_data = pickle.load(f)
@@ -48,6 +49,7 @@ def get_mean_ellipseT(path):
 	mean_ellipseT = np.nanmean(processed_data['Transmission Ratios'][0])
 
 	return mean_ellipseT
+
 
 def get_ellipseT(path):
 	with open(path, 'rb') as f:
@@ -65,6 +67,7 @@ def get_mean_peakT(path):
 	mean_peakT = np.nanmean(processed_data['Transmission Ratios'][1])
 
 	return mean_peakT
+
 
 def get_peakT(path):
 	with open(path, 'rb') as f:

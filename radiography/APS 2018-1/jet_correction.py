@@ -8,35 +8,25 @@ Re-processes the jets with the correction factors.
 @Last Modified time: 2020-05-01 19:47:14
 """
 
-import sys
-if sys.platform == 'win32':
-	sys.path.append('E:/GitHub/xray/general')
-	sys.path.append('E:/GitHub/xray/temperature')
-	sys_folder = 'R:'
-elif sys.platform == 'linux':
-	sys.path.append('/mnt/e/GitHub/xray/general')
-	sys.path.append('/mnt/e/GitHub/xray/temperature')
-	sys_folder = '/mnt/r/'
-
 import os
 import pickle
 import glob
 import warnings
 import numpy as np
 import pandas as pd
+
 import matplotlib.pyplot as plt
 from PIL import Image
 from scipy.signal import savgol_filter, find_peaks, peak_widths
 from skimage.transform import rotate
-from Statistics.CIs_LinearRegression import run_all, lin_fit, conf_calc, ylines_calc, plot_linreg_CIs
-from Statistics.calc_statistics import rmse, mape, zeta, mdlq
-from White_Beam.wb_functions import convert2EPL, ellipse, ideal_ellipse, plot_ellipse, plot_widths
-from timeit import default_timer as timer
-from jet_processing import create_folder, process_jet
+from general.Statistics.calc_statistics import rmse, mape, zeta, mdlq
+from general.White_Beam.wb_functions import convert2EPL, ellipse, ideal_ellipse, plot_ellipse, plot_widths
+from jet_processing import proc_jet
+from general.misc import create_folder
 
 def main():
 	# Location of APS 2018-1 data
-	project_folder = sys_folder + '/X-ray Radiography/APS 2018-1/'
+	project_folder = '/mnt/r/X-ray Radiography/APS 2018-1/'
 
 	#%% Imaging setup
 	cm_px = 0.16 / 162   # See 'APS White Beam.xlsx -> Pixel Size'
@@ -109,7 +99,7 @@ def main():
 				data_norm /= cf[KI_conc.index(test_matrix['KI %'][index])]
 
 				# Process the jet file
-				process_jet(cm_px, save_folder, scintillator, index, test_name, test_path, TtoEPL, EPLtoT, offset_sl_x, offset_sl_y, data_norm)
+				proc_jet(cm_px, save_folder, scintillator, index, test_name, test_path, TtoEPL, EPLtoT, offset_sl_x, offset_sl_y, data_norm)
 
 
 # Run this script
