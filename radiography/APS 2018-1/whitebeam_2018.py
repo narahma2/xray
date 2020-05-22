@@ -249,12 +249,12 @@ def filtered_spectra(energy, spectra, scint_resp):
                                     )
 
     # Apply correction filter (air)
-    #spectra_filtered = beer_lambert(
-    #                                incident=spectra_filtered,
-    #                                attenuation=air_atten['Attenuation'],
-    #                                density=air_den,
-    #                                epl=70
-    #                                )
+    spectra_filtered = beer_lambert(
+                                    incident=spectra_filtered,
+                                    attenuation=air_atten['Attenuation'],
+                                    density=air_den,
+                                    epl=70
+                                    )
 
     # Find detected spectra
     spectra_det = spectra_filtered * scint_resp
@@ -312,11 +312,16 @@ def spray_model(spray_epl, energy, model, scint, I0, wfct):
     #   Intensity (1991)
     I = np.swapaxes(I, 0, 1)
 
-    # Spray
-    #I = [np.trapz(x, energy) for x in spray_det]
-
-    ## LHS of Beer-Lambert Law based on weighted sum
-    Transmission = [np.sum((x/I0)*wfct, axis=1) for x in I]
+    method = 1
+    # Method 1: Ratio of areas
+    if method == 1:
+        Transmission = np.trapz(y=I, x=energy) / np.trapz(y=I0, x=energy)
+    # Method 2: Weighted sum
+    elif method == 2:
+        Transmission = [np.sum((x/I0)*wfct, axis=1) for x in I]
+    # Method 3: Average value
+    elif method == 3:
+        Transmision = np.mean(I/I0, axis=2)
 
     # Swap axes so that it's Row x EPL
     Transmission = np.swapaxes(Transmission, 0, 1)
@@ -364,7 +369,8 @@ def main():
     trans_avg_YAG = len(model) * [None]
 
     # Load XOP spectra
-    inp_spectra = xop('{0}/xsurface1.dat'.format(inp_fld))
+    # xsurface1: Power, ysurface1: Flux
+    inp_spectra = xop('{0}/ysurface1.dat'.format(inp_fld))
 
     # Extract energy
     energy = inp_spectra['Energy']
@@ -377,7 +383,7 @@ def main():
     # Passing in an angle in mrad will output an interp spectra (XOP as ref.) 
     sp_linfit = interp1d(
                          x=inp_spectra['Angle'],
-                         y=inp_spectra['Power'],
+                         y=inp_spectra['Intensity'],
                          axis=0
                          )
 
@@ -423,11 +429,6 @@ def main():
     YAG = list(YAG)
     YAG_det = np.swapaxes(YAG, 0, 1)[1]
 
-    ## Total intensity calculations
-    # Flat field
-    #I0_LuAG = [np.trapz(x, energy) for x in LuAG_det]
-    #I0_YAG = [np.trapz(x, energy) for x in YAG_det]
-
     # Spray EPL
     spray_epl = np.linspace(0.001, 0.82, 820)
 
@@ -455,7 +456,7 @@ def main():
     with open('{0}/Model/avg_var_YAG.pckl'.format(prj_fld), 'wb') as f:
         pickle.dump([spray_epl, atten_avg_YAG, trans_avg_YAG], f)
 
-    # Plot
+    # Plot the averaged attenuation/transmission
     atten_avg = [atten_avg_LuAG, atten_avg_YAG]
     trans_avg = [trans_avg_LuAG, trans_avg_YAG]
 
@@ -497,6 +498,28 @@ def main():
                        scint=scint
                        )
 
+    # Plot the weights array
+    plt.figure()
+    plt.plot(
+             energy/1000,
+             weights2D[175,:],
+             label='y = 175',
+             color='black',
+             linewidth=2.0
+             )
+    plt.plot(
+             energy/1000,
+             weights2D[60,:],
+             label='y = 60',
+             color='mediumblue',
+             linewidth=2.0,
+             linestyle='--'
+             )
+    plt.legend()
+    plt.xlabel('Photon Energy (keV)')
+    plt.ylabel('Photon Fraction')
+    plt.savefig('{0}/Figures/weights.png'.format(prj_fld))
+    plt.close()
 
 # Run this script
 if __name__ == '__main__':
