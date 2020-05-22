@@ -49,7 +49,7 @@ def norm_jets(prj_fld, dark, flatfield, test_matrix, norm_fld):
         offset_sl_x = slice(sl_x_start, sl_x_end)
 
         sl_y_start = test_matrix['BX'][index]
-        sl_y_end = test_matrix['Width'][index]
+        sl_y_end = sl_y_start + test_matrix['Width'][index]
         offset_sl_y = slice(sl_y_start, sl_y_end)
 
         # Read in averaged images and normalize
@@ -58,6 +58,10 @@ def norm_jets(prj_fld, dark, flatfield, test_matrix, norm_fld):
         warnings.filterwarnings('ignore')
         data_norm = (data - dark) / (flatfield - dark)
         warnings.filterwarnings('default')
+
+        # Apply intensity correction
+        offset_norm = np.nanmedian(data_norm[offset_sl_x, offset_sl_y]) - 1
+        data_norm -= offset_norm
 
         # Save Transmission images
         im = Image.fromarray(data_norm)
@@ -68,7 +72,7 @@ def norm_jets(prj_fld, dark, flatfield, test_matrix, norm_fld):
 def proc_jet(cm_px, save_fld, scint, index, test_name,
              test_path, TtoEPL, EPLtoT, offset_sl_x, offset_sl_y, data_norm):
     # Create folders
-    epl_folder = create_folder(save_fld + '/EPL')
+    epl_fld = create_folder(save_fld + '/EPL')
     summ_fld = create_folder(save_fld + '/Summary')
     ratio_elps_fld = create_folder(save_fld + '/RatioEllipse')
     ratio_peak_fld = create_folder(save_fld + '/RatioPeak')
@@ -80,7 +84,7 @@ def proc_jet(cm_px, save_fld, scint, index, test_name,
     boundary_folder = create_folder(save_fld + '/Boundaries')
     graph_fld = create_folder(save_fld + '/Graphs/' + test_name)
     width_fld = create_folder(save_fld + '/Widths/' + test_name)
-    scans_folder = create_folder(save_fld + '/Scans/')
+    scans_fld = create_folder(save_fld + '/Scans/')
 
     # Construct EPL mapping
     data_epl = np.zeros(np.shape(data_norm), dtype=float)
@@ -98,7 +102,7 @@ def proc_jet(cm_px, save_fld, scint, index, test_name,
 
     # Save EPL images
     im = Image.fromarray(data_epl)
-    im.save(epl_folder + '/' + test_path.rsplit('/')[-1].replace('AVG', scint))
+    im.save(epl_fld + '/' + test_path.rsplit('/')[-1].replace('AVG', scint))
 
     left_bound = len(cropped_view) * [np.nan]
     right_bound = len(cropped_view) * [np.nan]
@@ -229,12 +233,12 @@ def proc_jet(cm_px, save_fld, scint, index, test_name,
     with open(summ_fld + '/' + scint + '_' + test_name + '.pckl', 'wb') as f:
         pickle.dump(processed_data, f)
 
-    with open('{0}/{1}_{2}_y170.pckl'.format(scans_folder, scint,
+    with open('{0}/{1}_{2}_y170.pckl'.format(scans_fld, scint,
                                              test_name), 'wb') as f:
         pickle.dump([data_epl[170, :],
                      savgol_filter(data_epl[170, :], 105, 7)], f)
 
-    with open('{0}/{1}_{2}_y60.pckl'.format(scans_folder, scint,
+    with open('{0}/{1}_{2}_y60.pckl'.format(scans_fld, scint,
                                             test_name), 'wb') as f:
         pickle.dump([data_epl[60, :],
                      savgol_filter(data_epl[60, :], 105, 7)], f)
