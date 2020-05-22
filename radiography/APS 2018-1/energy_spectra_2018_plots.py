@@ -41,7 +41,7 @@ def main():
 
     # Create an interpolation object based on angle
     # Passing in an angle in mrad will output an interpolated spectra (w/ XOP as reference) 
-    spectra_linfit = interp1d(input_spectra['Angle'], input_spectra['Power'], axis=0)
+    spectra_linfit = interp1d(input_spectra['Angle'], input_spectra['Intensity'], axis=0)
 
     # Create an array containing spectra corresponding to each row of the 2018-1 images
     spectra2D = spectra_linfit(angles_mrad)
@@ -105,7 +105,7 @@ def main():
     plt.plot(integrated_YAG, color='seagreen', linewidth=1.5, label='YAG')
     plt.plot(integrated_YAG_filtered, color='seagreen', linestyle='--', linewidth=1.5, label='YAG (filtered)')
     plt.legend()
-    plt.savefig(plot_folder + '/integrated_power.png')
+    plt.savefig(plot_folder + '/integrated_intensity.png')
     plt.close()
 
     # Integrated and normalized (filtered) plots
@@ -115,7 +115,7 @@ def main():
     plt.plot(integrated_YAG_filtered / max(integrated_YAG_filtered), zorder=3, color='seagreen', linewidth=1.5, label='YAG (filtered)')
     plt.plot(flatfield_avg / max(flatfield_avg), zorder=4, color='red', linewidth=1.5, label='Flat Field')
     plt.legend()
-    plt.savefig(plot_folder + '/integrated_norm_power.png')
+    plt.savefig(plot_folder + '/integrated_norm_intensity.png')
     plt.close()
 
     # Scintillator response
@@ -138,7 +138,7 @@ def main():
     plt.plot(energy / 1000, YAG_detected[middle_index, :], linewidth=1.5, color='seagreen', linestyle='--', label='YAG (filtered)')
     plt.legend()
     plt.xlabel('Energy (keV)')
-    plt.ylabel('Spectral Power (mW/keV)')
+    plt.ylabel('Intensity')
     plt.savefig(plot_folder + '/middle_spectra.png')
     plt.close()
 
@@ -152,7 +152,7 @@ def main():
     plt.legend()
     plt.title('Filtered')
     plt.xlabel('Energy (keV)')
-    plt.ylabel('Spectral Power (mW/keV)')
+    plt.ylabel('Intensity')
     plt.savefig(plot_folder + '/LuAG_filtered_spectra.png')
     plt.close()
 
@@ -166,7 +166,7 @@ def main():
     plt.legend()
     plt.title('Filtered')
     plt.xlabel('Energy (keV)')
-    plt.ylabel('Spectral Power (mW/keV)')
+    plt.ylabel('Intensity')
     plt.savefig(plot_folder + '/YAG_filtered_spectra.png')
     plt.close()
 
@@ -180,7 +180,7 @@ def main():
     plt.legend()
     plt.title('Unfiltered')
     plt.xlabel('Energy (keV)')
-    plt.ylabel('Spectral Power (mW/keV)')
+    plt.ylabel('Intensity')
     plt.savefig(plot_folder + '/xray_spectra.png')
     plt.close()
 
