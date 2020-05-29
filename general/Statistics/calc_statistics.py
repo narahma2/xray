@@ -41,6 +41,7 @@ def comparefit(data, fit):
 
 # Calculate RMSE (root mean squared error)
 def rmse(experimental, theoretical):
+    """Root-mean-square error. Same units as data."""
     experimental = np.array(experimental)
     theoretical = np.array(theoretical)
     rmse = np.sqrt(np.nanmean((experimental - theoretical)**2))
@@ -50,6 +51,7 @@ def rmse(experimental, theoretical):
 
 # Calculate MAPE (mean absolute percentage error)
 def mape(experimental, theoretical):
+    """Mean absolute percentage error. Units are percentage scaled to 100."""
     experimental = np.array(experimental)
     theoretical = np.array(theoretical)
     mape = 100*np.sum(np.abs((experimental - theoretical)/theoretical)) / len(theoretical)
@@ -59,7 +61,18 @@ def mape(experimental, theoretical):
 
 # Calculate median symmetric accuracy
 def zeta(experimental, theoretical):
-    experimental = np.array(experimental)
+    """Median symmetric accuracy. Units are percentage scaled to 100."""
+    exp = np.array(experimental)
+    theo = np.array(theoretical)
+    mdlq = calc_mdlq(
+    zeta = 100*(np.exp(
+                       np.median(
+                                 np.abs(
+                                        np.log(exp/theo)
+                                        )
+                                 )
+                       ) - 1
+                )
 
     return zeta
 
@@ -67,8 +80,11 @@ def zeta(experimental, theoretical):
 # Calculate MdLQ (median log accuracy ratio)
 # Positive/negative: systematic (over/under)-prediction
 def mdlq(experimental, theoretical):
+    """Median log accuracy ratio. Unit-less."""
     experimental = np.array(experimental)
     theoretical = np.array(theoretical)
     mdlq = np.median(np.log(experimental/theoretical))
 
     return mdlq
+
+
