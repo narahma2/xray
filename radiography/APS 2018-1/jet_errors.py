@@ -38,7 +38,7 @@ def get_xpos(path):
     return xpos
 
 
-def get_abs(path, method):
+def get_per(path, method):
     with open(path, 'rb') as f:
         processed_data = pickle.load(f)
 
@@ -47,11 +47,16 @@ def get_abs(path, method):
     elif method == 'Peak':
         diam = 2
 
-    # Return absolute error in um
-    abs_err = 10000 * (np.array(processed_data['Diameters'][diam]) -
-                       np.array(processed_data['Diameters'][0]))
+    # Return percent error
+    prc_err = 100 * (
+                     (
+                      np.array(processed_data['Diameters'][diam]) -
+                      np.array(processed_data['Diameters'][0])
+                      ) /
+                     np.array(processed_data['Diameters'][0])
+                     )
 
-    return abs_err
+    return prc_err
 
 
 def get_rmse(path, method):
@@ -69,20 +74,20 @@ def vert_var(vert_matrix, method, corr_pckl, scint):
     clmn = method + ' AbsErr'
     vert_matrix[clmn] = np.nan
 
-    abs_errors = []
+    prc_errors = []
     for i,x in enumerate(vert_matrix['Test']):
         pckl_file = '{0}{1}.pckl'.format(corr_pckl, x) \
                                  .replace('XYZ', method.lower())
-        abs_errors.append(get_abs(pckl_file, method))
+        prc_errors.append(get_per(pckl_file, method))
 
     # Assign values to column
-    vert_matrix[clmn] = abs_errors
+    vert_matrix[clmn] = prc_errors
 
     # Group the matrix by diameter and KI%
-    vert_MAE_grouped = vert_matrix.copy()
+    vert_PRC_grouped = vert_matrix.copy()
     grp1 = 'Nozzle Diameter (um)'
     grp2 = 'KI %'
-    vert_MAE_grouped = vert_MAE_grouped.groupby([grp1, grp2]) \
+    vert_PRC_grouped = vert_PRC_grouped.groupby([grp1, grp2]) \
                                        .apply(lambda x: np.nanmean(x[clmn],
                                                                    axis=0))
 
@@ -102,25 +107,25 @@ def vert_var(vert_matrix, method, corr_pckl, scint):
     # Plot the 700 um jets
     for i,x in enumerate(linecolors):
         KI = KIconc[i]
-        ax1.plot(axial_positions, vert_MAE_grouped[700, KI][2:-1],
+        ax1.plot(axial_positions, vert_PRC_grouped[700, KI][2:-1],
                  color=x, linewidth=2.0)
 
     # Plot the 2000 um jets
     for i,x in enumerate(linecolors):
         KI = KIconc[i]
-        ax2.plot(axial_positions, vert_MAE_grouped[2000, KI][2:-1],
+        ax2.plot(axial_positions, vert_PRC_grouped[2000, KI][2:-1],
                  color=x, linewidth=2.0)
 
     ax1.title.set_text(r'700 $\mu$m')
     ax2.title.set_text(r'2000 $\mu$m')
     ax1.set_xlabel('Axial Position (px)')
     ax2.set_xlabel('Axial Position (px)')
-    ax1.set_ylabel('Mean Absolute Error ($\mu$m)')
-    fig.suptitle('Vertical Variation - ' + method + ' MAE')
+    ax1.set_ylabel('Percent Error (%)')
+    fig.suptitle('Vertical Variation - ' + method + ' PRC')
     fig.legend(ax1, labels=linelabels, loc='center right',
                borderaxespad=0.1, title='KI %')
     plt.subplots_adjust(wspace = 0.05, top = 0.90)
-    plt.savefig('{0}/{1}_vert_{2}MAE.png'.format(plt_fld, scint, method))
+    plt.savefig('{0}/{1}_vert_{2}PRC.png'.format(plt_fld, scint, method))
     plt.close()
     warnings.filterwarnings('default')
 
