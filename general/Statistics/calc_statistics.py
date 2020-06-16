@@ -64,7 +64,6 @@ def zeta(experimental, theoretical):
     """Median symmetric accuracy. Units are percentage scaled to 100."""
     exp = np.array(experimental)
     theo = np.array(theoretical)
-    mdlq = calc_mdlq(
     zeta = 100*(np.exp(
                        np.median(
                                  np.abs(
