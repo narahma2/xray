@@ -118,7 +118,8 @@ def proc_jet(cm_px, save_fld, scint, index, test_name,
     elps_T = len(cropped_view) * [np.nan]
 
     for z, k in enumerate(cropped_view):
-        smoothed = savgol_filter(data_epl[k, :], 105, 7)
+        smoothed = savgol_filter(data_epl[k, :], 5, 3)
+        smoothed[smoothed < 0] = 0
         warnings.filterwarnings('ignore')
         peaks, _ = find_peaks(smoothed, width=50, prominence=0.01)
         warnings.filterwarnings('default')
@@ -129,7 +130,7 @@ def proc_jet(cm_px, save_fld, scint, index, test_name,
             [rel_width, rel_max, lpos, rpos] = peak_widths(
                                                            smoothed,
                                                            peaks,
-                                                           rel_height=0.80
+                                                           rel_height=0.85
                                                            )
             warnings.filterwarnings('default')
 
