@@ -7,7 +7,6 @@ Created on Wed Jun 12 14:44:11 2019
 @author: rahmann
 """
 
-import sys
 import os
 import pickle
 import numpy as np
@@ -33,6 +32,7 @@ from general.misc import create_folder
 # Location of APS 2018-1 data
 prj_fld = '/mnt/r/X-ray Radiography/APS 2018-1/'
 inp_fld = '{0}/Spectra_Inputs'.format(prj_fld)
+
 
 def spectra_angles(flat):
     """
@@ -249,12 +249,12 @@ def filtered_spectra(energy, spectra, scint_resp):
                                     )
 
     # Apply correction filter (air)
-    spectra_filtered = beer_lambert(
-                                    incident=spectra_filtered,
-                                    attenuation=air_atten['Attenuation'],
-                                    density=air_den,
-                                    epl=70
-                                    )
+#    spectra_filtered = beer_lambert(
+#                                    incident=spectra_filtered,
+#                                    attenuation=air_atten['Attenuation'],
+#                                    density=air_den,
+#                                    epl=70
+#                                    )
 
     # Find detected spectra
     spectra_det = spectra_filtered * scint_resp
@@ -321,7 +321,7 @@ def spray_model(spray_epl, energy, model, scint, I0, wfct):
         Transmission = [np.sum((x/I0)*wfct, axis=1) for x in I]
     # Method 3: Average value
     elif method == 3:
-        Transmision = np.mean(I/I0, axis=2)
+        Transmission = np.mean(I/I0, axis=2)
 
     # Swap axes so that it's Row x EPL
     Transmission = np.swapaxes(Transmission, 0, 1)
@@ -344,7 +344,8 @@ def spray_model(spray_epl, energy, model, scint, I0, wfct):
     # Save model
     mdl_fld = create_folder('{0}/Model/'.format(prj_fld))
 
-    with open('{0}/{1}_model_{2}.pckl'.format(mdl_fld, model, scint), 'wb') as f:
+    with open('{0}/{1}_model_{2}.pckl'
+              .format(mdl_fld, model, scint), 'wb') as f:
         pickle.dump([TtoEPL, EPLtoT, spray_epl, Transmission], f)
 
     # Calculate average attenuation and transmission

@@ -108,7 +108,7 @@ def ellipse(data_epl, position, cm_pix, peak_width=20, relative_height=0.8, plot
         plt.title('Line Scan at ' + str(position))
         plt.xlabel('Horizontal Location [px]')
         plt.ylabel('EPL [cm]')
-    
+
 def ideal_ellipse(y, relative_width, relative_max, dx, units='cm'):
     """
     Function that takes in a line scan and returns the best fit ellipse.
@@ -120,28 +120,30 @@ def ideal_ellipse(y, relative_width, relative_max, dx, units='cm'):
     dx:                 Pixel size for x dimension (float).
     units:              Units of the x dimension (string: 'cm', 'mm').
     """
-    
+
     x = np.linspace(start=-(len(y)*dx)/2, stop=(len(y)*dx)/2, num=len(y))
     y = y - relative_max
-    
+
     area = np.trapz(y, dx=dx)
-    if units == 'cm':
-        b = np.linspace(0,1,1000)
-    elif units == 'mm':
-        b = np.linspace(0,10,1000)
     a = relative_width/2*dx
-    minimize = np.zeros(len(b))
-    
-    for i, R in enumerate(b):
-        check_area = (1/2)*np.pi*a*R
-        minimize[i] = abs(area - check_area)
-        
+    fitted_radius = 2*area / (np.pi*a)
+#    if units == 'cm':
+#        b = np.linspace(0,1,1000)
+#    elif units == 'mm':
+#        b = np.linspace(0,10,1000)
+#    a = relative_width/2*dx
+#    minimize = np.zeros(len(b))
+#
+#    for i, R in enumerate(b):
+#        check_area = (1/2)*np.pi*a*R
+#        minimize[i] = abs(area - check_area)
+#
     y = y + relative_max
-        
-    fitted_radius = b[np.argmin(minimize)]
+#
+#    fitted_radius = b[np.argmin(minimize)]
     data_graph = {"x": x, "y": y}
     fitted_graph = {"center": (0, relative_max), "a": a, "b": fitted_radius}
-    
+
     return fitted_radius, fitted_graph, data_graph
 
 def plot_ellipse(data_graph, fitted_graph, save_path=None):
@@ -150,7 +152,7 @@ def plot_ellipse(data_graph, fitted_graph, save_path=None):
     b = fitted_graph["b"]
     xc = fitted_graph["center"][0]
     yc = fitted_graph["center"][1]
-    
+
     plt.figure()
     plt.plot(10*data_graph["x"], 10*data_graph["y"], label="Data w/ Full Width = " + str(10*round(a*2,2)) + " mm")
     plt.plot(10*(xc+a*np.cos(t)), 10*(yc+b*np.sin(t)), label="Fitted Ellipse w/ Diameter = " + str(10*round(b,2)) + " mm")

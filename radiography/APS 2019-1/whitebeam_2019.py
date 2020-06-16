@@ -319,14 +319,14 @@ def main():
     energy = inp_spectra['Energy']
 
     # Find the angles corresponding to the 2018-1 image vertical pixels
-    angles_mrad, _ = spectra_angles('{0}/Imaging/Flat/Mean/AVG_Background'
+    angles_mrad, _ = spectra_angles('{0}/Images/Flat/Mean/AVG_Background'
                                     '_NewYAG.tif'.format(prj_fld))
 
     # Create an interpolation object based on angle
     # Passing in an angle in mrad will output an interp spectra (XOP as ref.) 
     sp_linfit = interp1d(
                          x=inp_spectra['Angle'],
-                         y=inp_spectra['Power'],
+                         y=inp_spectra['Intensity'],
                          axis=0
                          )
 

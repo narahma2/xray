@@ -38,7 +38,7 @@ from calibration_processing import proc_jet
 
 
 def main():
-    # Location of APS 2018-1 data
+    # Location of APS 2019-1 data
     prj_fld = '/mnt/r/X-ray Radiography/APS 2019-1/'
 
     # Location of Normalized sets
