@@ -128,7 +128,7 @@ def proc_jet(cropped_view, cm_px, save_fld, scint, index, test_name,
     elps_T = len(cropped_view) * [np.nan]
 
     for z, k in enumerate(cropped_view):
-        smoothed = savgol_filter(data_epl[k, :], 105, 7)
+        smoothed = savgol_filter(data_epl[k, :], 5, 3)
         warnings.filterwarnings('ignore')
         peaks, _ = find_peaks(smoothed, width=100)
         warnings.filterwarnings('default')
@@ -511,3 +511,4 @@ def main():
 # Run this script
 if __name__ == '__main__':
     main()
+
