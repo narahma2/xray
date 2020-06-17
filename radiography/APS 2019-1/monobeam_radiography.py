@@ -46,6 +46,7 @@ def main():
         yp = len(indices) * [None]
         scan = len(indices) * [None]
         x = len(indices) * [None]
+        test = z.rsplit('_')[0]
 
         # Load in the relevant HDF5 scans
         for n, y in enumerate(indices):
@@ -105,7 +106,8 @@ def main():
             plt.ylim([0, 5])
             plt.xlabel('Horizontal Location (mm)')
             plt.ylabel('EPL (mm)')
-            plt.title(str(yp[n]) + ' mm Downstream')
+            plt.title('{0} mm Downstream - {1} & {2}'
+                      .format(yp[n], test, scan[n]))
             plt.legend()
             plt.savefig('{0}/comparison_{1}mm.png'.format(mb_fld, yp[n]))
             plt.close()
@@ -113,9 +115,14 @@ def main():
         plt.figure()
         plt.imshow(img, vmin=0, vmax=5)
         plt.colorbar()
-        plt.title('EPL [mm] Mapping of Spray')
+        plt.title('EPL [mm] Mapping of Spray - {0}'.format(test))
         for n, _ in enumerate(indices):
-            plt.plot(np.linspace(1,768,768), np.linspace(wbp[n], wbp[n], 768))
+            plt.plot(
+                     np.linspace(1,768,768),
+                     np.linspace(wbp[n], wbp[n], 768),
+                     label='{0}'.format(scan[n])
+                     )
+        plt.legend()
         plt.savefig('{0}/Spray Image.png'.format(mb_fld))
         plt.close()
 
