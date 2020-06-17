@@ -123,9 +123,9 @@ def main():
 
     # Read in water lateral positions
     posn = np.array([get_xpos(x) for x in water_tests])
-    posn[np.abs(250-posn) <= 10] = int(0)
-    posn[np.abs(390-posn) <= 10] = int(1)
-    posn[np.abs(510-posn) <= 10] = int(2)
+    posn[np.abs(250-posn) <= 11] = int(0)
+    posn[np.abs(390-posn) <= 11] = int(1)
+    posn[np.abs(510-posn) <= 11] = int(2)
     posn = posn.astype(int)
 
     # Indices corresponding to each of the positions
