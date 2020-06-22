@@ -32,11 +32,11 @@ def mass_atten(molec, comp=[1], xcom=1, col=None):
     """
     # Select desired database and set default column
     if xcom == 1:
-        database = '/resources/nist_xcom1.xlsx'
+        database = 'resources/nist_xcom1.xlsx'
         if col is None:
             col = 7
     elif xcom == 2:
-        database = '/resources/nist_xcom2.xlsx'
+        database = 'resources/nist_xcom2.xlsx'
         if col is None:
             col = 2
 
@@ -122,16 +122,16 @@ def common_energy(coeffs, energies):
     interp_coeff = len(coeffs) * [None]
 
     # Add residual value to edge locations for interpolation
-    for n, coeff in enumerate(coeffs):
-        for i in range(len(coeff) - 1):
-            if coeff[i] == coeff[i + 1]:
-                coeff[i] -= 1E-5
-                coeff[i + 1] += 1E-5
+    for n, energy in enumerate(energies):
+        for i in range(len(energy) - 1):
+            if energies[n][i] == energies[n][i + 1]:
+                energies[n][i] -= 1E-5
+                energies[n][i + 1] += 1E-5
 
         # Create interpolate function for the attenuation
         interp_coeff[n] = interp1d(
                                    x=energies[n],
-                                   y=coeff
+                                   y=coeffs[n]
                                    )
 
     # Combine energy axes into one unique, sorted array
@@ -174,7 +174,7 @@ def molecule_info(molec):
     atom_mass = np.zeros(len(atoms),)
 
     for i, atom in enumerate(atoms):
-        atom_mass[i] = xlrd.open_workbook('/resources/nist_xcom1.xlsx') \
+        atom_mass[i] = xlrd.open_workbook('resources/nist_xcom1.xlsx') \
                            .sheet_by_name(atom) \
                            .cell(0, 1) \
                            .value
@@ -192,33 +192,48 @@ def molecule_info(molec):
 def test_plots():
     import matplotlib.pyplot as plt
 
+    # Calculated mass attenuation coefficient
     ki50_xcom1 = mass_atten(['H2O', 'KI'], [0.5, 0.5], xcom=1, col=7)
+
+    # Calculated mass energy-absorption attenuation coefficient
     ki50_xcom2 = mass_atten(['H2O', 'KI'], [0.5, 0.5], xcom=2, col=2)
+
+    # Attenuation coefficient taken directly from the NIST mixture web portal
+    # See: <https://physics.nist.gov/cgi-bin/Xcom/xcom2>
+    ki50_web = pd.read_csv('resources/nist_50percKI_H2O.txt', sep='\t')
 
     plt.figure()
     plt.plot(
              ki50_xcom1['Energy'],
              ki50_xcom1['Attenuation'],
-             color='b',
+             color='k',
              linestyle='solid',
              linewidth=3.0,
-             label='50% KI/H$_2$O'
+             label='Calc. $\mu$'
+             )
+    plt.plot(
+             ki50_web['Energy']*1000,
+             ki50_web['Tot wo Coh'],
+             color='b',
+             linestyle='dashed',
+             linewidth=2.0,
+             label='Web $\mu$'
              )
     plt.plot(
              ki50_xcom2['Energy'],
              ki50_xcom2['Attenuation'],
-             color='b',
-             linestyle='solid',
+             color='g',
+             linestyle='dotted',
              linewidth=2.0,
-             label='50% KI/H$_2$O'
+             label='$\mu_{en}$'
              )
     plt.xlim([0, 200])
     plt.yscale('log')
     plt.legend()
     plt.xlabel('Photon Energy (keV)')
     plt.ylabel('Attenuation Coefficient (cm$^2$/g)')
-    plt.title('$\mu$')
-    plt.savefig('mu.png')
+    plt.title('50% KI/H$_2$O $\mu$ Values')
+    plt.savefig('resources/mu_comparison.png')
     plt.close()
 
     return
