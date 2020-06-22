@@ -71,13 +71,8 @@ def mass_atten(molec, comp=[1]):
     molec_energy = len(molec) * [None]
 
     for i, x in enumerate(molec):
-        # Get their molecule formula
-        ele_list = re.findall(
-                              r'[A-Z][a-z]*|\d+',
-                              re.sub('[A-Z][a-z]*(?![\da-z])', r'\g<0>1', x)
-                              )
-        atoms = ele_list[::2]
-        atom_count = np.array([int(x) for x in ele_list[1::2]])
+        # Get molecule information
+        [atoms, atom_count, atom_frac] = molecule_info(x)
 
         atom_data = len(atoms) * [None]
         interp_mu = len(atoms) * [None]
@@ -105,8 +100,6 @@ def mass_atten(molec, comp=[1]):
         [molec_energy[i], atom_mu] = common_energy(raw_mu, raw_energy)
         [_, atom_mu_en] = common_energy(raw_mu_en, raw_energy)
 
-        # Get mass fraction for each atom
-        atom_frac = molecule_weight(atoms, atom_count)
 
         # Calculate combined molecule coefficients
         molec_mu[i] = np.array(
@@ -193,15 +186,23 @@ def common_energy(coeffs, energies):
     return energy, coeffs
 
 
-def molecule_weight(atoms, atom_count):
+def molecule_info(molec):
     """
     Get the mass fraction for each atom in a molecule.
     =============
     --VARIABLES--
-    atoms:          List of atoms by symbol.
-    atom_count:     List of atom count as integers.
+    molec:          String containing chemical formula. Must be its simplest
+                    form without parentheses, i.e. C8H18 not CH3(CH2)6CH3.
     """
     import xlrd
+
+    # Get molecule formula
+    ele_list = re.findall(
+                          r'[A-Z][a-z]*|\d+',
+                          re.sub('[A-Z][a-z]*(?![\da-z])', r'\g<0>1', molec)
+                          )
+    atoms = ele_list[::2]
+    atom_count = np.array([int(x) for x in ele_list[1::2]])
 
     atom_mass = np.zeros(len(atoms),)
 
