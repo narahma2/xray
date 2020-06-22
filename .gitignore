@@ -4,3 +4,7 @@
 *.sublime-workspace
 *.swp
 radiography/APS 2018-1/master_processing_2018.py
+
+general/mu_en.png
+general/mu.png
+general/~$nist_mass_atten_coeff.xlsx
