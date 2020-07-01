@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 from scipy.signal import savgol_filter, find_peaks, peak_widths
 from skimage.transform import rotate
-from general.Statistics.calc_statistics import polyfit
+from general.calc_statistics import polyfit
 from general.misc import create_folder
 
 # Location of APS 2018-1 data
@@ -84,12 +84,12 @@ def vert_var(vert_matrix, method, corr_pckl, scint):
     vert_matrix[clmn] = prc_errors
 
     # Group the matrix by diameter and KI%
-    vert_PRC_grouped = vert_matrix.copy()
+    temp = vert_matrix.copy()
     grp1 = 'Nozzle Diameter (um)'
     grp2 = 'KI %'
-    vert_PRC_grouped = vert_PRC_grouped.groupby([grp1, grp2]) \
-                                       .apply(lambda x: np.nanmean(x[clmn],
-                                                                   axis=0))
+    vert_PRC_grouped = temp.groupby([grp1, grp2])\
+                           .apply(lambda x: np.nanmean(x[clmn],
+                                                       axis=0))
 
     # Get axial positions
     axial_positions = np.linspace(start=20, stop=325, num=325-20+1, dtype=int)
@@ -199,7 +199,7 @@ def mean_var(mean_mat, method, corr_pckl, scint):
     plt.legend()
     plt.title('{0} - {1} RMSE'.format(scint, method))
     plt.xlabel('KI (%)')
-    plt.ylabel('RMSE ($\mu$m)')
+    plt.ylabel(r'RMSE ($\mu$m)')
     plt.savefig('{0}/{1}_mean_{2}_.png'.format(plt_fld, scint, method))
     plt.close()
 
@@ -252,7 +252,7 @@ def main(scint, test_matrix):
     plt.plot(horiz_matrix[x], horiz_matrix['Ellipse RMSE'], fillstyle='none',
              color='olivedrab', marker='s', label='Ellipse RMSE')
     plt.legend()
-    plt.ylabel('RMSE ($\mu$m)')
+    plt.ylabel(r'RMSE ($\mu$m)')
     plt.xlabel('X Position (px)')
     plt.title('{0} - Horizontal Variation - 700 um, 10% KI'.format(scint))
     plt.savefig('{0}/{1}_horiz.png'.format(plt_fld, scint))
@@ -298,6 +298,7 @@ def main(scint, test_matrix):
     plt.xlabel('KI (%)')
     plt.ylabel('RMSE ($\mu$m)')
     plt.savefig('{0}/{1}_combined.png'.format(plt_fld, scint))
+    plt.ylabel(r'RMSE ($\mu$m)')
     plt.close()
 
 
@@ -308,8 +309,11 @@ def run_main():
     scintillators = ['LuAG', 'YAG']
 
     # Test matrix
-    test_matrix = pd.read_csv('{0}/APS White Beam.txt'.format(prj_fld),
-                              sep='\t+', engine='python')
+    test_matrix = pd.read_csv(
+                              '{0}/APS White Beam.txt'.format(prj_fld),
+                              sep='\t+',
+                              engine='python'
+                              )
 
     # Crop down the test matrix
     test_matrix = test_matrix[['Test', 'Nozzle Diameter (um)', 'KI %']].copy()
