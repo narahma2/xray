@@ -14,7 +14,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import warnings
 from PIL import Image
-from general.Spectra.spectrum_modeling import multi_angle as xop, xcom, xcom_reshape, density_KIinH2O, beer_lambert, visible_light, beer_lambert_unknown
+from general.nist import mass_atten
+from general.spectrum_modeling import multi_angle as xop, xcom, xcom_reshape
 from scipy.interpolate import CubicSpline
 from scipy.signal import savgol_filter
 from scipy.interpolate import interp1d
@@ -50,8 +51,8 @@ def main():
     spectra_middle = spectra2D[middle_index, :]
 
     # Load NIST XCOM attenuation curves
-    YAG_atten = xcom(input_folder + '/YAG.txt', att_column=3)
-    LuAG_atten = xcom(input_folder + '/Al5Lu3O12.txt', att_column=3)
+    YAG_atten = mass_atten(['YAG'], xcom=1, col=3, keV=200)
+    LuAG_atten = mass_atten(['LuAG'], xcom=1, col=3, keV=200)
 
     # Reshape XCOM x-axis to match XOP
     YAG_atten = xcom_reshape(YAG_atten, energy)

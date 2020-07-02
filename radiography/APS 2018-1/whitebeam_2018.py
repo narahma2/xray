@@ -17,15 +17,15 @@ from PIL import Image
 from scipy.interpolate import CubicSpline
 from scipy.signal import savgol_filter
 from scipy.interpolate import interp1d
-from general.Spectra.spectrum_modeling import (
-                                               multi_angle as xop,
-                                               xcom,
-                                               xcom_reshape,
-                                               density_KIinH2O,
-                                               beer_lambert,
-                                               visible_light,
-                                               beer_lambert_unknown as bl_unk
-                                               )
+from general.nist import mass_atten
+from general.spectrum_modeling import (
+                                       multi_angle as xop,
+                                       xcom_reshape,
+                                       density_KIinH2O,
+                                       beer_lambert,
+                                       visible_light,
+                                       beer_lambert_unknown as bl_unk
+                                       )
 from general.misc import create_folder
 
 
@@ -60,7 +60,7 @@ def spectra_angles(flat):
     beam_middle_avg = int(np.mean(beam_middle).round())
 
     # Image pixel size
-    cm_pix = 0.16 / 162
+    cm_pix = np.loadtxt('{0}/cm_px.txt'.format(prj_fld))
 
     # Distance X-ray beam travels
     length = 3500
@@ -71,6 +71,48 @@ def spectra_angles(flat):
     angles_mrad = np.arctan((vertical_indices*cm_pix) / length) * 1000
 
     return angles_mrad, flatfield_avg
+
+
+def plot_atten(atten1, atten2, name):
+    """
+    Plots the attenuation coefficients before and after re-shaping.
+    =============
+    --VARIABLES--
+    atten1:     Original attenuation coefficient from nist.mass_atten.
+    atten2:     Updated attenuation coefficient from
+                spectrum_modeling.xcom_reshape.
+    name:       Name of filter.
+    """
+    atten_fld = create_folder('{0}/Figures/Atten_Coeff'.format(prj_fld))
+
+    plt.figure()
+    plt.plot(
+             atten1['Energy'],
+             atten1['Attenuation'],
+             label='Original',
+             linestyle='solid',
+             color='k',
+             linewidth=2.0,
+             zorder=1
+             )
+    plt.plot(
+             atten2['Energy'],
+             atten2['Attenuation'],
+             label='Re-shaped',
+             linestyle='dashed',
+             color='b',
+             linewidth=2.0,
+             zorder=2
+             )
+    plt.yscale('log')
+    plt.legend()
+    plt.xlabel('Photon Energy (keV)')
+    plt.ylabel('Attenuation Coefficient (cm$^2$/g')
+    plt.title('{0}'.format(name))
+    plt.savefig('{0}/{1}.png'.format(atten_fld, name))
+    plt.close()
+
+    return
 
 
 def averaged_plots(x, y, ylbl, xlbl, scale, name, scint):
@@ -209,12 +251,16 @@ def filtered_spectra(energy, spectra, scint_resp):
     global inp_fld
 
     # Load NIST XCOM attenuation curves
-    air_atten = xcom(inp_fld + '/air.txt', att_column=5)
-    Be_atten = xcom(inp_fld + '/Be.txt', att_column=5)
+    air_atten1 = mass_atten(['Air'], xcom=1, keV=200)
+    Be_atten1 = mass_atten(['Be'], xcom=1, keV=200)
 
     # Reshape XCOM x-axis to match XOP
-    air_atten = xcom_reshape(air_atten, energy)
-    Be_atten = xcom_reshape(Be_atten, energy)
+    air_atten2 = xcom_reshape(air_atten1, energy)
+    Be_atten2 = xcom_reshape(Be_atten1, energy)
+
+    # Plot the attenuation coefficients
+    plot_atten(air_atten1, air_atten2, 'Air')
+    plot_atten(Be_atten1, Be_atten2, 'Be')
 
     ## EPL in cm
     # Air EPL
@@ -235,7 +281,7 @@ def filtered_spectra(energy, spectra, scint_resp):
     # Apply air filter
     spectra_filtered = beer_lambert(
                                     incident=spectra,
-                                    attenuation=air_atten['Attenuation'],
+                                    attenuation=air_atten2['Attenuation'],
                                     density=air_den,
                                     epl=air_epl
                                     )
@@ -243,7 +289,7 @@ def filtered_spectra(energy, spectra, scint_resp):
     # Apply Be window filter
     spectra_filtered = beer_lambert(
                                     incident=spectra_filtered,
-                                    attenuation=Be_atten['Attenuation'],
+                                    attenuation=Be_atten2['Attenuation'],
                                     density=Be_den,
                                     epl=Be_epl
                                     )
@@ -251,7 +297,7 @@ def filtered_spectra(energy, spectra, scint_resp):
     # Apply correction filter (air)
 #    spectra_filtered = beer_lambert(
 #                                    incident=spectra_filtered,
-#                                    attenuation=air_atten['Attenuation'],
+#                                    attenuation=air_atten2['Attenuation'],
 #                                    density=air_den,
 #                                    epl=70
 #                                    )
@@ -277,31 +323,43 @@ def spray_model(spray_epl, energy, model, scint, I0, wfct):
     global prj_fld
     global inp_fld
 
-    # Spray attenuation curves
-    liq_atten = xcom('{0}/{1}.txt'.format(inp_fld, model), att_column=5)
-    liq_atten = xcom_reshape(liq_atten, energy)
-
     # Spray densities
     if model == 'water':
-        spray_den = 1.0                         # KI 0%
+        ki_perc = 0
+        spray_den = 1.0
     elif model == 'KI1p6':
-        spray_den = density_KIinH2O(1.6)        # KI 1.6%
+        ki_perc = 1.6
+        spray_den = density_KIinH2O(ki_perc)
     elif model == 'KI3p4':
-        spray_den = density_KIinH2O(3.4)        # KI 3.4%
+        ki_perc = 3.4
+        spray_den = density_KIinH2O(ki_perc)
     elif model == 'KI4p8':
-        spray_den = density_KIinH2O(4.8)        # KI 4.8%
+        ki_perc = 4.8
+        spray_den = density_KIinH2O(ki_perc)
     elif model == 'KI8p0':
-        spray_den = density_KIinH2O(8)          # KI 8.0%
+        ki_perc = 8.0
+        spray_den = density_KIinH2O(ki_perc)
     elif model == 'KI10p0':
-        spray_den = density_KIinH2O(10)         # KI 10.0%
+        ki_perc = 10.0
+        spray_den = density_KIinH2O(ki_perc)
     elif model == 'KI11p1':
-        spray_den = density_KIinH2O(11.1)       # KI 11.1%
+        ki_perc = 11.1
+        spray_den = density_KIinH2O(ki_perc)
+
+    # Spray composition
+    molec = ['H2O', 'KI']
+    comp = [100-ki_perc, ki_perc]
+
+    # Spray attenuation
+    liq_atten1 = mass_atten(molec=molec,comp=comp, xcom=1, keV=200)
+    liq_atten2 = xcom_reshape(liq_atten1, energy)
+    plot_atten(liq_atten1, liq_atten2, model)
 
     ## Detected spray spectra I 
     I = [
          bl_unk(
                 incident=incident,
-                attenuation=liq_atten['Attenuation'],
+                attenuation=liq_atten2['Attenuation'],
                 density=spray_den,
                 epl=spray_epl
                 )
@@ -395,12 +453,16 @@ def main():
     weights2D = np.array([x/np.sum(x) for x in spectra2D])
 
     # Load NIST XCOM attenuation curves
-    YAG_atten = xcom(inp_fld + '/YAG.txt', att_column=3)
-    LuAG_atten = xcom(inp_fld + '/Al5Lu3O12.txt', att_column=3)
+    YAG_atten1 = mass_atten(['YAG'], xcom=1, col=3, keV=200)
+    LuAG_atten1 = mass_atten(['LuAG'], xcom=1, col=3, keV=200)
 
     # Reshape XCOM x-axis to match XOP
-    YAG_atten = xcom_reshape(YAG_atten, energy)
-    LuAG_atten = xcom_reshape(LuAG_atten, energy)
+    YAG_atten2 = xcom_reshape(YAG_atten1, energy)
+    LuAG_atten2 = xcom_reshape(LuAG_atten1, energy)
+
+    # Plot attenuation coefficients
+    plot_atten(YAG_atten1, YAG_atten2, 'YAG')
+    plot_atten(LuAG_atten1, LuAG_atten2, 'LuAG')
 
     # Scintillator EPL
     YAG_epl = 0.05      # 500 um
@@ -414,12 +476,17 @@ def main():
     # Apply Beer-Lambert law
     # Scintillator response
     LuAG_resp = scint_respfn(
-                                 sp_linfit,
-                                 scint_atten=LuAG_atten,
-                                 scint_den=LuAG_den,
-                                 scint_epl=LuAG_epl
-                                 )
-    YAG_resp = scint_respfn(sp_linfit, YAG_atten, YAG_den, YAG_epl)
+                             sp_linfit,
+                             scint_atten=LuAG_atten2,
+                             scint_den=LuAG_den,
+                             scint_epl=LuAG_epl
+                             )
+    YAG_resp = scint_respfn(
+                            sp_linfit,
+                            scint_atten=YAG_atten2,
+                            scint_den=YAG_den,
+                            scint_epl=YAG_epl
+                            )
 
     # Apply filters and find detected visible light emission
     LuAG = map(lambda x: filtered_spectra(energy, x, LuAG_resp), spectra2D)
