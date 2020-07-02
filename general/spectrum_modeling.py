@@ -19,12 +19,15 @@ def multi_angle(xop_path):
     """Used for modeling vertical variation in synchrotron spectra"""
     # [Angle (mrad), Energy (eV), Power (Watts/eV/mrad) or Flux
     #   (Photons/s/0.1%bw/mrad)]
-    spct = pd.read_csv(xop_path, sep='\s+', header=None)
+    spct = pd.read_csv(xop_path, sep='\s+', header=None, engine='python')
     spct.columns = ['Angle', 'Energy', 'Intensity']
 
     # Can sort DataFrame if needed, however will be split into lists instead
     spct = spct.sort_values(['Angle', 'Energy'])
     spct = spct.reset_index(drop=True)
+
+    # Convert energy axis to keV
+    spct.loc[:, 'Energy'] /= 1000
 
     # Scale intensity to visible photon count
     # Logic being that 10 keV x-ray photons emit 10x more visible photons 
