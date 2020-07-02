@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from PIL import Image
 from scipy.signal import savgol_filter, find_peaks, peak_widths
-from general.Statistics.calc_statistics import polyfit
+from general.calc_statistics import polyfit
 from general.misc import create_folder
 
 def get_xpos(path):

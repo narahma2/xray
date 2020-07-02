@@ -23,19 +23,19 @@ from scipy.signal import (
                           peak_widths
                           )
 from skimage.transform import rotate
-from general.Statistics.calc_statistics import (
-                                                rmse,
-                                                mape,
-                                                zeta,
-                                                mdlq
-                                                )
-from general.White_Beam.wb_functions import (
-                                             convert2EPL,
-                                             ellipse,
-                                             ideal_ellipse,
-                                             plot_ellipse,
-                                             plot_widths
-                                             )
+from general.calc_statistics import (
+                                     rmse,
+                                     mape,
+                                     zeta,
+                                     mdlq
+                                     )
+from general.wb_functions import (
+                                  convert2EPL,
+                                  ellipse,
+                                  ideal_ellipse,
+                                  plot_ellipse,
+                                  plot_widths
+                                  )
 from jet_processing import proc_jet
 from general.misc import create_folder
 
@@ -44,15 +44,20 @@ def main():
     prj_fld = '/mnt/r/X-ray Radiography/APS 2018-1/'
 
     #%% Imaging setup
-    cm_px = 0.16 / 162   # See 'APS White Beam.xlsx -> Pixel Size'
+    # See 'APS White Beam.xlsx -> Pixel Size'
+    cm_px = np.loadtxt('{0}/cm_px.txt'.format(prj_fld))
 
-    test_matrix = pd.read_csv(prj_fld + '/APS White Beam.txt', sep='\t+')
+    test_matrix = pd.read_csv(
+                              prj_fld + '/APS White Beam.txt',
+                              sep='\t+',
+                              engine='python'
+                              )
 
     # Scintillator
     scintillators = ['LuAG', 'YAG']
 
     # Correction factors
-    correction_factors = ['peakT', 'ellipseT']
+    correction_factors = ['peakT', 'elpsT']
 
     for cf_type in correction_factors:
         for scint in scintillators:

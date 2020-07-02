@@ -21,19 +21,19 @@ from scipy.signal import (
                           peak_widths
                           )
 from skimage.transform import rotate
-from general.Statistics.calc_statistics import (
-                                                rmse,
-                                                mape,
-                                                zeta,
-                                                mdlq
-                                                )
-from general.White_Beam.wb_functions import (
-                                             convert2EPL,
-                                             ellipse,
-                                             ideal_ellipse,
-                                             plot_ellipse,
-                                             plot_widths
-                                             )
+from general.calc_statistics import (
+                                     rmse,
+                                     mape,
+                                     zeta,
+                                     mdlq
+                                     )
+from general.wb_functions import (
+                                  convert2EPL,
+                                  ellipse,
+                                  ideal_ellipse,
+                                  plot_ellipse,
+                                  plot_widths
+                                  )
 from general.misc import create_folder
 from timeit import default_timer as timer
 
@@ -228,7 +228,7 @@ def proc_jet(cm_px, save_fld, scint, index, test_name,
                       'Ellipse Errors': ellipse_errors,
                       'Peak Errors': peak_errors,
                       'Transmission Ratios': [ratio_ellipseT, ratio_peakT],
-                      'EPL Ratios': [ratio_peak, ratio_ellipse]
+                      'EPL Ratios': [ratio_ellipse, ratio_peak]
                       }
 
     with open(summ_fld + '/' + scint + '_' + test_name + '.pckl', 'wb') as f:
@@ -379,7 +379,8 @@ def main():
     prj_fld = '/mnt/r/X-ray Radiography/APS 2018-1/'
 
     #%% Imaging setup
-    cm_px = 0.16 / 162   # See 'APS White Beam.xlsx -> Pixel Size'
+    # See 'APS White Beam.xlsx -> Pixel Size'
+    cm_px = np.loadtxt('{0}/cm_px.txt'.format(prj_fld))
 
     dark_path = prj_fld + '/Images/Uniform_Jets/Mean/AVG_Jet_dark2.tif'
     dark = np.array(Image.open(dark_path))

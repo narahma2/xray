@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 from scipy.signal import savgol_filter, find_peaks, peak_widths
 from skimage.transform import rotate
-from general.Statistics.calc_statistics import polyfit
+from general.calc_statistics import polyfit
 from general.misc import create_folder
 
 

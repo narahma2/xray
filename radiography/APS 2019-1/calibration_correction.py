@@ -20,19 +20,19 @@ from scipy.signal import (
                           peak_widths
                           )
 from skimage.transform import rotate
-from general.Statistics.calc_statistics import (
-                                                rmse,
-                                                mape,
-                                                zeta,
-                                                mdlq
-                                                )
-from general.White_Beam.wb_functions import (
-                                             convert2EPL,
-                                             ellipse,
-                                             ideal_ellipse,
-                                             plot_ellipse,
-                                             plot_widths
-                                             )
+from general.calc_statistics import (
+                                     rmse,
+                                     mape,
+                                     zeta,
+                                     mdlq
+                                     )
+from general.wb_functions import (
+                                  convert2EPL,
+                                  ellipse,
+                                  ideal_ellipse,
+                                  plot_ellipse,
+                                  plot_widths
+                                  )
 from general.misc import create_folder
 from calibration_processing import proc_jet
 
