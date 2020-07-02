@@ -2,7 +2,10 @@ import pandas as pd
 import numpy as np
 
 
-def mass_atten(molec, comp=[1], xcom=1, col=None):
+fld = '/mnt/e/GitHub/xray/general/resources'
+
+
+def mass_atten(molec, comp=[1], xcom=1, col=None, keV=200):
     """
     Retrieves the mass attenuation coefficient data from NIST.
     See: <https://www.nist.gov/pml/x-ray-mass-attenuation-coefficients>
@@ -14,7 +17,9 @@ def mass_atten(molec, comp=[1], xcom=1, col=None):
                 Pure H2O: ['H2O']
                 10% KI in H2O: ['H2O', 'KI']
     comp:       Mass composition of the mixture (optional). Order matches the
-                molec variable, e.g. for 10% KI in H2O: [0.9, 0.1].
+                molec variable, e.g. for 10% KI in H2O: [0.9, 0.1]. Can be
+                entered in decimal form (0-1) or percent form (0-100), data
+                will be normalized in this code to the 0-1 scale.
     xcom:       1: first database (w/ specific interactions listed) (default)
                 2: new updated energy-absorption coefficient (total coeff).
     col:        Which attenuation coefficient to return, depedent on xcom.
@@ -29,20 +34,33 @@ def mass_atten(molec, comp=[1], xcom=1, col=None):
                 if xcom == 2, col corresponds to:
                     1: Total mass atten. coeff.
                     2: Energy-absorption corrected atten. coeff. (default)
+    keV:        Cut-off for energy axis in keV. Defaults to 200 keV.
     """
+    # Check if common name is passed and manually set the formula/composition
+    if molec == ['Air'] or molec == ['air']:
+        molec = ['N2', 'O2', 'Ar']
+        comp = [0.78, 0.21, 0.01]
+    elif molec == ['YAG']:
+        molec = ['Y3Al5O12']
+    elif molec == ['LuAG']:
+        molec = ['Lu3Al5O12']
+
     # Select desired database and set default column
     if xcom == 1:
-        database = 'resources/nist_xcom1.xlsx'
+        database = '{0}/nist_xcom1.xlsx'.format(fld)
         if col is None:
             col = 7
     elif xcom == 2:
-        database = 'resources/nist_xcom2.xlsx'
+        database = '{0}/nist_xcom2.xlsx'.format(fld)
         if col is None:
             col = 2
 
     # Convert to arrays
     molec = np.array(molec)
     comp = np.array(comp)
+
+    # Normalize the composition parameter if needed
+    comp = comp / comp.sum()
 
     # Check to make sure data passed in proper format
     if comp.size is 1:
@@ -72,7 +90,8 @@ def mass_atten(molec, comp=[1], xcom=1, col=None):
             atom_data[j] = pd.read_excel(
                                          database,
                                          sheet_name=y,
-                                         skiprows=2
+                                         skiprows=2,
+                                         engine='openpyxl'
                                          )
 
             # Convert MeV to keV
@@ -105,7 +124,10 @@ def mass_atten(molec, comp=[1], xcom=1, col=None):
                      )
     coeff = coeff.sum(axis=0)
 
-    return {'Energy': energy, 'Attenuation': coeff}
+    # Mask out values greater than keV cut-off
+    mask = energy <= keV
+
+    return {'Energy': energy[mask], 'Attenuation': coeff[mask]}
 
 
 def common_energy(coeffs, energies):
@@ -161,7 +183,9 @@ def molecule_info(molec):
                     form without parentheses, i.e. C8H18 not CH3(CH2)6CH3.
     """
     import re
-    import xlrd
+
+    # Excel workbook to read atom mass from
+    xlsx = '{0}/nist_xcom1.xlsx'.format(fld)
 
     # Get molecule formula
     ele_list = re.findall(
@@ -170,19 +194,20 @@ def molecule_info(molec):
                           )
     atoms = ele_list[::2]
     atom_count = np.array([int(x) for x in ele_list[1::2]])
-
     atom_mass = np.zeros(len(atoms),)
 
     for i, atom in enumerate(atoms):
-        atom_mass[i] = xlrd.open_workbook('resources/nist_xcom1.xlsx') \
-                           .sheet_by_name(atom) \
-                           .cell(0, 1) \
-                           .value
+        atom_mass[i] = pd.read_excel(
+                                     xlsx,
+                                     sheet_name=atom,
+                                     header=None,
+                                     nrows=1,
+                                     engine='openpyxl'
+                                     )[1].to_numpy()
         atom_mass[i] *= atom_count[i]
 
     # Get total molecule mass
     molecule_mass = atom_mass.sum()
-
     # Calculate mass fraction for each atom
     atom_frac = atom_mass / molecule_mass
 
@@ -190,6 +215,7 @@ def molecule_info(molec):
 
 
 def test_plots():
+    """Tests out the NIST attenuation coefficient functions above."""
     import matplotlib.pyplot as plt
 
     # Calculated mass attenuation coefficient
@@ -200,7 +226,10 @@ def test_plots():
 
     # Attenuation coefficient taken directly from the NIST mixture web portal
     # See: <https://physics.nist.gov/cgi-bin/Xcom/xcom2>
-    ki50_web = pd.read_csv('resources/nist_50percKI_H2O.txt', sep='\t')
+    ki50_web = pd.read_csv('{0}/nist_50percKI_H2O.txt'.format(fld), sep='\t')
+
+    # Drop values greater than the given keV cut-off
+    ki50_web.drop(ki50_web[ki50_web.Energy > 200/1000].index, inplace=True)
 
     plt.figure()
     plt.plot(
@@ -227,13 +256,12 @@ def test_plots():
              linewidth=2.0,
              label='$\mu_{en}$'
              )
-    plt.xlim([0, 200])
     plt.yscale('log')
     plt.legend()
     plt.xlabel('Photon Energy (keV)')
     plt.ylabel('Attenuation Coefficient (cm$^2$/g)')
     plt.title('50% KI/H$_2$O $\mu$ Values')
-    plt.savefig('resources/mu_comparison.png')
+    plt.savefig('{0}/mu_comparison.png'.format(fld))
     plt.close()
 
     return
