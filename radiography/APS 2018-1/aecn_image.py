@@ -52,83 +52,44 @@ def main():
     # Calculate EPL and convert to um from mm
     EPL = (ext_lengths / atten_coeff) * 1000
 
-        # Load in corresponding EPL image and convert to um from cm
-        img_path = '{0}/Images/AeroECN 100psi 10%KI/EPL/TimeAvg/'\
-                   'AVG_AeroECN_{1}B_.tif'\
-                   .format(prj_fld, image)
-        img = np.array(Image.open(img_path))
-        img *= 10000
+    # Load in corresponding TimeRes EPL image and convert to um from cm
+    img_path = '{0}/Images/AeroECN 100psi 10%KI/EPL/TimeRes/'\
+               'AeroECN_centerB_.tif'.format(prj_fld)
 
-        xx = np.linspace(1, 768, 768)
-        xx = xx - image_inj_x[n]
-        # Convert to mm
-        xx = xx * cm_px * 10
+    img = np.array(Image.open(img_path))
+    img *= 10000
 
-        yy = np.linspace(1, 352, 352)
-        yy = yy - image_inj_y[n]
-        # Convert to mm
-        yy = yy * cm_px * 10
+    xx = np.linspace(1, 768, 768)
+    xx = xx - image_inj_x[n]
+    # Convert to mm
+    xx = xx * cm_px * 10
 
-        # Get vertical scan data (V1)
-        [inj_xdata, inj_ydata, img_xdata, img_ydata, v_x] = \
-            vert_scan(xx, image_v_x[n][0], yy, image_v_y, img, EPL, x, y)
-        plot_fig(img_xdata, img_ydata, inj_xdata, inj_ydata,
-                 'Vertical Location (mm)', 'x', v_x, '{0}_v1'.format(image))
+    yy = np.linspace(1, 352, 352)
+    yy = yy - image_inj_y[n]
+    # Convert to mm
+    yy = yy * cm_px * 10
+    
+    # Image positions
+    image_h_x = [0, 767]
+    image_h_y = list(range(29, 330))
 
-        # Get vertical scan data (V2)
-        [inj_xdata, inj_ydata, img_xdata, img_ydata, v_x] = \
-            vert_scan(xx, image_v_x[n][1], yy, image_v_y, img, EPL, x, y)
-        plot_fig(img_xdata, img_ydata, inj_xdata, inj_ydata,
-                 'Vertical Location (mm)', 'x', v_x, '{0}_v2'.format(image))
+    # Initialize the image and fly scan arrays
+    inj_xdata = len(image_h_y) * [None]
+    inj_ydata = len(image_h_y) * [None]
+    img_xdata = len(image_h_y) * [None]
+    img_ydata = len(image_h_y) * [None]
+    h_y = len(image_h_y) * [None]
 
-        if n == 0:
-            u = 60-29
-            v = 150-29
-        else:
-            u = 0
-            v = 1
-
+    for j in image_h_y:
         # Get horizontal scan data (H1)
-        [inj_xdata, inj_ydata, img_xdata, img_ydata, h_y] = \
-            horiz_scan(xx, image_h_x, yy, image_h_y[n][u], img, EPL, x, y)
-        plot_fig(img_xdata, img_ydata, inj_xdata, inj_ydata,
-                 'Horizontal Location (mm)', 'y', h_y, '{0}_h1'.format(image))
+        [inj_xdata[j], inj_ydata[j], img_xdata[j], img_ydata[j], _h_y[j]] = \
+            horiz_scan(xx, image_h_x, yy, j, img, EPL, x, y)
+    
+    plt.figure()
+    plt.contourf([xx, yy[image_h_y]], img_ydata)
+    plt.savefig('{0}/image.png'.format(mb_fld))
+    plt.close()
 
-        # Get horizontal scan data (H2)
-        [inj_xdata, inj_ydata, img_xdata, img_ydata, h_y] = \
-            horiz_scan(xx, image_h_x, yy, image_h_y[n][v], img, EPL, x, y)
-        plot_fig(img_xdata, img_ydata, inj_xdata, inj_ydata,
-                 'Horizontal Location (mm)', 'y', h_y, '{0}_h2'.format(image))
-
-        # Build up RMSE array for the horizontal center scan
-        if n == 0:
-            center_rmse = np.zeros(len(image_h_y[n]))
-            image_pos = np.zeros(len(image_h_y[n]))
-            scan_pos = np.zeros(len(image_h_y[n]))
-
-            for q, k in enumerate(image_h_y[n]):
-                [inj_xdata, inj_ydata, img_xdata, img_ydata, h_y] = \
-                    horiz_scan(xx, image_h_x, yy, k, img, EPL, x, y)
-                interp = interp1d(inj_xdata, inj_ydata, fill_value=0,
-                                  bounds_error=False)
-                center_rmse[q] = rmse(img_ydata, interp(img_xdata))
-                image_pos[q] = k
-                scan_pos[q] = h_y
-
-        # Plot the RMSE curve
-        plt.figure()
-        plt.plot(
-                 image_pos,
-                 center_rmse,
-                 linewidth=2.0,
-                 linestyle='solid',
-                 color='k'
-                 )
-        plt.xlabel('Vertical Location (px)')
-        plt.ylabel('Norm. RMSE (-)')
-        plt.title('RMSE for AeroECN @ 11.1% KI')
-        plt.savefig('{0}/rmse.png'.format(mb_fld))
-        plt.close()
 
 # Run this script
 if __name__ == '__main__':
