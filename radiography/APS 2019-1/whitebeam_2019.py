@@ -16,9 +16,9 @@ from scipy.interpolate import CubicSpline
 from scipy.signal import savgol_filter
 from scipy.interpolate import interp1d
 from general.misc import create_folder
-from general.Spectra.spectrum_modeling import (
+from general.nist import mass_atten
+from general.spectrum_modeling import (
     multi_angle as xop,
-    xcom,
     xcom_reshape,
     density_KIinH2O,
     beer_lambert,
@@ -160,9 +160,9 @@ def filtered_spectra(spectra, scint_resp, energy):
     global inp_fld
 
     # Load NIST XCOM attenuation curves
-    air_atten = xcom(inp_fld + '/air.txt', att_column=5)
-    Be_atten = xcom(inp_fld + '/Be.txt', att_column=5)
-    Si_atten = xcom(inp_fld + '/Si.txt', att_column=5)
+    air_atten = mass_atten(['Air'], xcom=2, keV=200)
+    Be_atten = mass_atten(['Be'], xcom=2, keV=200)
+    Si_atten = mass_atten(['Si'], xcom=2, keV=200)
 
     # Reshape XCOM x-axis to match XOP
     air_atten = xcom_reshape(air_atten, energy)
@@ -243,8 +243,17 @@ def spray_model(energy, model, spray_epl, scint, det, I0):
     global prj_fld
     global inp_fld
 
+    # Read in model and get correct liquid
+    if model is 'water':
+        molec = ['H2O']
+        comp = [1]
+    elif model is 'KI4p8':
+        ki_perc = 4.8
+        molec = ['H2O', 'KI']
+        comp = [100-ki_perc, ki_perc]
+
     # Spray attenuation curves
-    liq_atten = xcom('{0}/{1}.txt'.format(inp_fld, model), att_column=5)
+    liq_atten = mass_atten(molec=molec, comp=comp, xcom=2, keV=200)
     liq_atten = xcom_reshape(liq_atten, energy)
 
     # Spray densities
@@ -334,7 +343,7 @@ def main():
     spectra2D = sp_linfit(angles_mrad)
 
     # Load NIST XCOM attenuation curves
-    YAG_atten = xcom(inp_fld + '/YAG.txt', att_column=3)
+    YAG_atten = mass_atten(['YAG'], xcom=1, col=3, keV=200)
 
     # Reshape XCOM x-axis to match XOP
     YAG_atten = xcom_reshape(YAG_atten, energy)
