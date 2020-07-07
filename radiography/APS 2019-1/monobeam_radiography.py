@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from PIL import Image
-from general.Spectra.spectrum_modeling import density_KIinH2O
+from general.spectrum_modeling import density_KIinH2O
 from general.misc import create_folder
 
 
@@ -77,17 +77,18 @@ def main():
             # Add in air attenuation coefficient
             #atten_coeff *= (9.227*(10*10))*(0.0012929/1000)
 
-            EPL[n] = extinction_length / atten_coeff
+            # Calculate EPL and convert to um from mm
+            EPL[n] = (extinction_length / atten_coeff) * 1000
 
             # Append offset value to file
             with open(prj_fld + '/offsets.txt', 'a') as f:
                 f.write('{0}\n'.format(offset))
 
-        # Load in corresponding EPL image and convert to mm from cm
+        # Load in corresponding EPL image and convert to um from cm
         img_path = '{0}/Images/Spray/EPL/TimeAvg/AVG_{1}_S001.tif'\
                    .format(prj_fld, z)
         img = np.array(Image.open(img_path))
-        img *= 10
+        img *= 10000
 
         # Flip image to match MB scan
         img = np.fliplr(img)
@@ -100,12 +101,26 @@ def main():
 
         for n, _ in enumerate(indices):
             plt.figure()
-            plt.plot(x[n], np.mean(EPL[n], axis=1), label='Monobeam Averaged')
-            plt.plot(xx, img[wbp[n], :], label='Whitebeam Averaged')
+            plt.plot(
+                     xx[0::5],
+                     img[wbp[n], :][0::5],
+                     color='b',
+                     marker='o',
+                     fillstyle='none',
+                     label='WB {0}'.format(test)
+                     )
+            plt.plot(
+                     x[n],
+                     np.mean(EPL[n], axis=1),
+                     color='r',
+                     marker='s',
+                     fillstyle='none',
+                     label='MB {0}'.format(scan[n])
+                     )
             plt.xlim([-3, 3])
-            plt.ylim([0, 5])
+            plt.ylim([-200, 3500])
             plt.xlabel('Horizontal Location (mm)')
-            plt.ylabel('EPL (mm)')
+            plt.ylabel('EPL ($\mu$m)')
             plt.title('{0} mm Downstream - {1} & {2}'
                       .format(yp[n], test, scan[n]))
             plt.legend()
@@ -113,9 +128,9 @@ def main():
             plt.close()
 
         plt.figure()
-        plt.imshow(img, vmin=0, vmax=5)
+        plt.imshow(img, vmin=-200, vmax=3500)
         plt.colorbar()
-        plt.title('EPL [mm] Mapping of Spray - {0}'.format(test))
+        plt.title('EPL ($\mu$m) Mapping of Spray - {0}'.format(test))
         for n, _ in enumerate(indices):
             plt.plot(
                      np.linspace(1,768,768),

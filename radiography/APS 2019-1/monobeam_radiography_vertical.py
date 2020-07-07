@@ -14,7 +14,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from PIL import Image
 from scipy.signal import savgol_filter
-from general.Spectra.spectrum_modeling import density_KIinH2O
+from general.spectrum_modeling import density_KIinH2O
 from general.misc import create_folder
 
 
@@ -47,11 +47,12 @@ def main():
         scan = len(indices) * [None]
         fy = len(indices) * [None]
 
-        # Load in corresponding EPL image and convert to mm from cm
+        # Load in corresponding EPL image and convert to um from cm
         img_path = '{0}/Images/Spray/EPL/TimeAvg/AVG_{1}_S001.tif'\
                    .format(prj_fld, z)
+        img_name = img_path.rsplit('/')[-1].rsplit('_')[0]
         img = np.array(Image.open(img_path))
-        img *= 10
+        img *= 10000
 
         # Flip image to match MB scan
         img = np.fliplr(img)
@@ -86,11 +87,12 @@ def main():
                 # <https://physics.nist.gov/PhysRefData/Xcom/html/xcom1.html>
                 atten_coeff = (1.006*10*(10*10))*(0.001)
             elif 'KI' in z:
-                # 4.8% KI in water @ 8 keV 
+                # 4.8% KI in water @ 8 keV
                 # <https://physics.nist.gov/PhysRefData/Xcom/html/xcom1.html>
                 atten_coeff = (2.182*10*(10*10))*(density_KIinH2O(4.8)/1000)
 
-            EPL[n] = extinction_length / atten_coeff
+            # Calculate EPL and convert to um from mm
+            EPL[n] = (extinction_length / atten_coeff) * 1000
 
         yy = np.linspace(0,511,512)
         yy *= cm_px * 10       # in mm
@@ -100,32 +102,39 @@ def main():
         for n, _ in enumerate(indices):
             plt.figure()
             plt.plot(
-                     fy[n],
-                     np.mean(EPL[n], axis=1),
-                     label='Monobeam Averaged'
+                     yy[0::5],
+                     img[:, wbp[n]][0::5],
+                     color='b',
+                     marker='o',
+                     fillstyle='none',
+                     label='WB {0} @ {1}'.format(img_name, wbp[n])
                      )
             plt.plot(
-                     yy,
-                     img[:, mdpt],
-                     label='Whitebeam Averaged'
+                     fy[n],
+                     np.mean(EPL[n], axis=1),
+                     color='r',
+                     marker='s',
+                     fillstyle='none',
+                     label='MB {0}'.format(scan[n])
                      )
             plt.xlim([0, 5])
-            plt.ylim([0, 5])
-            plt.title('{0} mm'.format(xp[n]))
+            plt.ylim([-200, 3500])
+            plt.title('Time Averaged - {0} mm'.format(xp[n]))
             plt.xlabel('Vertical Location (mm)')
-            plt.ylabel('EPL (mm)')
+            plt.ylabel('EPL ($\mu$m)')
             plt.legend()
             plt.savefig('{0}/comparison_x{1}mm.png'.format(mb_fld, xp[n]))
             plt.close()
 
         plt.figure()
-        plt.imshow(img, vmin=0, vmax=5)
+        plt.imshow(img, vmin=-200, vmax=3500)
         plt.colorbar()
-        plt.title('EPL [mm] Mapping of Spray')
+        plt.title('EPL ($\mu$m) Mapping of Spray')
         for n, _ in enumerate(indices):
             plt.plot(
                      np.linspace(wbp[n], wbp[n], 512),
-                     np.linspace(1,512,512)
+                     np.linspace(1,512,512),
+                     label='{0} MB'.format(scan[n])
                      )
         plt.savefig('{0}/Spray Image Vertical.png'.format(mb_fld))
         plt.close()
