@@ -1,6 +1,6 @@
 """
 -*- coding: utf-8 -*-
-Summarize the correction factors for the jets.
+Summarize the transmission correction factors for the jets.
 
 @Author: rahmann
 @Date:   2020-04-30 10:54:07
@@ -8,17 +8,13 @@ Summarize the correction factors for the jets.
 @Last Modified time: 2020-04-30 10:54:07
 """
 
-import os
 import pickle
-import glob
 import warnings
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from PIL import Image
-from scipy.signal import savgol_filter, find_peaks, peak_widths
-from skimage.transform import rotate
-from general.Statistics.calc_statistics import polyfit
+from general.calc_statistics import polyfit
 from general.misc import create_folder
 
 
@@ -105,12 +101,12 @@ def main():
 
         # Get vertical values
         vert_mat[relT] = [
-                          get_elpsT('{0}/{1}_{2}.pckl'\
+                          get_elpsT('{0}/{1}_{2}.pckl'
                                     .format(prc_fld, scint, x))
                           for x in vert_mat['Test']
                           ]
         vert_mat[rpkT] = [
-                          get_peakT('{0}/{1}_{2}.pckl'\
+                          get_peakT('{0}/{1}_{2}.pckl'
                                     .format(prc_fld, scint, x))
                           for x in vert_mat['Test']
                           ]
@@ -131,13 +127,13 @@ def main():
         for i, x in enumerate(linecolors):
             ax1.plot(
                      axial_loc[2:-1],
-                     vert_peakT_grp[700,KI_conc[i]][2:-1],
+                     vert_peakT_grp[700, KI_conc[i]][2:-1],
                      color=x,
                      linewidth=2.0
                      )
             ax2.plot(
                      axial_loc[2:-1],
-                     vert_peakT_grp[2000,KI_conc[i]][2:-1],
+                     vert_peakT_grp[2000, KI_conc[i]][2:-1],
                      color=x,
                      linewidth=2.0
                      )
@@ -154,7 +150,7 @@ def main():
                    borderaxespad=0.1,
                    title=grp2
                    )
-        plt.subplots_adjust(wspace = 0.05, top = 0.90)
+        plt.subplots_adjust(wspace=0.05, top=0.90)
         plt.savefig('{0}/{1}_vert_peakT.png'.format(plots_folder, scint))
         plt.close()
 
@@ -164,12 +160,12 @@ def main():
         for i, x in enumerate(linecolors):
             ax1.plot(
                      axial_loc[2:-1],
-                     vert_elpsT_grp[700,KI_conc[i]][2:-1],
+                     vert_elpsT_grp[700, KI_conc[i]][2:-1],
                      linewidth=2.0
                      )
             ax2.plot(
                      axial_loc[2:-1],
-                     vert_elpsT_grp[2000,KI_conc[i]][2:-1],
+                     vert_elpsT_grp[2000, KI_conc[i]][2:-1],
                      linewidth=2.0
                      )
         ax1.title.set_text(r'700 $\mu$m')
@@ -185,18 +181,19 @@ def main():
                    borderaxespad=0.1,
                    title=grp2
                    )
-        plt.subplots_adjust(wspace = 0.05, top = 0.90)
+        plt.subplots_adjust(wspace=0.05, top=0.90)
         plt.savefig('{0}/{1}_vert_elpsT.png'.format(plots_folder, scint))
         warnings.filterwarnings('default')
 
         ######################################################################
 
         # Horizontal variation
-        horiz_matrix = test_matrix[test_matrix['Test'].str\
-                                                      .contains('mm')]\
-                                                      .copy()
+        horiz_matrix = test_matrix[
+                                   test_matrix['Test'].str.contains('mm')
+                                   ].copy()
+
         horiz_matrix['X Position'] = [
-                                      get_xpos('{0}/{1}_{2}.pckl'\
+                                      get_xpos('{0}/{1}_{2}.pckl'
                                                .format(prc_fld, scint, x))
                                       for x in horiz_matrix['Test']
                                       ]
@@ -208,15 +205,35 @@ def main():
 
         # Get horizontal values
         horiz_matrix[relT] = [
-                              get_mean_elpsT('{0}/{1}_{2}.pckl'\
+                              get_mean_elpsT('{0}/{1}_{2}.pckl'
                                              .format(prc_fld, scint, x))
                               for x in horiz_matrix['Test']
                               ]
         horiz_matrix[rpkT] = [
-                              get_mean_peakT('{0}/{1}_{2}.pckl'\
+                              get_mean_peakT('{0}/{1}_{2}.pckl'
                                              .format(prc_fld, scint, x))
                               for x in horiz_matrix['Test']
                               ]
+
+        # Normalize the horiz values to remove KI% dependency
+        horiz_matrix[relT] /= max(horiz_matrix[relT])
+        horiz_matrix[rpkT] /= max(horiz_matrix[rpkT])
+
+        # Fit a quadratic to the horizontal values
+        relT_quad = np.poly1d(
+                              np.polyfit(
+                                         x=horiz_matrix['X Position'],
+                                         y=horiz_matrix[relT],
+                                         deg=2
+                                         )
+                              )
+        rpkT_quad = np.poly1d(
+                              np.polyfit(
+                                         x=horiz_matrix['X Position'],
+                                         y=horiz_matrix[rpkT],
+                                         deg=2
+                                         )
+                              )
 
         # Horizontal plot
         plt.figure()
@@ -229,32 +246,57 @@ def main():
                  )
         plt.plot(
                  horiz_matrix['X Position'],
+                 rpkT_quad(horiz_matrix['X Position']),
+                 color='black',
+                 marker='s',
+                 linestyle='dashed',
+                 alpha=0.5,
+                 label='Peak Fit'
+                 )
+        plt.legend()
+        plt.title('{0} - Horizontal Variation - 700 um, 10% KI'.format(scint))
+        plt.savefig('{0}/{1}_horiz_peak.png'.format(plots_folder, scint))
+        plt.close()
+
+        plt.figure()
+        plt.plot(
+                 horiz_matrix['X Position'],
                  horiz_matrix[relT],
                  fillstyle='none',
                  color='olivedrab',
                  marker='s',
                  label=relT
                  )
+        plt.plot(
+                 horiz_matrix['X Position'],
+                 relT_quad(horiz_matrix['X Position']),
+                 fillstyle='none',
+                 color='black',
+                 marker='s',
+                 linestyle='dashed',
+                 alpha=0.5,
+                 label='Ellipse Fit'
+                 )
         plt.legend()
         plt.title('{0} - Horizontal Variation - 700 um, 10% KI'.format(scint))
-        plt.savefig('{0}/{1}_horiz.png'.format(plots_folder, scint))
+        plt.savefig('{0}/{1}_horiz_elps.png'.format(plots_folder, scint))
         plt.close()
 
         ######################################################################
 
         # Mean vertical variation
-        mean_matrix = test_matrix[~test_matrix['Test'].str\
-                                                      .contains('mm')]\
-                                                      .copy()
+        mean_matrix = test_matrix[
+                                  ~test_matrix['Test'].str.contains('mm')
+                                  ].copy()
 
         # Get mean vertical values
         mean_matrix[relT] = [
-                             get_mean_elpsT('{0}/{1}_{2}.pckl'\
+                             get_mean_elpsT('{0}/{1}_{2}.pckl'
                                             .format(prc_fld, scint, x))
                              for x in mean_matrix['Test']
                              ]
         mean_matrix[rpkT] = [
-                             get_mean_peakT('{0}/{1}_{2}.pckl'\
+                             get_mean_peakT('{0}/{1}_{2}.pckl'
                                             .format(prc_fld, scint, x))
                              for x in mean_matrix['Test']
                              ]
@@ -272,51 +314,52 @@ def main():
                                                    columns=[grp1],
                                                    aggfunc=np.nanmean
                                                    )
-        # Create arrays from the pivot tables 
-        # Could plot directly from the pivot table but I didn't want to delve too deep into that
+        # Create arrays from the pivot tables
+        # Could plot directly from the pivot table but I didn't want to delve
+        # too deep into that
         mean_peakT_700 = pivot_mean_peakT[700]
         peakT_700_fit = polyfit(KI_conc, mean_peakT_700, 1)
         peakT_700_fit_r2 = peakT_700_fit['determination']
         peakT_700_fit_lbl = 'y$_{700}$ = ' + '{0:0.3f}x + {1:0.3f};'\
-                              'R$^2$ {2:0.0f}%'\
-                              .format(
-                                      peakT_700_fit['polynomial'][0],
-                                      peakT_700_fit['polynomial'][1],
-                                      100*peakT_700_fit_r2
-                                      )
+                            'R$^2$ {2:0.0f}%'\
+                            .format(
+                                    peakT_700_fit['polynomial'][0],
+                                    peakT_700_fit['polynomial'][1],
+                                    100*peakT_700_fit_r2
+                                    )
 
         mean_peakT_2000 = pivot_mean_peakT[2000]
         peakT_2000_fit = polyfit(KI_conc, mean_peakT_2000, 1)
         peakT_2000_fit_r2 = peakT_2000_fit['determination']
         peakT_2000_fit_lbl = 'y$_{2000}$ = ' + '{0:0.3f}x + {1:0.3f};'\
-                               'R$^2$ {2:0.0f}%'\
-                               .format(
-                                       peakT_2000_fit['polynomial'][0],
-                                       peakT_2000_fit['polynomial'][1],
-                                       100*peakT_2000_fit_r2
-                                       )
+                             'R$^2$ {2:0.0f}%'\
+                             .format(
+                                     peakT_2000_fit['polynomial'][0],
+                                     peakT_2000_fit['polynomial'][1],
+                                     100*peakT_2000_fit_r2
+                                     )
 
         mean_elpsT_700 = pivot_mean_elpsT[700]
         elpsT_700_fit = polyfit(KI_conc, mean_elpsT_700, 1)
         elpsT_700_fit_r2 = elpsT_700_fit['determination']
         elpsT_700_fit_lbl = 'y$_{700}$ = ' + '{0:0.3f}x + {1:0.3f};'\
-                              'R$^2$ {2:0.0f}%'\
-                              .format(
-                                      elpsT_700_fit['polynomial'][0],
-                                      elpsT_700_fit['polynomial'][1],
-                                      100*elpsT_700_fit_r2
-                                      )
+                            'R$^2$ {2:0.0f}%'\
+                            .format(
+                                    elpsT_700_fit['polynomial'][0],
+                                    elpsT_700_fit['polynomial'][1],
+                                    100*elpsT_700_fit_r2
+                                    )
 
         mean_elpsT_2000 = pivot_mean_elpsT[2000]
         elpsT_2000_fit = polyfit(KI_conc, mean_elpsT_2000, 1)
         elpsT_2000_fit_r2 = elpsT_2000_fit['determination']
         elpsT_2000_fit_lbl = 'y$_{2000}$ = ' + '{0:0.3f}x + {1:0.3f};'\
-                               'R$^2$ {2:0.0f}%'\
-                               .format(
-                                       elpsT_2000_fit['polynomial'][0],
-                                       elpsT_2000_fit['polynomial'][1],
-                                       100*elpsT_2000_fit_r2
-                                       )
+                             'R$^2$ {2:0.0f}%'\
+                             .format(
+                                     elpsT_2000_fit['polynomial'][0],
+                                     elpsT_2000_fit['polynomial'][1],
+                                     100*elpsT_2000_fit_r2
+                                     )
 
         # PeakT plot (markers filled)
         plt.figure()
@@ -396,11 +439,11 @@ def main():
         peakT_combi_fit = polyfit(KI_conc, mean_peakT_combi, 1)
         peakT_combi_fit_r2 = peakT_combi_fit['determination']
         peakT_combi_fit_lbl = 'y = {0:0.3f}x + {1:0.3f};'\
-                                 'R$^2$ {2:0.0f}%'\
-                                 .format(peakT_combi_fit['polynomial'][0],
-                                         peakT_combi_fit['polynomial'][1],
-                                         100*peakT_combi_fit_r2
-                                         )
+                              'R$^2$ {2:0.0f}%'\
+                              .format(peakT_combi_fit['polynomial'][0],
+                                      peakT_combi_fit['polynomial'][1],
+                                      100*peakT_combi_fit_r2
+                                      )
 
         mean_elpsT_combi = np.mean(
                                       [mean_elpsT_700, mean_elpsT_2000],
@@ -409,20 +452,39 @@ def main():
         elpsT_combi_fit = polyfit(KI_conc, mean_elpsT_combi, 1)
         elpsT_combi_fit_r2 = elpsT_combi_fit['determination']
         elpsT_combi_fit_lbl = 'y = {0:0.3f}x + {1:0.3f}; R$^2$ {2:0.0f}%'\
-                                 .format(
-                                         elpsT_combi_fit['polynomial'][0],
-                                         elpsT_combi_fit['polynomial'][1],
-                                         100*elpsT_combi_fit_r2
-                                         )
+                              .format(
+                                      elpsT_combi_fit['polynomial'][0],
+                                      elpsT_combi_fit['polynomial'][1],
+                                      100*elpsT_combi_fit_r2
+                                      )
 
         # Save the linear fitted correction factors
-        with open('{0}/Processed/{1}/{1}_peakT_cf.txt'\
+        with open('{0}/Processed/{1}/{1}_peakT_cf.txt'
                   .format(prj_fld, scint), 'wb') as f:
             np.savetxt(f, peakT_combi_fit['function'](KI_conc))
 
-        with open('{0}/Processed/{1}/{1}_elpsT_cf.txt'\
+        with open('{0}/Processed/{1}/{1}_elpsT_cf.txt'
                   .format(prj_fld, scint), 'wb') as f:
             np.savetxt(f, elpsT_combi_fit['function'](KI_conc))
+
+        # Map out the correction factor horizontally over an image array
+        cf_fld = create_folder('{0}/Processed/{1}/CF_Map/'
+                               .format(prj_fld, scint))
+        image_x = np.linspace(0, 767, 768)
+        for KI in KI_conc:
+            KIstr = str(KI).replace('.', 'p')
+
+            # Create CF based on elpsT
+            elps_mat = np.ones((352, 768)) * elpsT_combi_fit['function'](KI)
+            elps_mat *= relT_quad(image_x)
+            elps_im = Image.fromarray(elps_mat)
+            elps_im.save('{0}/elps_{1}.tif'.format(cf_fld, KIstr))
+
+            # Create CF based on peakT
+            peak_mat = np.ones((352, 768)) * peakT_combi_fit['function'](KI)
+            peak_mat *= rpkT_quad(image_x)
+            peak_im = Image.fromarray(peak_mat)
+            peak_im.save('{0}/peak_{1}.tif'.format(cf_fld, KIstr))
 
         plt.figure()
         plt.plot(
