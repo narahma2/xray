@@ -7,16 +7,12 @@ Summarize the errors for the corrected jets.
 @Last Modified by:   rahmann
 """
 
-import os
 import pickle
 import glob
 import warnings
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from PIL import Image
-from scipy.signal import savgol_filter, find_peaks, peak_widths
-from skimage.transform import rotate
 from general.calc_statistics import polyfit
 from general.misc import create_folder
 
@@ -29,6 +25,7 @@ plt_fld = create_folder('{0}/Figures/Jet_Errors/'.format(prj_fld))
 # KI %
 KIconc = [0, 1.6, 3.4, 4.8, 8, 10, 11.1]
 
+
 def get_xpos(path):
     with open(path, 'rb') as f:
         processed_data = pickle.load(f)
@@ -39,10 +36,13 @@ def get_xpos(path):
 
 
 def get_per(path, method):
+    if 'ellipse' in path:
+        path.replace('ellipse', 'elps')
+
     with open(path, 'rb') as f:
         processed_data = pickle.load(f)
 
-    if method == 'Ellipse':
+    if method == 'Elps':
         diam = 1
     elif method == 'Peak':
         diam = 2
@@ -60,6 +60,9 @@ def get_per(path, method):
 
 
 def get_rmse(path, method):
+    if 'ellipse' in path:
+        path = path.replace('ellipse', 'elps')
+
     with open(path, 'rb') as f:
         processed_data = pickle.load(f)
 
@@ -87,9 +90,9 @@ def vert_var(vert_matrix, method, corr_pckl, scint):
     temp = vert_matrix.copy()
     grp1 = 'Nozzle Diameter (um)'
     grp2 = 'KI %'
-    vert_PRC_grouped = temp.groupby([grp1, grp2])\
-                           .apply(lambda x: np.nanmean(x[clmn],
-                                                       axis=0))
+    vert_PRC_grouped = temp.groupby([grp1, grp2]) \
+                           .apply(lambda x: np.mean(x[clmn],
+                                                    axis=0))
 
     # Get axial positions
     axial_positions = np.linspace(start=20, stop=325, num=325-20+1, dtype=int)
@@ -227,7 +230,7 @@ def main(scint, test_matrix):
     # Vertical variation (absolute error vs. vertical location plots)
     vert_matrix = test_matrix[~test_matrix['Test'].str.contains('mm')].copy()
     vert_matrix = vert_var(vert_matrix, 'Peak', corr_pckl, scint)
-    vert_matrix = vert_var(vert_matrix, 'Ellipse', corr_pckl, scint)
+    vert_matrix = vert_var(vert_matrix, 'Elps', corr_pckl, scint)
 
     ##########################################################################
 
@@ -281,7 +284,7 @@ def main(scint, test_matrix):
     with open('{0}_{1}RMSE.txt'.format(cf_file, 'peak'), 'wb') as f:
         np.savetxt(f, np.c_[KIconc, peakRMSE[1](KIconc)])
 
-    with open('{0}_{1}RMSE.txt'.format(cf_file, 'ellipse'), 'wb') as f:
+    with open('{0}_{1}RMSE.txt'.format(cf_file, 'elps'), 'wb') as f:
         np.savetxt(f, np.c_[KIconc, elpsRMSE[1](KIconc)])
 
     plt.figure()
@@ -322,7 +325,7 @@ def run_main():
         main(scint, test_matrix)
 
     # Plot overlapped diameter scans
-    types = ['peakT', 'ellipseT']
+    types = ['peakT', 'elpsT']
     KI = ['0p0', '11p5', '24', '34', '57', '72', '80']
     KIperc = ['0', '1.6', '3.4', '4.8', '8.0', '10.0', '11.0']
     for scint in scintillators:

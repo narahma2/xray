@@ -99,17 +99,25 @@ def main():
                             .format(prj_fld, scint, cf_type))
 
             KI_conc = [0, 1.6, 3.4, 4.8, 8, 10, 11.1]
+            KI_strs = ['0', '1p6', '3p4', '4p8', '8', '10', '11p1']
             models = [water_model, KI1p6_model, KI3p4_model, KI4p8_model,
                       KI8p0_model, KI10p0_model, KI11p1_model]
 
             for index, test_name in enumerate(test_matrix['Test']):
                 test_path = '{0}/Processed/Normalized/Norm_{1}.tif'\
                             .format(prj_fld, test_name)
-                model = models[KI_conc.index(test_matrix['KI %'][index])]
-                nozzleD = test_matrix['Nozzle Diameter (um)'][index]
                 KIperc = test_matrix['KI %'][index]
+                model = models[KI_conc.index(KIperc)]
+                nozzleD = test_matrix['Nozzle Diameter (um)'][index]
+                KIstr = KI_strs[KI_conc.index(KIperc)]
                 TtoEPL = model[0]
                 EPLtoT = model[1]
+
+                # Load the CF image as an array
+                cf_mat_path = '{0}/Processed/{1}/CF_Map/{2}_{3}.tif'\
+                              .format(prj_fld, scint, cf_type[0:-1], KIstr)
+                cf_mat = np.array(Image.open(cf_mat_path))
+                cf_mat /= np.max(cf_mat)
 
                 # Offset bounds found in ImageJ, X and Y are flipped!
                 sl_x_start = test_matrix['BY'][index]
@@ -125,6 +133,9 @@ def main():
 
                 # Apply corresponding correction factor to normalized image
                 data_norm /= cf[KI_conc.index(test_matrix['KI %'][index])]
+
+                # Apply corresponding correction factor using the array
+                #data_norm /= cf_mat
 
                 # Process the jet file
                 proc_jet(cm_px, save_fld, scint, index, test_name,

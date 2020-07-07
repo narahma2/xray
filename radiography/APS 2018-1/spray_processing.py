@@ -79,20 +79,34 @@ def conv_spray(test_path, save_fld):
     # Load corresponding correction factor and set rotation angle
     if 'SC' in test_path:
         model = models[0]
+        KIstr = '10'
         cf = cf_summ[5]
         rot = -1.5
     else:
         model = models[1]
+        KIstr = '11p1'
         cf = cf_summ[6]
         rot = -1
 
     TtoEPL = model[0]
+
+
+    # Load the CF image as an array
+    cf_mat_path = '{0}/Processed/{1}/CF_Map/{2}_{3}.tif'\
+                  .format(prj_fld, scint, 'elps', KIstr)
+    cf_mat = np.array(Image.open(cf_mat_path))
+
+    # Normalize CF matrix by maximum value
+    cf_mat /= np.max(cf_mat)
 
     # Load in normalized image
     data_norm = np.array(Image.open(test_path))
 
     # Apply correction factor
     data_norm /= cf
+
+    # Apply correction factor image
+    #data_norm /= cf_mat
 
     # Convert to EPL
     data_epl = np.zeros(np.shape(data_norm), dtype=float)
