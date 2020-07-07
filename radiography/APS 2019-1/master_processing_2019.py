@@ -18,6 +18,9 @@ from watervsKI import main as watervsKI
 from monobeam_radiography import main as mbr
 from monobeam_radiography_vertical import main as mbr_vert
 
+
+input('Enter run description: ')
+
 # Build the whitebeam models
 # Output: Data under /Model
 start = time.time()
@@ -32,7 +35,7 @@ cal_processing()
 cp_time = timedelta(seconds=(time.time() - start))
 print('2/9: cal_processing finished ({0})'.format(cp_time))
 
-# Analyze the calibrations
+# Analyze the calibrations and find a correction factor to use
 # Output: CF files under /Processing folder; Plots under /Figures/Cal_Summary
 start = time.time()
 cal_analysis()
