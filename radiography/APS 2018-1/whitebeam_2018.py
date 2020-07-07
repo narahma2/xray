@@ -33,6 +33,10 @@ from general.misc import create_folder
 prj_fld = '/mnt/r/X-ray Radiography/APS 2018-1/'
 inp_fld = '{0}/Spectra_Inputs'.format(prj_fld)
 
+# Which XCOM database to use (manually set the scintillator in main)
+# Original = 1, Energy-Absorbed = 2
+xcom = 1
+
 
 def spectra_angles(flat):
     """
@@ -251,8 +255,8 @@ def filtered_spectra(energy, spectra, scint_resp):
     global inp_fld
 
     # Load NIST XCOM attenuation curves
-    air_atten1 = mass_atten(['Air'], xcom=1, keV=200)
-    Be_atten1 = mass_atten(['Be'], xcom=1, keV=200)
+    air_atten1 = mass_atten(['Air'], xcom=xcom, keV=200)
+    Be_atten1 = mass_atten(['Be'], xcom=xcom, keV=200)
 
     # Reshape XCOM x-axis to match XOP
     air_atten2 = xcom_reshape(air_atten1, energy)
@@ -351,7 +355,7 @@ def spray_model(spray_epl, energy, model, scint, I0, wfct):
     comp = [100-ki_perc, ki_perc]
 
     # Spray attenuation
-    liq_atten1 = mass_atten(molec=molec,comp=comp, xcom=1, keV=200)
+    liq_atten1 = mass_atten(molec=molec,comp=comp, xcom=xcom, keV=200)
     liq_atten2 = xcom_reshape(liq_atten1, energy)
     plot_atten(liq_atten1, liq_atten2, model)
 
