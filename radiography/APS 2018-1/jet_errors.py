@@ -23,7 +23,7 @@ prj_fld = '/mnt/r/X-ray Radiography/APS 2018-1/'
 plt_fld = create_folder('{0}/Figures/Jet_Errors/'.format(prj_fld))
 
 # KI %
-KIconc = [0, 1.6, 3.4, 4.8, 8, 10, 11.1]
+KIconc = [0, 1.6, 3.4, 5.3, 8, 10, 11.1]
 
 
 def get_xpos(path):
@@ -47,16 +47,14 @@ def get_per(path, method):
     elif method == 'Peak':
         diam = 2
 
-    # Return percent error
-    prc_err = 100 * (
-                     (
-                      np.array(processed_data['Diameters'][diam]) -
-                      np.array(processed_data['Diameters'][0])
-                      ) /
-                     np.array(processed_data['Diameters'][0])
-                     )
+    # Get diameters (in um)
+    diam_method = 10000*np.array(processed_data['Diameters'][diam])
+    diam_opti = 10000*np.array(processed_data['Diameters'][0])
 
-    return prc_err
+    # Return percent error
+    prc_err = 100 * ((diam_method - diam_opti) / diam_opti)
+
+    return diam_method, diam_opti, prc_err
 
 
 def get_rmse(path, method):
@@ -74,24 +72,32 @@ def get_rmse(path, method):
 
 def vert_var(vert_matrix, method, corr_pckl, scint):
     # Create new column
-    clmn = method + ' AbsErr'
-    vert_matrix[clmn] = np.nan
+    clmn1 = 'Opti Diam'
+    clmn2 = method + ' Diam'
+    clmn3 = method + ' %Err'
 
     prc_errors = []
-    for i,x in enumerate(vert_matrix['Test']):
+    diam_method = []
+    diam_opti = []
+    for i, x in enumerate(vert_matrix['Test']):
         pckl_file = '{0}{1}.pckl'.format(corr_pckl, x) \
                                  .replace('XYZ', method.lower())
-        prc_errors.append(get_per(pckl_file, method))
+        data = get_per(pckl_file, method)
+        diam_method.append(data[0])
+        diam_opti.append(data[1])
+        prc_errors.append(data[2])
 
-    # Assign values to column
-    vert_matrix[clmn] = prc_errors
+    # Assign values to column (diameters in um)
+    vert_matrix[clmn1] = diam_opti
+    vert_matrix[clmn2] = diam_method
+    vert_matrix[clmn3] = prc_errors
 
     # Group the matrix by diameter and KI%
     temp = vert_matrix.copy()
     grp1 = 'Nozzle Diameter (um)'
     grp2 = 'KI %'
     vert_PRC_grouped = temp.groupby([grp1, grp2]) \
-                           .apply(lambda x: np.mean(x[clmn],
+                           .apply(lambda x: np.mean(x[clmn3],
                                                     axis=0))
 
     # Get axial positions
@@ -108,13 +114,13 @@ def vert_var(vert_matrix, method, corr_pckl, scint):
     fig.set_size_inches(12, 6)
 
     # Plot the 700 um jets
-    for i,x in enumerate(linecolors):
+    for i, x in enumerate(linecolors):
         KI = KIconc[i]
         ax1.plot(axial_positions, vert_PRC_grouped[700, KI][2:-1],
                  color=x, linewidth=2.0)
 
     # Plot the 2000 um jets
-    for i,x in enumerate(linecolors):
+    for i, x in enumerate(linecolors):
         KI = KIconc[i]
         ax2.plot(axial_positions, vert_PRC_grouped[2000, KI][2:-1],
                  color=x, linewidth=2.0)
@@ -127,10 +133,17 @@ def vert_var(vert_matrix, method, corr_pckl, scint):
     fig.suptitle('Vertical Variation - ' + method + ' PRC')
     fig.legend(ax1, labels=linelabels, loc='center right',
                borderaxespad=0.1, title='KI %')
-    plt.subplots_adjust(wspace = 0.05, top = 0.90)
+    plt.subplots_adjust(wspace=0.05, top=0.90)
     plt.savefig('{0}/{1}_vert_{2}PRC.png'.format(plt_fld, scint, method))
     plt.close()
     warnings.filterwarnings('default')
+
+    pckl_file = '{0}/{1}_vert_{2}.pckl'.format(plt_fld, scint, method)
+    with open(pckl_file, 'wb') as f:
+        pickle.dump([
+                     vert_matrix,
+                     ],
+                    f)
 
     return vert_matrix
 
@@ -144,7 +157,7 @@ def horiz_var(horiz_matrix, method, corr_pckl):
     # Get horizontal values
     horiz_matrix[method + ' RMSE'] = np.nan
 
-    for i,x in enumerate(horiz_matrix['Test']):
+    for i, x in enumerate(horiz_matrix['Test']):
         pckl_file = '{0}{1}.pckl'.format(corr_pckl, x).replace('XYZ',
                                                                method.lower())
         horiz_matrix.iloc[i, -1] = get_rmse(pckl_file, method)
@@ -158,7 +171,7 @@ def mean_var(mean_mat, method, corr_pckl, scint):
     mean_mat[clmn] = np.nan
 
     # Get mean vertical values
-    for i,x in enumerate(mean_mat['Test']):
+    for i, x in enumerate(mean_mat['Test']):
         pckl_file = '{0}{1}.pckl'.format(corr_pckl, x).replace('XYZ',
                                                                method.lower())
         mean_mat.iloc[i, -1] = get_rmse(pckl_file, method)
@@ -168,9 +181,15 @@ def mean_var(mean_mat, method, corr_pckl, scint):
                                       columns=['Nozzle Diameter (um)'],
                                       aggfunc=np.nanmean)
 
+    # Calculate the standard deviation values as needed
+    pivot_stdv = mean_mat.pivot_table(values=clmn, index=['KI %'],
+                                      columns=['Nozzle Diameter (um)'],
+                                      aggfunc=np.nanstd)
+
     # Create arrays from the pivot tables
     # Could plot directly from table but I didn't want to delve too deep
     RMSE_700 = pivot_mean[700]
+    StDv_700 = pivot_stdv[700]
     RMSE_700_fit = polyfit(KIconc, RMSE_700, 1)
     RMSE_700_r2 = 100 * RMSE_700_fit['determination']
     RMSE_700_label = 'y$_{{{0}}}$ = {1:.3f}x + {2:.3f}; R$^2$ {3:.0f}%' \
@@ -178,6 +197,7 @@ def mean_var(mean_mat, method, corr_pckl, scint):
                              RMSE_700_fit['polynomial'][1], RMSE_700_r2)
 
     RMSE_2000 = pivot_mean[2000]
+    StDv_2000 = pivot_stdv[2000]
     RMSE_2000_fit = polyfit(KIconc, RMSE_2000, 1)
     RMSE_2000_r2 = 100 * RMSE_2000_fit['determination']
     RMSE_2000_label = 'y$_{{{0}}}$ = {1:.3f}x + {2:.3f}; R$^2$ {3:.0f}%' \
@@ -206,6 +226,15 @@ def mean_var(mean_mat, method, corr_pckl, scint):
     plt.savefig('{0}/{1}_mean_{2}_.png'.format(plt_fld, scint, method))
     plt.close()
 
+    pckl_file = '{0}/{1}_mean_{2}.pckl'.format(plt_fld, scint, method)
+    with open(pckl_file, 'wb') as f:
+        pickle.dump([
+                     mean_mat,
+                     RMSE_700, StDv_700,
+                     RMSE_2000, StDv_2000
+                     ],
+                    f)
+
     return mean_mat, RMSE_700, RMSE_2000
 
 
@@ -216,7 +245,6 @@ def combi_var(mean_RMSE_700, mean_RMSE_2000, method):
     RMSE_combi_label = 'y = {0:0.3f}x + {1:0.3f}; R$^2$ {2:0.0f}%' \
                        .format(RMSE_combi_fit['polynomial'][0],
                                RMSE_combi_fit['polynomial'][1], RMSE_combi_r2)
-
 
     return RMSE_combi, RMSE_combi_fit['function'], RMSE_combi_label
 
@@ -241,7 +269,7 @@ def main(scint, test_matrix):
     x = 'X Position'
     horiz_matrix[x] = np.nan
 
-    for i,n in enumerate(horiz_matrix['Test']):
+    for i, n in enumerate(horiz_matrix['Test']):
         pckl_file = '{0}{1}.pckl'.format(corr_pckl, n).replace('XYZ', 'peak')
         horiz_matrix.iloc[i, -1] = get_xpos(pckl_file)
 
@@ -299,7 +327,7 @@ def main(scint, test_matrix):
     plt.title('{0} - Combined'.format(scint))
     plt.legend()
     plt.xlabel('KI (%)')
-    plt.ylabel('RMSE ($\mu$m)')
+    plt.ylabel(r'RMSE ($\mu$m)')
     plt.savefig('{0}/{1}_combined.png'.format(plt_fld, scint))
     plt.ylabel(r'RMSE ($\mu$m)')
     plt.close()
@@ -331,72 +359,92 @@ def run_main():
     for scint in scintillators:
         for typ in types:
             scan_fld = '{0}/Corrected/{1}_{2}/Scans'.format(prj_fld, scint,
-                    typ)
+                                                            typ)
 
             # Plot 700 um jets
             cases_700_y170 = []
             for x in KI:
                 with open(glob.glob('{0}/*700-um_{1}*y170.pckl'
-                          .format(scan_fld ,x))[0], 'rb') as f:
+                          .format(scan_fld, x))[0], 'rb') as f:
                     cases_700_y170.append(pickle.load(f)[0])
 
             plt.figure()
-            [plt.plot(x, label=KIperc[i]) for i,x in enumerate(cases_700_y170)]
+            [
+             plt.plot(x, label=KIperc[i])
+             for i, x in enumerate(cases_700_y170)
+             ]
             plt.xlabel('X Position (px)')
             plt.ylabel('EPL (cm)')
             plt.legend()
             plt.title('700 um @ y = 170')
-            plt.savefig(prj_fld +
-                '/Figures/Jet_Errors/{0}_{1}_700_y170.png'.format(scint, typ))
+            plt.savefig(
+                        '{0}/Figures/Jet_Errors/{1}_{2}_700_y170.png'
+                        .format(prj_fld, scint, typ)
+                        )
             plt.close()
 
             cases_700_y60 = []
             for x in KI:
                 with open(glob.glob('{0}/*700-um_{1}*y60.pckl'
-                          .format(scan_fld ,x))[0], 'rb') as f:
+                          .format(scan_fld, x))[0], 'rb') as f:
                     cases_700_y60.append(pickle.load(f)[0])
 
             plt.figure()
-            [plt.plot(x, label=KIperc[i]) for i,x in enumerate(cases_700_y60)]
+            [
+             plt.plot(x, label=KIperc[i])
+             for i, x in enumerate(cases_700_y60)
+             ]
             plt.xlabel('X Position (px)')
             plt.ylabel('EPL (cm)')
             plt.legend()
             plt.title('700 um @ y = 60')
-            plt.savefig(prj_fld +
-                '/Figures/Jet_Errors/{0}_{1}_700_y60.png'.format(scint, typ))
+            plt.savefig(
+                        '{0}/Figures/Jet_Errors/{1}_{2}_700_y60.png'
+                        .format(prj_fld, scint, typ)
+                        )
             plt.close()
 
             # Plot 2000 um jets
             cases_2000_y170 = []
             for x in KI:
                 with open(glob.glob('{0}/*2000-um_{1}*y170.pckl'
-                          .format(scan_fld ,x))[0], 'rb') as f:
+                          .format(scan_fld, x))[0], 'rb') as f:
                     cases_2000_y170.append(pickle.load(f)[0])
 
             plt.figure()
-            [plt.plot(x,label=KIperc[i]) for i,x in enumerate(cases_2000_y170)]
+            [
+             plt.plot(x, label=KIperc[i])
+             for i, x in enumerate(cases_2000_y170)
+             ]
             plt.xlabel('X Position (px)')
             plt.ylabel('EPL (cm)')
             plt.legend()
             plt.title('2000 um @ y = 170')
-            plt.savefig(prj_fld +
-                '/Figures/Jet_Errors/{0}_{1}_2000_y170.png'.format(scint, typ))
+            plt.savefig(
+                        '{0}/Figures/Jet_Errors/{1}_{2}_2000_y170.png'
+                        .format(prj_fld, scint, typ)
+                        )
             plt.close()
 
             cases_2000_y60 = []
             for x in KI:
                 with open(glob.glob('{0}/*2000-um_{1}*y60.pckl'
-                          .format(scan_fld ,x))[0], 'rb') as f:
+                          .format(scan_fld, x))[0], 'rb') as f:
                     cases_2000_y60.append(pickle.load(f)[0])
 
             plt.figure()
-            [plt.plot(x, label=KIperc[i]) for i,x in enumerate(cases_2000_y60)]
+            [
+             plt.plot(x, label=KIperc[i])
+             for i, x in enumerate(cases_2000_y60)
+             ]
             plt.xlabel('X Position (px)')
             plt.ylabel('EPL (cm)')
             plt.legend()
             plt.title('2000 um @ y = 60')
-            plt.savefig(prj_fld +
-                '/Figures/Jet_Errors/{0}_{1}_2000_y60.png'.format(scint, typ))
+            plt.savefig(
+                        '{0}/Figures/Jet_Errors/{1}_{2}_2000_y60.png'
+                        .format(prj_fld, scint, typ)
+                        )
             plt.close()
 
 

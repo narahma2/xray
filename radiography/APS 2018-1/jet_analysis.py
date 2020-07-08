@@ -74,7 +74,7 @@ def main():
     scintillators = ['LuAG', 'YAG']
 
     # KI %
-    KI_conc = [0, 1.6, 3.4, 4.8, 8, 10, 11.1]
+    KI_conc = [0, 1.6, 3.4, 5.3, 8, 10, 11.1]
 
     # Test matrix
     test_matrix = pd.read_csv(

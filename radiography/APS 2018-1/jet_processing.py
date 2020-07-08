@@ -6,9 +6,7 @@ Created on Thu Jun 13 13:04:28 2019
 """
 
 
-import os
 import pickle
-import glob
 import warnings
 import numpy as np
 import pandas as pd
@@ -28,14 +26,11 @@ from general.calc_statistics import (
                                      mdlq
                                      )
 from general.wb_functions import (
-                                  convert2EPL,
-                                  ellipse,
                                   ideal_ellipse,
                                   plot_ellipse,
                                   plot_widths
                                   )
 from general.misc import create_folder
-from timeit import default_timer as timer
 
 
 def norm_jets(prj_fld, dark, flatfield, test_matrix, norm_fld):
@@ -89,7 +84,7 @@ def proc_jet(cm_px, save_fld, scint, index, test_name,
     # Construct EPL mapping
     data_epl = np.zeros(np.shape(data_norm), dtype=float)
     cropped_view = np.linspace(start=20, stop=325, num=325-20+1, dtype=int)
-    for _,k in enumerate(cropped_view):
+    for _, k in enumerate(cropped_view):
         data_epl[k, :] = TtoEPL[k](data_norm[k, :])
 
     # Correct the EPL values
@@ -192,16 +187,6 @@ def proc_jet(cm_px, save_fld, scint, index, test_name,
     ratio_peakT = np.array(peak_T) / np.array(optical_T)
     ratio_ellipse = np.array(elps_epl) / np.array(optical_diameter)
     ratio_peak = np.array(peak_epl) / np.array(optical_diameter)
-
-    mean_ratio_ellipseT = np.nanmean(ratio_ellipseT)
-    mean_ratio_peakT = np.nanmean(ratio_peakT)
-    mean_ratio_ellipse = np.nanmean(ratio_ellipse)
-    mean_ratio_peak = np.nanmean(ratio_peak)
-
-    cv_ratio_ellipseT = np.nanstd(ratio_ellipseT) / np.nanmean(ratio_ellipseT)
-    cv_ratio_peakT = np.nanstd(ratio_peakT) / np.nanmean(ratio_peakT)
-    cv_ratio_ellipse = np.nanstd(ratio_ellipse) / np.nanmean(ratio_ellipse)
-    cv_ratio_peak = np.nanstd(ratio_peak) / np.nanmean(ratio_peak)
 
     with np.errstate(all='ignore'):
         ellipse_errors = [
@@ -378,7 +363,7 @@ def main():
     # Location of APS 2018-1 data
     prj_fld = '/mnt/r/X-ray Radiography/APS 2018-1/'
 
-    #%% Imaging setup
+    # Imaging setup
     # See 'APS White Beam.xlsx -> Pixel Size'
     cm_px = np.loadtxt('{0}/cm_px.txt'.format(prj_fld))
 
@@ -400,7 +385,7 @@ def main():
     scintillators = ['LuAG', 'YAG']
 
     for scint in scintillators:
-        #%% Load models from the whitebeam_2018-1 script
+        # Load models from the whitebeam_2018-1 script
         f = open(prj_fld + '/Model/water_model_' + scint + '.pckl', 'rb')
         water_mdl = pickle.load(f)
         f.close()
@@ -413,8 +398,8 @@ def main():
         KI3p4_mdl = pickle.load(f)
         f.close()
 
-        f = open(prj_fld + '/Model/KI4p8_model_' + scint + '.pckl', 'rb')
-        KI4p8_mdl = pickle.load(f)
+        f = open(prj_fld + '/Model/KI5p3_model_' + scint + '.pckl', 'rb')
+        KI5p3_mdl = pickle.load(f)
         f.close()
 
         f = open(prj_fld + '/Model/KI8p0_model_' + scint + '.pckl', 'rb')
@@ -432,16 +417,13 @@ def main():
         # Top-level save folder
         save_fld = '{0}/Processed/{1}/'.format(prj_fld, scint)
 
-        KI_conc = [0, 1.6, 3.4, 4.8, 8, 10, 11.1]
-        models = [water_mdl, KI1p6_mdl, KI3p4_mdl, KI4p8_mdl, KI8p0_mdl,
+        KI_conc = [0, 1.6, 3.4, 5.3, 8, 10, 11.1]
+        models = [water_mdl, KI1p6_mdl, KI3p4_mdl, KI5p3_mdl, KI8p0_mdl,
                   KI10p0_mdl, KI11p1_mdl]
 
         for index, test_name in enumerate(test_matrix['Test']):
-        #for index in sl:
             test_path = norm_fld + '/Norm_' + test_name + '.tif'
             model = models[KI_conc.index(test_matrix['KI %'][index])]
-            nozzleD = test_matrix['Nozzle Diameter (um)'][index]
-            KIperc = test_matrix['KI %'][index]
             TtoEPL = model[0]
             EPLtoT = model[1]
 
@@ -460,6 +442,7 @@ def main():
             # Process the jet file
             proc_jet(cm_px, save_fld, scint, index, test_name, test_path,
                      TtoEPL, EPLtoT, offset_sl_x, offset_sl_y, data_norm)
+
 
 # Run this script
 if __name__ == '__main__':

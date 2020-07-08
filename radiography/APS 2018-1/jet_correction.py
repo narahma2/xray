@@ -8,42 +8,19 @@ Re-processes the jets with the correction factors.
 @Last Modified time: 2020-05-01 19:47:14
 """
 
-import os
 import pickle
-import glob
-import warnings
 import numpy as np
 import pandas as pd
 
-import matplotlib.pyplot as plt
 from PIL import Image
-from scipy.signal import (
-                          savgol_filter,
-                          find_peaks,
-                          peak_widths
-                          )
-from skimage.transform import rotate
-from general.calc_statistics import (
-                                     rmse,
-                                     mape,
-                                     zeta,
-                                     mdlq
-                                     )
-from general.wb_functions import (
-                                  convert2EPL,
-                                  ellipse,
-                                  ideal_ellipse,
-                                  plot_ellipse,
-                                  plot_widths
-                                  )
 from jet_processing import proc_jet
-from general.misc import create_folder
+
 
 def main():
     # Location of APS 2018-1 data
     prj_fld = '/mnt/r/X-ray Radiography/APS 2018-1/'
 
-    #%% Imaging setup
+    # Imaging setup
     # See 'APS White Beam.xlsx -> Pixel Size'
     cm_px = np.loadtxt('{0}/cm_px.txt'.format(prj_fld))
 
@@ -61,7 +38,7 @@ def main():
 
     for cf_type in correction_factors:
         for scint in scintillators:
-            #%% Load models from the whitebeam_2018-1 script
+            # Load models from the whitebeam_2018-1 script
             f = open(prj_fld + '/Model/water_model_' + scint + '.pckl', 'rb')
             water_model = pickle.load(f)
             f.close()
@@ -74,8 +51,8 @@ def main():
             KI3p4_model = pickle.load(f)
             f.close()
 
-            f = open(prj_fld + '/Model/KI4p8_model_' + scint + '.pckl', 'rb')
-            KI4p8_model = pickle.load(f)
+            f = open(prj_fld + '/Model/KI5p3_model_' + scint + '.pckl', 'rb')
+            KI5p3_model = pickle.load(f)
             f.close()
 
             f = open(prj_fld + '/Model/KI8p0_model_' + scint + '.pckl', 'rb')
@@ -98,9 +75,9 @@ def main():
             cf = np.loadtxt('{0}/Processed/{1}/{1}_{2}_cf.txt'
                             .format(prj_fld, scint, cf_type))
 
-            KI_conc = [0, 1.6, 3.4, 4.8, 8, 10, 11.1]
-            KI_strs = ['0', '1p6', '3p4', '4p8', '8', '10', '11p1']
-            models = [water_model, KI1p6_model, KI3p4_model, KI4p8_model,
+            KI_conc = [0, 1.6, 3.4, 5.3, 8, 10, 11.1]
+            KI_strs = ['0', '1p6', '3p4', '5p3', '8', '10', '11p1']
+            models = [water_model, KI1p6_model, KI3p4_model, KI5p3_model,
                       KI8p0_model, KI10p0_model, KI11p1_model]
 
             for index, test_name in enumerate(test_matrix['Test']):
@@ -108,7 +85,6 @@ def main():
                             .format(prj_fld, test_name)
                 KIperc = test_matrix['KI %'][index]
                 model = models[KI_conc.index(KIperc)]
-                nozzleD = test_matrix['Nozzle Diameter (um)'][index]
                 KIstr = KI_strs[KI_conc.index(KIperc)]
                 TtoEPL = model[0]
                 EPLtoT = model[1]
@@ -135,7 +111,7 @@ def main():
                 data_norm /= cf[KI_conc.index(test_matrix['KI %'][index])]
 
                 # Apply corresponding correction factor using the array
-                #data_norm /= cf_mat
+#                data_norm /= cf_mat
 
                 # Process the jet file
                 proc_jet(cm_px, save_fld, scint, index, test_name,

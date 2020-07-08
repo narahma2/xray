@@ -7,17 +7,12 @@ Summarize the horizontal correction factors for the jets.
 @Last Modified by:   rahmann
 """
 
-import os
 import pickle
-import glob
-import warnings
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from PIL import Image
 from scipy.signal import savgol_filter
 from scipy.interpolate import CubicSpline
-from general.calc_statistics import polyfit
 from general.misc import create_folder
 
 
@@ -59,7 +54,7 @@ def main():
     scintillators = ['LuAG', 'YAG']
 
     # KI %
-    KI_conc = [0, 1.6, 3.4, 4.8, 8, 10, 11.1]
+    KI_conc = [0, 1.6, 3.4, 5.3, 8, 10, 11.1]
 
     # Test matrix
     test_matrix = pd.read_csv(
@@ -80,11 +75,11 @@ def main():
         relT = 'Ratio Ellipse T'
 
         # Horizontal variation
-        horiz_matrix = test_matrix[test_matrix['Test'].str\
-                                                      .contains('mm')]\
-                                                      .copy()
+        horiz_matrix = test_matrix[
+                                   test_matrix['Test'].str.contains('mm')
+                                   ].copy()
         horiz_matrix['X Position'] = [
-                                      get_xpos('{0}/{1}_{2}.pckl'\
+                                      get_xpos('{0}/{1}_{2}.pckl'
                                                .format(prc_fld, scint, x))
                                       for x in horiz_matrix['Test']
                                       ]
@@ -96,12 +91,12 @@ def main():
 
         # Get horizontal values
         horiz_matrix[relT] = [
-                              get_mean_elpsT('{0}/{1}_{2}.pckl'\
+                              get_mean_elpsT('{0}/{1}_{2}.pckl'
                                              .format(prc_fld, scint, x))
                               for x in horiz_matrix['Test']
                               ]
         horiz_matrix[rpkT] = [
-                              get_mean_peakT('{0}/{1}_{2}.pckl'\
+                              get_mean_peakT('{0}/{1}_{2}.pckl'
                                              .format(prc_fld, scint, x))
                               for x in horiz_matrix['Test']
                               ]
@@ -141,11 +136,11 @@ def main():
         plt.close()
 
         # Save the linear fitted correction factors
-        with open('{0}/Processed/{1}/{1}_peakT_cf.txt'\
+        with open('{0}/Processed/{1}/{1}_peakT_cf.txt'
                   .format(prj_fld, scint), 'wb') as f:
             np.savetxt(f, peakT_combi_fit['function'](KI_conc))
 
-        with open('{0}/Processed/{1}/{1}_elpsT_cf.txt'\
+        with open('{0}/Processed/{1}/{1}_elpsT_cf.txt'
                   .format(prj_fld, scint), 'wb') as f:
             np.savetxt(f, elpsT_combi_fit['function'](KI_conc))
 

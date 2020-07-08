@@ -7,7 +7,6 @@ Created on Wed Jun 12 14:44:11 2019
 @author: rahmann
 """
 
-import os
 import pickle
 import numpy as np
 import warnings
@@ -57,7 +56,7 @@ def spectra_angles(flat):
     # Loop each column of the image to find the vertical middle
     for i in range(flatfield.shape[1]):
         warnings.filterwarnings('ignore')
-        beam_middle[i] = np.argmax(savgol_filter(flatfield[:,i], 55, 3))
+        beam_middle[i] = np.argmax(savgol_filter(flatfield[:, i], 55, 3))
         warnings.filterwarnings('default')
 
     # Take the mean to be the center
@@ -169,13 +168,13 @@ def averaged_plots(x, y, ylbl, xlbl, scale, name, scint):
              label='3.4% KI'
              )
 
-    # 4.8% KI
+    # 5.3% KI
     plt.plot(
              x[3],
              y[3],
              linestyle='-.',
              linewidth=2.0,
-             label='4.8% KI'
+             label='5.3% KI'
              )
 
     # 8.0% KI
@@ -266,16 +265,16 @@ def filtered_spectra(energy, spectra, scint_resp):
     plot_atten(air_atten1, air_atten2, 'Air')
     plot_atten(Be_atten1, Be_atten2, 'Be')
 
-    ## EPL in cm
+    # EPL in cm
     # Air EPL
     air_epl = 70
 
     # Be window EPL
-    # See Alan's 'Spray Diagnostics at the Advanced Photon Source 
+    # See Alan's 'Spray Diagnostics at the Advanced Photon Source
     #   7-BM Beamline' (3 Be windows)
     Be_epl = 0.075
 
-    ## Density in g/cm^3
+    # Density in g/cm^3
     # Air density
     air_den = 0.001275
 
@@ -337,8 +336,8 @@ def spray_model(spray_epl, energy, model, scint, I0, wfct):
     elif model == 'KI3p4':
         ki_perc = 3.4
         spray_den = density_KIinH2O(ki_perc)
-    elif model == 'KI4p8':
-        ki_perc = 4.8
+    elif model == 'KI5p3':
+        ki_perc = 5.3
         spray_den = density_KIinH2O(ki_perc)
     elif model == 'KI8p0':
         ki_perc = 8.0
@@ -355,11 +354,11 @@ def spray_model(spray_epl, energy, model, scint, I0, wfct):
     comp = [100-ki_perc, ki_perc]
 
     # Spray attenuation
-    liq_atten1 = mass_atten(molec=molec,comp=comp, xcom=xcom, keV=200)
+    liq_atten1 = mass_atten(molec=molec, comp=comp, xcom=xcom, keV=200)
     liq_atten2 = xcom_reshape(liq_atten1, energy)
     plot_atten(liq_atten1, liq_atten2, model)
 
-    ## Detected spray spectra I 
+    # Detected spray spectra I
     I = [
          bl_unk(
                 incident=incident,
@@ -388,7 +387,7 @@ def spray_model(spray_epl, energy, model, scint, I0, wfct):
     # Swap axes so that it's Row x EPL
     Transmission = np.swapaxes(Transmission, 0, 1)
 
-    # Cubic spline fitting of Transmission and spray_epl curves 
+    # Cubic spline fitting of Transmission and spray_epl curves
     #   Needs to be reversed b/c of monotonically increasing
     #   restriction on 'x', however this doesn't change the interp call.
     # Function that takes in I/I0 and outputs expected EPL (cm)
@@ -425,7 +424,7 @@ def spray_model(spray_epl, energy, model, scint, I0, wfct):
 def main():
     global inp_fld
 
-    model = ['water', 'KI1p6', 'KI3p4', 'KI4p8', 'KI8p0', 'KI10p0', 'KI11p1']
+    model = ['water', 'KI1p6', 'KI3p4', 'KI5p3', 'KI8p0', 'KI10p0', 'KI11p1']
     atten_avg_LuAG = len(model) * [None]
     trans_avg_LuAG = len(model) * [None]
     atten_avg_YAG = len(model) * [None]
@@ -443,7 +442,7 @@ def main():
                                     'Jet_flat2.tif'.format(prj_fld))
 
     # Create an interpolation object based on angle
-    # Passing in an angle in mrad will output an interp spectra (XOP as ref.) 
+    # Passing in an angle in mrad will output an interp spectra (XOP as ref.)
     sp_linfit = interp1d(
                          x=inp_spectra['Angle'],
                          y=inp_spectra['Intensity'],
@@ -472,9 +471,9 @@ def main():
     YAG_epl = 0.05      # 500 um
     LuAG_epl = 0.01     # 100 um
 
-    # Scintillator densities from Crytur 
+    # Scintillator densities from Crytur
     #   <https://www.crytur.cz/materials/yagce/>
-    YAG_den =  4.57
+    YAG_den = 4.57
     LuAG_den = 6.73
 
     # Apply Beer-Lambert law
@@ -574,14 +573,14 @@ def main():
     plt.figure()
     plt.plot(
              energy/1000,
-             weights2D[175,:],
+             weights2D[175, :],
              label='y = 175',
              color='black',
              linewidth=2.0
              )
     plt.plot(
              energy/1000,
-             weights2D[60,:],
+             weights2D[60, :],
              label='y = 60',
              color='mediumblue',
              linewidth=2.0,
@@ -593,6 +592,7 @@ def main():
     plt.savefig('{0}/Figures/weights.png'.format(prj_fld))
     plt.close()
 
+
 # Run this script
 if __name__ == '__main__':
-        main()
+    main()
