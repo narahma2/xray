@@ -118,7 +118,7 @@ def main():
 
         linecolors = ['dimgray', 'firebrick', 'goldenrod', 'mediumseagreen',
                       'steelblue', 'mediumpurple', 'hotpink']
-        linelabels = ['0%', '1.6%', '3.4%', '4.8%', '8%', '10%', '11.1%']
+        linelabels = ['0%', '1.6%', '3.4%', '5.3%', '8%', '10%', '11.1%']
 
         warnings.filterwarnings('ignore')
         # Vertical peakT plot
