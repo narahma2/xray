@@ -398,12 +398,12 @@ def main():
         KI3p4_mdl = pickle.load(f)
         f.close()
 
-        f = open(prj_fld + '/Model/KI5p3_model_' + scint + '.pckl', 'rb')
-        KI5p3_mdl = pickle.load(f)
+        f = open(prj_fld + '/Model/KI5p6_model_' + scint + '.pckl', 'rb')
+        KI5p6_mdl = pickle.load(f)
         f.close()
 
-        f = open(prj_fld + '/Model/KI8p0_model_' + scint + '.pckl', 'rb')
-        KI8p0_mdl = pickle.load(f)
+        f = open(prj_fld + '/Model/KI8p1_model_' + scint + '.pckl', 'rb')
+        KI8p1_mdl = pickle.load(f)
         f.close()
 
         f = open(prj_fld + '/Model/KI10p0_model_' + scint + '.pckl', 'rb')
@@ -417,8 +417,8 @@ def main():
         # Top-level save folder
         save_fld = '{0}/Processed/{1}/'.format(prj_fld, scint)
 
-        KI_conc = [0, 1.6, 3.4, 5.3, 8, 10, 11.1]
-        models = [water_mdl, KI1p6_mdl, KI3p4_mdl, KI5p3_mdl, KI8p0_mdl,
+        KI_conc = [0, 1.6, 3.4, 5.6, 8.1, 10, 11.1]
+        models = [water_mdl, KI1p6_mdl, KI3p4_mdl, KI5p6_mdl, KI8p1_mdl,
                   KI10p0_mdl, KI11p1_mdl]
 
         for index, test_name in enumerate(test_matrix['Test']):

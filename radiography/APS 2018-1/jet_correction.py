@@ -51,12 +51,12 @@ def main():
             KI3p4_model = pickle.load(f)
             f.close()
 
-            f = open(prj_fld + '/Model/KI5p3_model_' + scint + '.pckl', 'rb')
-            KI5p3_model = pickle.load(f)
+            f = open(prj_fld + '/Model/KI5p6_model_' + scint + '.pckl', 'rb')
+            KI5p6_model = pickle.load(f)
             f.close()
 
-            f = open(prj_fld + '/Model/KI8p0_model_' + scint + '.pckl', 'rb')
-            KI8p0_model = pickle.load(f)
+            f = open(prj_fld + '/Model/KI8p1_model_' + scint + '.pckl', 'rb')
+            KI8p1_model = pickle.load(f)
             f.close()
 
             f = open(prj_fld + '/Model/KI10p0_model_' + scint + '.pckl', 'rb')
@@ -75,10 +75,10 @@ def main():
             cf = np.loadtxt('{0}/Processed/{1}/{1}_{2}_cf.txt'
                             .format(prj_fld, scint, cf_type))
 
-            KI_conc = [0, 1.6, 3.4, 5.3, 8, 10, 11.1]
-            KI_strs = ['0', '1p6', '3p4', '5p3', '8', '10', '11p1']
-            models = [water_model, KI1p6_model, KI3p4_model, KI5p3_model,
-                      KI8p0_model, KI10p0_model, KI11p1_model]
+            KI_conc = [0, 1.6, 3.4, 5.6, 8.1, 10, 11.1]
+            KI_strs = ['0', '1p6', '3p4', '5p6', '8.1', '10', '11p1']
+            models = [water_model, KI1p6_model, KI3p4_model, KI5p6_model,
+                      KI8p1_model, KI10p0_model, KI11p1_model]
 
             for index, test_name in enumerate(test_matrix['Test']):
                 test_path = '{0}/Processed/Normalized/Norm_{1}.tif'\

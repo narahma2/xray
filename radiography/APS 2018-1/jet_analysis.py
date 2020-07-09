@@ -74,7 +74,7 @@ def main():
     scintillators = ['LuAG', 'YAG']
 
     # KI %
-    KI_conc = [0, 1.6, 3.4, 5.3, 8, 10, 11.1]
+    KI_conc = [0, 1.6, 3.4, 5.6, 8.1, 10, 11.1]
 
     # Test matrix
     test_matrix = pd.read_csv(
@@ -118,7 +118,7 @@ def main():
 
         linecolors = ['dimgray', 'firebrick', 'goldenrod', 'mediumseagreen',
                       'steelblue', 'mediumpurple', 'hotpink']
-        linelabels = ['0%', '1.6%', '3.4%', '5.3%', '8%', '10%', '11.1%']
+        linelabels = ['0%', '1.6%', '3.4%', '5.6%', '8.1%', '10%', '11.1%']
 
         warnings.filterwarnings('ignore')
         # Vertical peakT plot
