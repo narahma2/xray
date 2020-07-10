@@ -23,7 +23,7 @@ prj_fld = '/mnt/r/X-ray Radiography/APS 2018-1/'
 plt_fld = create_folder('{0}/Figures/Jet_Errors/'.format(prj_fld))
 
 # KI %
-KIconc = [0, 1.6, 3.4, 5.6, 8.1, 10, 11.1]
+KIconc = [0, 1.6, 3.4, 5.3, 8.1, 10, 11.1]
 
 
 def get_xpos(path):

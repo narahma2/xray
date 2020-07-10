@@ -51,8 +51,8 @@ def main():
             KI3p4_model = pickle.load(f)
             f.close()
 
-            f = open(prj_fld + '/Model/KI5p6_model_' + scint + '.pckl', 'rb')
-            KI5p6_model = pickle.load(f)
+            f = open(prj_fld + '/Model/KI5p3_model_' + scint + '.pckl', 'rb')
+            KI5p3_model = pickle.load(f)
             f.close()
 
             f = open(prj_fld + '/Model/KI8p1_model_' + scint + '.pckl', 'rb')
@@ -75,9 +75,9 @@ def main():
             cf = np.loadtxt('{0}/Processed/{1}/{1}_{2}_cf.txt'
                             .format(prj_fld, scint, cf_type))
 
-            KI_conc = [0, 1.6, 3.4, 5.6, 8.1, 10, 11.1]
-            KI_strs = ['0', '1p6', '3p4', '5p6', '8.1', '10', '11p1']
-            models = [water_model, KI1p6_model, KI3p4_model, KI5p6_model,
+            KI_conc = [0, 1.6, 3.4, 5.3, 8.1, 10, 11.1]
+            KI_strs = ['0', '1p6', '3p4', '5p3', '8.1', '10', '11p1']
+            models = [water_model, KI1p6_model, KI3p4_model, KI5p3_model,
                       KI8p1_model, KI10p0_model, KI11p1_model]
 
             for index, test_name in enumerate(test_matrix['Test']):
@@ -90,10 +90,10 @@ def main():
                 EPLtoT = model[1]
 
                 # Load the CF image as an array
-                cf_mat_path = '{0}/Processed/{1}/CF_Map/{2}_{3}.tif'\
-                              .format(prj_fld, scint, cf_type[0:-1], KIstr)
-                cf_mat = np.array(Image.open(cf_mat_path))
-                cf_mat /= np.max(cf_mat)
+                #cf_mat_path = '{0}/Processed/{1}/CF_Map/{2}_{3}.tif'\
+                #              .format(prj_fld, scint, cf_type[0:-1], KIstr)
+                #cf_mat = np.array(Image.open(cf_mat_path))
+                #cf_mat /= np.max(cf_mat)
 
                 # Offset bounds found in ImageJ, X and Y are flipped!
                 sl_x_start = test_matrix['BY'][index]

@@ -168,13 +168,13 @@ def averaged_plots(x, y, ylbl, xlbl, scale, name, scint):
              label='3.4% KI'
              )
 
-    # 5.6% KI
+    # 5.3% KI
     plt.plot(
              x[3],
              y[3],
              linestyle='-.',
              linewidth=2.0,
-             label='5.6% KI'
+             label='5.3% KI'
              )
 
     # 8.1% KI
@@ -336,8 +336,8 @@ def spray_model(spray_epl, energy, model, scint, I0, wfct):
     elif model == 'KI3p4':
         ki_perc = 3.4
         spray_den = density_KIinH2O(ki_perc)
-    elif model == 'KI5p6':
-        ki_perc = 5.6
+    elif model == 'KI5p3':
+        ki_perc = 5.3
         spray_den = density_KIinH2O(ki_perc)
     elif model == 'KI8p1':
         ki_perc = 8.1
@@ -424,7 +424,7 @@ def spray_model(spray_epl, energy, model, scint, I0, wfct):
 def main():
     global inp_fld
 
-    model = ['water', 'KI1p6', 'KI3p4', 'KI5p6', 'KI8p1', 'KI10p0', 'KI11p1']
+    model = ['water', 'KI1p6', 'KI3p4', 'KI5p3', 'KI8p1', 'KI10p0', 'KI11p1']
     atten_avg_LuAG = len(model) * [None]
     trans_avg_LuAG = len(model) * [None]
     atten_avg_YAG = len(model) * [None]
