@@ -9,7 +9,11 @@ import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
-from scipy.signal import sg_filt, find_peaks, peak_widths
+from scipy.signal import (
+                          savgol_filter as sg_filt,
+                          find_peaks,
+                          peak_widths
+                          )
 
 
 def convert2EPL(test_path, offset, model_pckl, cm_pix,
@@ -168,7 +172,7 @@ def ideal_ellipse(y, rel_width, rel_max, dx, units='cm'):
     """
 
     x = np.linspace(start=-(len(y)*dx)/2, stop=(len(y)*dx)/2, num=len(y))
-    y = y - rel_max
+#    y = y - rel_max
 
     area = np.trapz(y, dx=dx)
     a = rel_width/2*dx
@@ -184,7 +188,7 @@ def ideal_ellipse(y, rel_width, rel_max, dx, units='cm'):
 #        check_area = (1/2)*np.pi*a*R
 #        minimize[i] = abs(area - check_area)
 #
-    y = y + rel_max
+#    y = y + rel_max
 #
 #    fitted_radius = b[np.argmin(minimize)]
     data_graph = {'x': x, 'y': y}
@@ -219,7 +223,8 @@ def plot_ellipse(data_graph, fitted_graph, save_path=None):
         plt.savefig(save_path)
 
 
-def plot_widths(ydata, peaks, relative_max, lpos, rpos, save_path):
+def plot_widths(ydata, peaks, relative_max, lpos, rpos,
+                save_path):
     plt.figure()
     plt.plot(ydata, color='blue')
     plt.plot(peaks, ydata[peaks], 'x', color='orange')
