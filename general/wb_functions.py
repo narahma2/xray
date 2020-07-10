@@ -38,7 +38,7 @@ def convert2EPL(test_path, offset, model_pckl, cm_pix,
                         False (boolean).
     """
 
-    f = open(model_pckl, "rb")
+    f = open(model_pckl, 'rb')
     model = pickle.load(f)
     f.close()
 
@@ -94,7 +94,7 @@ def ellipse(data_epl, pos, cm_px, peak_width=20, rel_height=0.8,
             plot=False):
     """
     Function that takes in the EPL image and finds the best elliptical fit
-    EPL diameter. Optionally plots the result against the "optical diameter"
+    EPL diameter. Optionally plots the result against the 'optical diameter'
     as well for quick diagnostic of single image.
     =============
     --VARIABLES--
@@ -105,7 +105,7 @@ def ellipse(data_epl, pos, cm_px, peak_width=20, rel_height=0.8,
     peak_width:         Width in pixels to be used for the find_peaks
                         function. Defaulted to 20 px (integer).
     rel_height:         Relative height to be used for the peak_widths
-                        function. Defaulted to 0.8 for the "fifth_maximum"
+                        function. Defaulted to 0.8 for the 'fifth_maximum'
                         (scalar).
     cm_px:             Pixel to cm conversion, dependent on experimental
                         setup (scalar).
@@ -187,29 +187,29 @@ def ideal_ellipse(y, rel_width, rel_max, dx, units='cm'):
     y = y + rel_max
 #
 #    fitted_radius = b[np.argmin(minimize)]
-    data_graph = {"x": x, "y": y}
-    fitted_graph = {"center": (0, rel_max), "a": a, "b": fitted_radius}
+    data_graph = {'x': x, 'y': y}
+    fitted_graph = {'center': (0, rel_max), 'a': a, 'b': fitted_radius}
 
     return fitted_radius, fitted_graph, data_graph
 
 
 def plot_ellipse(data_graph, fitted_graph, save_path=None):
     t = np.linspace(0, np.pi)
-    a = fitted_graph["a"]
-    b = fitted_graph["b"]
-    xc = fitted_graph["center"][0]
-    yc = fitted_graph["center"][1]
+    a = fitted_graph['a']
+    b = fitted_graph['b']
+    xc = fitted_graph['center'][0]
+    yc = fitted_graph['center'][1]
 
     plt.figure()
     plt.plot(
-             10*data_graph["x"],
-             10*data_graph["y"],
-             label="Data w/ Full Width = {0:0.2f} mm".format(10*a*2)
+             10*data_graph['x'],
+             10*data_graph['y'],
+             label='Data w/ Full Width = {0:0.2f} mm'.format(10*a*2)
              )
     plt.plot(
              10*(xc+a*np.cos(t)),
              10*(yc+b*np.sin(t)),
-             label="Fitted Ellipse w/ Diameter = {0:0.2f} mm".format(10*b)
+             label='Fitted Ellipse w/ Diameter = {0:0.2f} mm'.format(10*b)
              )
     plt.legend()
     plt.title('Ellipse Fitting to EPL Scan')
