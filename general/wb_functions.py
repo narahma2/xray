@@ -54,10 +54,10 @@ def convert2EPL(test_path, offset, model_pckl, cm_pix,
     for i in range(flatfield_darksub.shape[1]):
         beam_middle[i] = np.argmax(
                                    sg_filt(
-                                                 flatfield_darksub[:, i],
-                                                 55,
-                                                 3
-                                                 )
+                                           flatfield_darksub[:, i],
+                                           55,
+                                           3
+                                           )
                                    )
 
     beam_middle_avg = int(np.mean(beam_middle).round())
