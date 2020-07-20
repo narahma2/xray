@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Functions for processing temperature data sets (calibration + IJ).
 
@@ -7,7 +6,6 @@ Created on Tue Jan 21 13:54:00 2020
 @author: rahmann
 """
 
-import os
 import pickle
 import numpy as np
 import pandas as pd
@@ -15,12 +13,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime
 from PIL import Image
-from scipy.signal import savgol_filter, find_peaks
-from scipy.optimize import curve_fit
+from scipy.signal import find_peaks
 from scipy import stats
-from Statistics.calc_statistics import polyfit
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
+from general.calc_statistics import polyfit
 from general.misc import create_folder
 
 
@@ -29,12 +26,12 @@ prj_fld = '/mnt/r/X-ray Temperature/'
 
 
 # Functions for intensity profile fitting
-def gauss(x,mu,sigma,A):
+def gauss(x, mu, sigma, A):
     return A*np.exp(-(x-mu)**2/2/sigma**2)
 
 
-def bimodal(x,mu1,sigma1,A1,mu2,sigma2,A2):
-    return gauss(x,mu1,sigma1,A1)+gauss(x,mu2,sigma2,A2)
+def bimodal(x, mu1, sigma1, A1, mu2, sigma2, A2):
+    return gauss(x, mu1, sigma1, A1) + gauss(x, mu2, sigma2, A2)
 
 
 def poly4(x, c0, c1, c2, c3, c4):
@@ -63,7 +60,7 @@ def profile(name, fit_var, profile, prfl_fld, stats_fld,
     if fit_var[-1] != 252:
         prfl_fit = polyfit(profile, fit_var, 1)
         np.savetxt(
-                   '{0}/{1}_polynomial.txt'.format(stats_fld, name)
+                   '{0}/{1}_polynomial.txt'.format(stats_fld, name),
                    prfl_fit['polynomial']
                    )
 
@@ -81,11 +78,12 @@ def profile(name, fit_var, profile, prfl_fld, stats_fld,
                  prfl_fit['function'](profile),
                  'k',
                  linewidth=2.0,
-                 label='y = {0:0.2f}x + {1:0.2f}'\
+                 label='y = {0:0.2f}x + {1:0.2f}'
                        .format(prfl_fit['polynomial'][0],
                                prfl_fit['polynomial'][1])
-                 plt.title('{0} {1} - R$^2$ = {2:0.4f}'
-                           .format(test, name, prfl_fit['determination'])
+                 )
+        plt.title('{0} {1} - R$^2$ = {2:0.4f}'
+                  .format(test, name, prfl_fit['determination']))
         plt.legend()
         if any(x in prfl_fld for x in ['IJ Ramping/Temperature',
                                        'IJ Ambient', 'IJ65', 'Cold']):
@@ -95,13 +93,13 @@ def profile(name, fit_var, profile, prfl_fld, stats_fld,
         plt.xlabel(name)
         plt.autoscale(enable=True, axis='x', tight=True)
         plt.minorticks_on()
-        plt.tick_params(which='both',direction='in')
+        plt.tick_params(which='both', direction='in')
         plt.tight_layout()
-        plt.savefig('{1}/{2}.png'.format(plt_fld, name))
+        plt.savefig('{0}/{1}.png'.format(plt_fld, name))
         plt.close()
 
 
-def density(test, q_spacing, T):
+def density(test, peak_q, T):
     """
     Computes density based on q spacing data. Serves as a measure of error.
     =============
@@ -112,13 +110,15 @@ def density(test, q_spacing, T):
     """
 
     # Convert q to d (q = 4*sin(theta)*pi/lambda; 2*d*sin(theta) = n*lambda)
-    d = 2*pi/peak_q
+    d = 2*np.pi/peak_q
 
     # Get temperatures and densities from EES data file
     density_file = '{0}/ScriptData/densities.txt'.format(prj_fld)
     density_data = pd.read_csv(density_file, sep="\t")
     temp = density_data["T_" + test[0:3].lower()]
     dens = density_data["rho" + test[0:3].lower()]
+
+    return d, temp, dens
 
 
 def saveimage(img_fld, fit_var, scatter, background):
@@ -142,12 +142,8 @@ def saveimage(img_fld, fit_var, scatter, background):
     [
      Image.fromarray(x).save(
                              '{0}/{1:03d}_{2:06.2f}.tif'
-                                                        .format(
-                                                                img_fld,
-                                                                n,
-                                                                fit_var[n]
-                                                                )
-                                                        .replace('.', 'p')
+                             .format(img_fld, n, fit_var[n])
+                             .replace('.', 'p')
                              )
      for n, x in enumerate(scatter)
      ]
@@ -162,7 +158,7 @@ def pca(intensity):
     # PCA
     pca = PCA(n_components=3)
     principalComponents = pca.fit_transform(scaled_intensity)
-    pc1 = principalComponents[:,0]
+    pc1 = principalComponents[:, 0]
 
     return pc1
 
@@ -187,7 +183,7 @@ def main(test, folder, scan, reduced_intensity, reduced_q,
     """
 
     prfl_fld = create_folder('{0}/{1}/Profiles/'.format(folder, scan))
-    stats_fld = create_folder('/Statistics/'.format(folder, scan))
+    stats_fld = create_folder('{0}/{1}/Statistics/'.format(folder, scan))
     plt_fld = create_folder('{0}/{1}/Plots/'.format(folder, scan))
     tests_fld = create_folder('{0}/{1}/Tests/'.format(folder, scan))
     curves_fld = create_folder('{0}/{1}/Curves/'.format(folder, scan))
@@ -201,13 +197,13 @@ def main(test, folder, scan, reduced_intensity, reduced_q,
     elif 'IJ' in str(scan) and 'Water' in test:
         pinned_pts = np.abs(reduced_q - 2.79).argmin()
     else:
-        ## Find pinned points in the curves (least variation)
+        # Find pinned points in the curves (least variation)
         intensity_std = np.std(reduced_intensity, axis=0)
         pinned_pts = find_peaks(-intensity_std)[0]
         # Find the minimum peak only (throw away every other valley)
         pinned_pts = pinned_pts[np.argmin(intensity_std[pinned_pts])]
 
-    pinned_q = reduced_q[pinned_pts] #[reduced_q[int(x)] for x in pinned_pts]
+    pinned_q = reduced_q[pinned_pts]
 
     # Designate fit_var
     if pooled:
@@ -276,15 +272,6 @@ def main(test, folder, scan, reduced_intensity, reduced_q,
                    for x in fit_var
                    ])
 
-    if 'Water' in test:
-        llim = 0.46
-    elif 'Ethanol' in test:
-        llim = 0.30
-    elif 'Dodecane' in test:
-        llim = 0.10
-    else:
-        llim = 0.46
-
     for i, _ in enumerate(reduced_intensity):
         # Create intensity plots with q values of interest highlighted
         plt.figure()
@@ -292,7 +279,7 @@ def main(test, folder, scan, reduced_intensity, reduced_q,
                  reduced_q,
                  reduced_intensity[i],
                  linestyle='-',
-                 color=(rr[i],0,bb[i]),
+                 color=(rr[i], 0, bb[i]),
                  linewidth=2.0,
                  label='{0:0.1f}{1}'.format(fit_var[i], data_label)
                  )
@@ -306,24 +293,19 @@ def main(test, folder, scan, reduced_intensity, reduced_q,
         plt.xlabel('q (Å$^{-1}$)')
         plt.ylabel('Intensity (a.u.)')
         plt.autoscale(enable=True, axis='x', tight=True)
-        #plt.gca().set_ylim([llim, 1.02])
         plt.minorticks_on()
-        plt.tick_params(which='both',direction='in')
+        plt.tick_params(which='both', direction='in')
         plt.title(test + ' Curves')
         plt.tight_layout()
-        plt.savefig('{0}/curves_{1:0.1f}.png'.format(curves_fld, fit_var[i])
+        plt.savefig('{0}/curves_{1:0.1f}.png'.format(curves_fld, fit_var[i]))
         plt.close()
 
     if structure_factor is not None:
-        for i,_ in enumerate(structure_factor):
+        for i, _ in enumerate(structure_factor):
             np.savetxt(
                        '{0}/{1:02d}_{2:0.2f}K.txt'
-                                                  .format(
-                                                          tests_fld,
-                                                          i,
-                                                          temperature[i]
-                                                          )
-                                                  .replace('.', 'p'),
+                       .format(tests_fld, i, temperature[i])
+                       .replace('.', 'p'),
                        structure_factor[i]
                        )
 
@@ -332,7 +314,7 @@ def main(test, folder, scan, reduced_intensity, reduced_q,
                      reduced_q,
                      structure_factor[i],
                      linestyle='-',
-                     color=(rr[i],0,bb[i]),
+                     color=(rr[i], 0, bb[i]),
                      linewidth=2.0,
                      label='{0:0.1f}{1}'.format(temperature[i], data_label)
                      )
@@ -341,14 +323,14 @@ def main(test, folder, scan, reduced_intensity, reduced_q,
             plt.ylabel('Structure Factor (a.u.)')
             plt.autoscale(enable=True, axis='x', tight=True)
             plt.minorticks_on()
-            plt.tick_params(which='both',direction='in')
+            plt.tick_params(which='both', direction='in')
             plt.title(test + ' Curves')
             plt.tight_layout()
             plt.savefig('{0}/{1}curves_{2:0.1f}.png'.format(
                                                             sf_fld,
                                                             test,
                                                             temperature[i]
-                                                            )
+                                                            ))
             plt.close()
 
     np.savetxt(
@@ -403,7 +385,7 @@ def main(test, folder, scan, reduced_intensity, reduced_q,
         plt.savefig('{0}/stdev.png'.format(plt_fld))
         plt.close()
 
-    # Superimposed intensity plot    
+    # Superimposed intensity plot
     plt.figure()
     [
      plt.plot(
@@ -411,7 +393,7 @@ def main(test, folder, scan, reduced_intensity, reduced_q,
               x,
               color=(rr[i], 0, bb[i])
               )
-     for i,x in enumerate(reduced_intensity)
+     for i, x in enumerate(reduced_intensity)
      ]
     plt.xlabel('q (Å$^{-1}$)')
     plt.ylabel('Intensity (a.u.)')
@@ -428,7 +410,6 @@ def main(test, folder, scan, reduced_intensity, reduced_q,
              bbox=dict(facecolor='white', alpha=1.0)
              )
     plt.title('Scan {0}'.format(scan))
-    #plt.ylim([llim, 1.05])
     plt.tight_layout()
     plt.savefig('{0}/superimposedcurves.png'.format(plt_fld))
     plt.close()
