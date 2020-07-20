@@ -49,7 +49,7 @@ def main(test, scan):
                    (np.abs(np.array(q) - 1.70)).argmin(),
                    (np.abs(np.array(q) - 3.1)).argmin()
                    )
-        avg_rows = 12
+        avg_rows = 1
 
     if scan in [400, 401, 403]:
         g = h5py.File(prj_fld + '/RawData/Scan_402.hdf5', 'r')
@@ -66,7 +66,7 @@ def main(test, scan):
                    (np.abs(np.array(q) - 1.70)).argmin(),
                    (np.abs(np.array(q) - 3.1)).argmin()
                    )
-        avg_rows = 20
+        avg_rows = 1
 
     # 2017 Ethanol
     # 404 looked at the same q range as the water scans
@@ -85,7 +85,7 @@ def main(test, scan):
                    (np.abs(np.array(q) - 1.70)).argmin(),
                    (np.abs(np.array(q) - 3.1)).argmin()
                    )
-        avg_rows = 20
+        avg_rows = 1
 
     # 408 and 409 had a different detector position (different q range)
     if scan == 408:
@@ -103,7 +103,7 @@ def main(test, scan):
                    (np.abs(np.array(q) - 0.6)).argmin(),
                    (np.abs(np.array(q) - 1.75)).argmin()
                    )
-        avg_rows = 10
+        avg_rows = 1
 
     if scan == 409:
         g = h5py.File(prj_fld + '/RawData/Scan_410.hdf5', 'r')
@@ -120,7 +120,7 @@ def main(test, scan):
                    (np.abs(np.array(q) - 0.6)).argmin(),
                    (np.abs(np.array(q) - 1.75)).argmin()
                    )
-        avg_rows = 10
+        avg_rows = 1
 
     # 2017 Dodecane
     if scan == 414:
@@ -138,7 +138,7 @@ def main(test, scan):
                    (np.abs(np.array(q) - 0.6)).argmin(),
                    (np.abs(np.array(q) - 1.75)).argmin()
                    )
-        avg_rows = 10
+        avg_rows = 1
 
     if scan == 415:
         g = h5py.File(prj_fld + '/RawData/Scan_416.hdf5', 'r')
@@ -155,7 +155,7 @@ def main(test, scan):
                    (np.abs(np.array(q) - 0.6)).argmin(),
                    (np.abs(np.array(q) - 1.75)).argmin()
                    )
-        avg_rows = 10
+        avg_rows = 1
 
     # Background subtraction
     intensity = [(x-bg_avg) for x in raw_intensity]
