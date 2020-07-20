@@ -7,12 +7,11 @@ Created on Thu Jan 23 17:42:32 2020
 
 import glob
 import numpy as np
-import os
 from scipy.constants import convert_temperature
 from scipy.signal import savgol_filter
-from general.xray_factor import ItoS
 from general.misc import create_folder
 from temperature.temperature_processing import main as temperature_processing
+
 
 def main():
     # Setup
@@ -70,20 +69,20 @@ def main():
         T = convert_temperature(T, 'Celsius', 'Kelvin')
 
         # Load in and process intensity curves (sort, filter, crop, normalize)
-        I = np.array([
+        intensity = np.array([
                               np.mean([
                                        np.loadtxt(x, usecols=1)-bg
                                        for x in y
                                        ],
-                                       axis=0)
+                                      axis=0)
                               for y in files
                               ])
-        filtered_I = [savgol_filter(x, 55, 3) for x in I]
+        filtered_I = [savgol_filter(x, 55, 3) for x in intensity]
         reduced_I = [x[sl] for x in filtered_I]
         reduced_I = np.array([
-                                      y/np.trapz(y, x=reduced_q)
-                                      for y in reduced_I
-                                      ])
+                              y/np.trapz(y, x=reduced_q)
+                              for y in reduced_I
+                              ])
 
         # Run processing script
         temperature_processing(test, fld, scan, reduced_I, reduced_q, T)
