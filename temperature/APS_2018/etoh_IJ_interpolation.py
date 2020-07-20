@@ -1,30 +1,19 @@
-# -*- coding: utf-8 -*-
 # @Author: naveed
 # @Date:   2020-04-07 13:37:46
 # @Last Modified by:   rahmann
 # @Last Modified time: 2020-04-28 22:35:36
-
-import sys
-if sys.platform == 'win32':
-	sys.path.append('E:/GitHub/xray/general')
-	sys.path.append('E:/GitHub/xray/temperature')
-	sys_folder = 'R:'
-elif sys.platform == 'linux':
-	sys.path.append('/mnt/e/GitHub/xray/general')
-	sys.path.append('/mnt/e/GitHub/xray/temperature')
-	sys_folder = '/mnt/r/'
 
 import glob
 import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from Statistics.calc_statistics import polyfit
+from general.calc_statistics import polyfit
 
 def main():
-	## Setup initial parameters
-	project_folder = sys_folder + '/X-ray Temperature/APS 2018-1'
-	folder = project_folder + '/Processed/Ethanol'
+	# Setup initial parameters
+	prj_fld = '/mnt/r/X-ray Temperature/APS 2018-1'
+	folder = prj_fld + '/Processed/Ethanol'
 
 	# Select profiles to be used as thermometers
 	profiles = ['aratio', 'peak', 'peakq', 'var', 'skew', 'kurt', 'pca']

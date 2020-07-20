@@ -9,7 +9,6 @@ import os
 import h5py
 import numpy as np
 import matplotlib.pyplot as plt
-plt.style.use(gh_fld + '/python/matplotlib/stylelib/paper.mplstyle')
 import pickle
 from copy import copy
 from datetime import datetime

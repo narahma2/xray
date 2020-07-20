@@ -143,7 +143,6 @@ def saveimage(img_fld, fit_var, scatter, background):
      Image.fromarray(x).save(
                              '{0}/{1:03d}_{2:06.2f}.tif'
                              .format(img_fld, n, fit_var[n])
-                             .replace('.', 'p')
                              )
      for n, x in enumerate(scatter)
      ]

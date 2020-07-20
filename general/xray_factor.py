@@ -59,10 +59,10 @@ def waas_kirf(atom, q):
                 b) doi:10.1038/nature13266, Supplementary Information, Eq. S.23"""
 
     if atom == "H" or atom == "hydrogen":
-        file = os.path.dirname(os.path.realpath(__file__)) + "/hydrogen.txt"
+        file = "/mnt/e/GitHub/xray/general/resources/hydrogen.txt"
         alpha = -0.43
     elif atom == "O" or atom == "oxygen":
-        file = os.path.dirname(os.path.realpath(__file__))+ "/oxygen.txt"
+        file = "/mnt/e/GitHub/xray/general/resources/oxygen.txt"
         alpha = 0.1075
 
     lines = []

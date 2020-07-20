@@ -12,7 +12,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from Statistics.calc_statistics import polyfit
+from general.calc_statistics import polyfit
 
 
 def main():
