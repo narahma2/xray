@@ -53,8 +53,8 @@ def main():
                               '/Statistics/' + profile + '_polynomial.txt'))
 
             # Create flds
-            plots_fld = '{0}/IJ Ramping/Positions/Interp/{1}_{2}'\
-                        .profile(fld, calibration, profile)
+            plots_fld = '{0}/IJ Ramping/PositionsInterp/{1}_{2}'\
+                        .format(fld, calibration, profile)
             if not os.path.exists(plots_fld):
                 os.makedirs(plots_fld)
 
@@ -63,18 +63,18 @@ def main():
 
             # Load in Positions
             pos_y = []
-            for i, fld in enumerate(flds):
+            for i, fldr in enumerate(flds):
                 # Y position string (y00p25, y00p05, etc.)
-                yp = fld.rsplit('/')[-2]
+                yp = fldr.rsplit('/')[-2]
                 pos_y.append(float(yp[1:].replace('p', '.')))
 
                 # Profile data for the IJ Ramping Positions
                 data = np.loadtxt('{0}/Profiles/profile_{1}.txt'
-                                  .format(fld, profile)
+                                  .format(fldr, profile)
                                   )
 
                 # Nozzle T
-                nozzleT = np.loadtxt(fld + '/temperature.txt')
+                nozzleT = np.loadtxt(fldr + '/temperature.txt')
                 # Interpolated temperature
                 interpT = p(data)
                 # Fit a linear line of interpT vs. nozzleT
