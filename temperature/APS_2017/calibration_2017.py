@@ -49,7 +49,7 @@ def main(test, scan):
                    (np.abs(np.array(q) - 1.70)).argmin(),
                    (np.abs(np.array(q) - 3.1)).argmin()
                    )
-        avg_rows = 3
+        avg_rows = 5
 
     if scan in [400, 401, 403]:
         g = h5py.File(prj_fld + '/RawData/Scan_402.hdf5', 'r')
@@ -66,7 +66,7 @@ def main(test, scan):
                    (np.abs(np.array(q) - 1.70)).argmin(),
                    (np.abs(np.array(q) - 3.1)).argmin()
                    )
-        avg_rows = 3
+        avg_rows = 5
 
     # 2017 Ethanol
     # 404 looked at the same q range as the water scans
@@ -85,7 +85,7 @@ def main(test, scan):
                    (np.abs(np.array(q) - 1.70)).argmin(),
                    (np.abs(np.array(q) - 3.1)).argmin()
                    )
-        avg_rows = 3
+        avg_rows = 5
 
     # 408 and 409 had a different detector position (different q range)
     if scan == 408:
@@ -103,7 +103,7 @@ def main(test, scan):
                    (np.abs(np.array(q) - 0.6)).argmin(),
                    (np.abs(np.array(q) - 1.75)).argmin()
                    )
-        avg_rows = 3
+        avg_rows = 5
 
     if scan == 409:
         g = h5py.File(prj_fld + '/RawData/Scan_410.hdf5', 'r')
@@ -120,7 +120,7 @@ def main(test, scan):
                    (np.abs(np.array(q) - 0.6)).argmin(),
                    (np.abs(np.array(q) - 1.75)).argmin()
                    )
-        avg_rows = 3
+        avg_rows = 5
 
     # 2017 Dodecane
     if scan == 414:
@@ -138,7 +138,7 @@ def main(test, scan):
                    (np.abs(np.array(q) - 0.6)).argmin(),
                    (np.abs(np.array(q) - 1.75)).argmin()
                    )
-        avg_rows = 3
+        avg_rows = 10
 
     if scan == 415:
         g = h5py.File(prj_fld + '/RawData/Scan_416.hdf5', 'r')
@@ -155,7 +155,7 @@ def main(test, scan):
                    (np.abs(np.array(q) - 0.6)).argmin(),
                    (np.abs(np.array(q) - 1.75)).argmin()
                    )
-        avg_rows = 3
+        avg_rows = 10
 
     # Background subtraction
     intensity = [(x-bg_avg) for x in raw_intensity]
@@ -186,7 +186,7 @@ def main(test, scan):
 
     reduced_q = np.array(q[sl])
     reduced_I = [x[sl] for x in filt_I]
-    reduced_I = np.array([y/np.trapz(y, x=reduced_q) for y in reduced_I])
+    #reduced_I = np.array([y/np.trapz(y, x=reduced_q) for y in reduced_I])
 
     if test == 'Water':
         sf = np.array([ItoS(np.array(reduced_q), x) for x in reduced_I])
@@ -210,7 +210,7 @@ def main(test, scan):
              linestyle='-',
              color=(rr[0], 0, bb[0]),
              linewidth=2.0,
-             label='{0:d} K'.format(round(T_avg[0]))
+             label='{0:d} K'.format(int(round(T_avg[0])))
              )
     plt.plot(
              reduced_q,
@@ -218,7 +218,7 @@ def main(test, scan):
              linestyle='-.',
              color=(0.5, 0, 0.5),
              linewidth=2.0,
-             label='{0:d} K'.format(round(T_avg[mid_temp]))
+             label='{0:d} K'.format(int(round(T_avg[mid_temp])))
              )
     plt.plot(
              reduced_q,
@@ -226,7 +226,7 @@ def main(test, scan):
              linestyle=':',
              color=(rr[-1], 0, bb[-1]),
              linewidth=2.0,
-             label='{0:d} K'.format(round(T_avg[-1]))
+             label='{0:d} K'.format(int(round(T_avg[-1])))
              )
     plt.legend()
     plt.xlabel('q (Å$^{-1}$)')

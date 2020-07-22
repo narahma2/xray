@@ -83,10 +83,10 @@ def main():
     reduced_intensity = [x[sl] for x in filtered_intensity]
 
     # Normalize intensity by the area (same process as the Nature paper)
-    reduced_intensity = [
-                         y/np.trapz(y, x=reduced_q)
-                         for y in reduced_intensity
-                         ]
+    #reduced_intensity = [
+    #                     y/np.trapz(y, x=reduced_q)
+    #                     for y in reduced_intensity
+    #                     ]
 
     # Convert reduced_intensity to numpy array
     reduced_intensity = np.array(reduced_intensity)

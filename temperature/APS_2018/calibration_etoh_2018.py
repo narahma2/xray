@@ -79,10 +79,10 @@ def main():
                               ])
         filtered_I = [savgol_filter(x, 55, 3) for x in intensity]
         reduced_I = [x[sl] for x in filtered_I]
-        reduced_I = np.array([
-                              y/np.trapz(y, x=reduced_q)
-                              for y in reduced_I
-                              ])
+        #reduced_I = np.array([
+        #                      y/np.trapz(y, x=reduced_q)
+        #                      for y in reduced_I
+        #                      ])
 
         # Run processing script
         temperature_processing(test, fld, scan, reduced_I, reduced_q, T)

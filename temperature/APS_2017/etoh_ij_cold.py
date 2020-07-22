@@ -46,10 +46,10 @@ def main():
     filtered_intensity = [savgol_filter(x, 55, 3) for x in intensity]
     reduced_q = np.array(q[sl])
     reduced_intensity = [x[sl] for x in filtered_intensity]
-    reduced_intensity = np.array([
-                                  y/np.trapz(y, x=reduced_q)
-                                  for y in reduced_intensity
-                                  ])
+    #reduced_intensity = np.array([
+    #                              y/np.trapz(y, x=reduced_q)
+    #                              for y in reduced_intensity
+    #                              ])
 
     temperature_processing(test.rsplit('/')[0], folder, test.rsplit('/')[1],
                            reduced_intensity[:-15], reduced_q, temperature=[],

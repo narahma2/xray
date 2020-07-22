@@ -122,7 +122,7 @@ def main():
             filtered_intensity = [savgol_filter(x, 55, 3) for x in intensity]
             reduced_q = q[sl]
             reduced_intensity = [x[sl] for x in filtered_intensity]
-            reduced_intensity = [y/np.trapz(y, x=reduced_q) for y in reduced_intensity]
+            #reduced_intensity = [y/np.trapz(y, x=reduced_q) for y in reduced_intensity]
 
             # Filter out NaN
             nan_ind = [~np.isnan(x[0]) for x in reduced_intensity]

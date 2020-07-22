@@ -12,10 +12,11 @@ import matplotlib.pyplot as plt
 import pickle
 from scipy.signal import savgol_filter
 from general.xray_factor import ItoS
-from temperature_processing import main as temperature_processing
+from temperature.temperature_processing import main as temperature_processing
+
 
 def main():
-    #%% Setup
+    # Setup
     prj_fld = '/mnt/r/X-ray Temperature/APS 2018-1/'
 
     test = 'Ethanol/IJ65C'
@@ -38,7 +39,7 @@ def main():
         if not os.path.exists(folder + scan):
             os.makedirs(folder + scan)
 
-        #%% Load background
+        # Load background
         bg = glob.glob(prj_fld + '/Q Space/Ethanol_ImpingingJet/*Scan1152*')
         q = np.loadtxt(bg[0], usecols=0)                    # Load q
         bg = [np.loadtxt(x, usecols=1) for x in bg]         # Load intensity
@@ -46,7 +47,7 @@ def main():
         # Average background intensities
         bg = np.mean(bg, axis=0)
 
-        #%% Intensity correction
+        # Intensity correction
         perpendicular = [1138, 1139, 1140, 1141, 1142, 1143]
         transverse = [1145, 1146, 1148, 1149, 1150, 1151]
 
@@ -67,7 +68,7 @@ def main():
 
         reduced_q = q[sl]
         reduced_intensity = [x[sl] for x in filtered_intensity]
-        reduced_intensity = [y/np.trapz(y, x=reduced_q) for y in reduced_intensity]
+        #reduced_intensity = [y/np.trapz(y, x=reduced_q) for y in reduced_intensity]
 
         temperature_processing('Ethanol', prj_fld + '/Processed/Ethanol/IJ65C/', scan, reduced_intensity, reduced_q, temperature=None, structure_factor=None, y=y_loc, ramping=False)
 

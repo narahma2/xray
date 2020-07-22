@@ -25,7 +25,8 @@ def main():
         if 'Hot' in test:
             scans = [428, 430, 431]
             bg_scan = 429
-            y = [10, np.nan, 25]
+            # Y position for Scan 430 is faked
+            y = [10, 15, 25]
 
         g = h5py.File(
                       '{0}/RawData/Scan_{1}.hdf5'.format(prj_fld, bg_scan),
@@ -60,7 +61,7 @@ def main():
         filtered_I = [savgol_filter(x, 55, 3) for x in intensities]
         reduced_q = np.array(q[sl])
         reduced_I = [x[sl] for x in filtered_I]
-        reduced_I = [y/np.trapz(y, x=reduced_q) for y in reduced_I]
+        #reduced_I = [y/np.trapz(y, x=reduced_q) for y in reduced_I]
 
         temperature_processing(test.rsplit('/')[0], folder,
                                test.rsplit('/')[1], reduced_I, reduced_q,
