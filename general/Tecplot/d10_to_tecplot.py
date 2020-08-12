@@ -7,70 +7,27 @@ Created on Wed May 22 17:12:11 2019
 import glob
 import numpy as np
 import tecplot as tp
+
 from os import path
 from libim7 import readim7
 from scipy.ndimage.interpolation import shift
+from general.misc import create_folder
 
 
-def convert_tp(
-               im7_path,
-               dataset,
-               zone_name,
-               crop_x1=None,
-               crop_x2=None,
-               crop_y1=None,
-               crop_y2=None,
-               crop_z1=None,
-               crop_z2=None,
-               vshift=None
-               ):
+def load_davis(im7_path):
     """
-    Function that takes in a reconstructed volume from LaVision DaVis and
-    converts into a Tecplot readable form. For ease of use, this function
-    only works on *individual volumes*, however the calling procedure for
-    the volume depends on how the volumes are saved by LaVision DaVis (as
-    individual B0*.im7 files or a series of B0*.im7 files). SEE THE
-    <im7_path> VARIABLE.
+    Function that loads in the LaVision DaVis reconstructed volume. Returns
+    the volume as a structured 3D numpy array and the X/Y/Z extents in mm.
 
-    If you want to convert a multitude of reconstructed volumes (e.g. a
-    time series), simply call this function within a for-loop.
-
-    For saving the files after conversion, call the func ~save_plt~
-    defined below in the script.
+    For full conversion to a Tecplot .PLT file, use convert_tp() below,
+    this function only does the preliminary step of loading the volume.
 
     INPUT VARIABLES
     ---------------
     im7_path:   Path to a single reconstructed volume. Can be a folder path
-                containing all B0*.im7 files for that single volume, or a file
-                path to the B0*.im7 file containing the entire volume
+                containing all B0*.im7 files for that single volume, or a
+                file path to the B0*.im7 file containing the entire volume
                 (check your project directory!)
-
-    dataset:    Tecplot dataset
-
-    zone_name:  Name of zone within Tecplot (e.g. Q5, Q14, Mass, etc.)
-
-    crop_x1:    OPTIONAL. If cropping is desired in X range, this is the
-                beginning crop point IN MILLIMETERS.
-
-    crop_x2:    OPTIONAL. If cropping is desired in X range, this is the
-                ending crop point IN MILLIMETERS.
-
-    crop_y1:    OPTIONAL. If cropping is desired in Y range, this is the
-                beginning crop point IN MILLIMETERS.
-
-    crop_y2:    OPTIONAL. If cropping is desired in Y range, this is the
-                ending crop point IN MILLIMETERS.
-
-    crop_z1:    OPTIONAL. If cropping is desired in Z range, this is the
-                beginning crop point IN MILLIMETERS.
-
-    crop_z2:    OPTIONAL. If cropping is desired in Z range, this is the
-                ending crop point IN MILLIMETERS.
-
-    vshift:     OPTIONAL. I don't remember what this does. I assume it
-                shifts the volume in a certain direction. Might be useful when
-                needing to overlap different volumes (e.g. Q14/Q5 of OH
-                transitions for temperature calculation)?
     """
     # Check how to read in the im7 files.
     # IF AN INDIVIDUAL VOLUME IS SPLIT UP INTO MULTIPLE B0*.im7
@@ -122,6 +79,74 @@ def convert_tp(
                        dtype=np.float32)
     z_mm = np.linspace(start=start_z, stop=start_z + nz*scale_z, num=nz,
                        dtype=np.float32)
+
+    del buf, att
+
+    return volume, x_mm, y_mm, z_mm
+
+
+def convert_tp(
+               im7_path,
+               dataset,
+               zone_name,
+               crop_x1=None,
+               crop_x2=None,
+               crop_y1=None,
+               crop_y2=None,
+               crop_z1=None,
+               crop_z2=None,
+               vshift=None
+               ):
+    """
+    Function that takes in a reconstructed volume from LaVision DaVis and
+    converts into a Tecplot readable form. For ease of use, this function
+    only works on *individual volumes*, however the calling procedure for
+    the volume depends on how the volumes are saved by LaVision DaVis (as
+    individual B0*.im7 files or a series of B0*.im7 files). SEE THE
+    <im7_path> VARIABLE.
+
+    If you want to convert a multitude of reconstructed volumes (e.g. a
+    time series), simply call this function within a for-loop.
+
+    For saving the files after conversion, call the func ~save_plt~
+    defined below in the script.
+
+    INPUT VARIABLES
+    ---------------
+    im7_path:   Path to a single reconstructed volume. Can be a folder path
+                containing all B0*.im7 files for that single volume, or a
+                file path to the B0*.im7 file containing the entire volume
+                (check your project directory!)
+
+    dataset:    Tecplot dataset
+
+    zone_name:  Name of zone within Tecplot (e.g. Q5, Q14, Mass, etc.)
+
+    crop_x1:    OPTIONAL. If cropping is desired in X range, this is the
+                beginning crop point IN MILLIMETERS.
+
+    crop_x2:    OPTIONAL. If cropping is desired in X range, this is the
+                ending crop point IN MILLIMETERS.
+
+    crop_y1:    OPTIONAL. If cropping is desired in Y range, this is the
+                beginning crop point IN MILLIMETERS.
+
+    crop_y2:    OPTIONAL. If cropping is desired in Y range, this is the
+                ending crop point IN MILLIMETERS.
+
+    crop_z1:    OPTIONAL. If cropping is desired in Z range, this is the
+                beginning crop point IN MILLIMETERS.
+
+    crop_z2:    OPTIONAL. If cropping is desired in Z range, this is the
+                ending crop point IN MILLIMETERS.
+
+    vshift:     OPTIONAL. I don't remember what this does. I assume it
+                shifts the volume in a certain direction. Might be useful
+                when needing to overlap different volumes (e.g. Q14/Q5 of
+                OH transitions for temperature calculation)?
+    """
+    # Load in the DaVis file
+    volume, x_mm, y_mm, z_mm = load_davis(im7_path)
 
     # OPTIONAL: Cropping the volume down to size (in millimeters)
     if crop_x1 is not None:
@@ -186,7 +211,6 @@ def convert_tp(
     # column-wise order)
     zone.values('Intensity')[:] = volume.flatten(order='F')
 
-    del buf, att
 
 
 def save_plt(dataset, plt_folder, plt_name, zone=None):
@@ -208,6 +232,10 @@ def save_plt(dataset, plt_folder, plt_name, zone=None):
                     index starting at 1). If not specified, will save
                     the entire dataset.
     """
+    # Create folder if it doesn't exist
+    plt_fld = create_folder(plt_fld)
+
+    # Save the dataset to a PLT file
     tp.data.save_tecplot_plt(
                              '{0}/{1}.plt'.format(plt_fld, plt_name),
                              dataset=dataset,
