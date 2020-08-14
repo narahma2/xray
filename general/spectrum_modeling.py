@@ -48,24 +48,41 @@ def multi_angle(xop_path):
 
 
 def tube_xop(xop_path):
-    """Used for modeling the tube source spectra"""
+    """Used for modeling the tube source spectra from XOP"""
     # [Energy (eV), Flux (photons/1keV(bw)/mA/mm^2(@1m)/sec)]
-    spctm = pd.read_csv(
-                        xop_path,
-                        sep='\s+',
-                        names=['Energy', 'Flux'],
-                        skiprows=4
-                        )
+    spectrum = pd.read_csv(
+                           xop_path,
+                           sep='\s+',
+                           names=['Energy', 'Intensity'],
+                           skiprows=4
+                           )
+
+    # Convert energy to keV
+    spectrum['Energy'] /= 1000
 
     # Convert Flux to units of (photons/mA/mm^2(@1m)/sec)
-    spctm['Flux'] = spctm['Flux'] * (spctm['Energy'] / 1000)
+    spectrum['Intensity'] *= spectrum['Energy']
 
-    # Convert Flux to Power in units of (W/mA/mm^2(@1m))
-    # Convert eV to Joules, Watts = J/s
-    spctm['Flux'] = spctm['Flux'] * (spctm['Energy'] * (1.602E-19))
-    spctm.columns = ['Energy', 'Power']
+    return spectrum
 
-    return spctm
+
+def tube_spekcalc(spekcalc_path):
+    """Used for modeling the tube source spectra from SpekCalc"""
+    # Energy: keV, Intensity: Photons/keV/cm^2/mAs
+    spectrum = pd.read_csv(
+                           spekcalc_path,
+                           skiprows=18,
+                           sep='  ',
+                           engine='python',
+                           names=['Energy', 'Intensity']
+                           )
+
+    # Scale intensity to visible photon count
+    # Logic being that 10 keV x-ray photons emit 10x more visible photons 
+    #   than 1 keV x-ray photons
+    spectrum['Intensity'] *= spectrum['Energy']
+
+    return spectrum
 
 
 def xcom(xcom_path, att_column=3):
@@ -93,15 +110,15 @@ def xcom(xcom_path, att_column=3):
     return xcom_spct
 
 
-def xcom_reshape(xcom_spct, xop_abscissa):
+def xcom_reshape(xcom_spct, source_energy):
     """Linear interp. to reconfigure the x-axis of the xcom spectra to XOP"""
     y = np.interp(
-                  xop_abscissa,
+                  source_energy,
                   xcom_spct['Energy'],
                   xcom_spct['Attenuation']
                   )
 
-    y = {'Energy': xop_abscissa, 'Attenuation': y}
+    y = {'Energy': source_energy, 'Attenuation': y}
 
     return y
 
