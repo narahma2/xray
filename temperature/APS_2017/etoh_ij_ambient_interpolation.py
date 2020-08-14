@@ -20,7 +20,7 @@ def main():
     profiles = ['aratio', 'peak', 'peakq', 'var', 'skew', 'kurt', 'pca']
 
     # Select calibration data sets
-    calibration = 'Combined'
+    calibration = 'RampUp'
 
     # Load in IJ Ramping folders
     flds = ['/IJ Ambient']

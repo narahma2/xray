@@ -24,7 +24,7 @@ def main():
     if not os.path.exists(folder):
         os.makedirs(folder)
 
-    scans = ['/RampUp', '/RampDown', '/Combined']
+    scans = ['/RampUp', '/RampDown'] #, '/Combined']
 
     for scan in scans:
         # Load background
@@ -71,12 +71,12 @@ def main():
 
         # Load in and process intensity curves (sort, filter, crop, normalize, ItoS)
         intensity = np.array([np.mean([np.loadtxt(x, usecols=1)-bg for x in y], axis=0) for y in files])
-        filtered_intensity = [savgol_filter(x, 55, 3) for x in intensity]
+        filtered_intensity = [savgol_filter(x, 49, 3) for x in intensity]
         reduced_intensity = [x[sl] for x in filtered_intensity]
         #reduced_intensity = np.array([y/np.trapz(y, x=reduced_q) for y in reduced_intensity])
-        structure_factor = np.array([ItoS(np.array(reduced_q), x) for x in reduced_intensity])
+        #structure_factor = np.array([ItoS(np.array(reduced_q), x) for x in reduced_intensity])
 
-        temperature_processing(test, folder, scan, reduced_intensity, reduced_q, temperature, structure_factor)
+        temperature_processing(test, folder, scan, reduced_intensity, reduced_q, temperature)
 
 
 if __name__ == '__main__':

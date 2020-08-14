@@ -72,8 +72,8 @@ def main():
     bg = [g['Intensity_vs_q'][:,i] for i in range(np.shape(g['Intensity_vs_q'])[1])]
     bg_avg = np.mean(bg, axis=0)
 
-    calib_folders = [project_folder + '/Processed/Water/403', '/mnt/r/X-ray Temperature/APS 2018-1/Processed/Water_700umNozzle/Combined']
-    calibrations = ['403', 'Combined'] 
+    calib_folders = [project_folder + '/Processed/Water/403']#, '/mnt/r/X-ray Temperature/APS 2018-1/Processed/Water_700umNozzle/Combined']
+    calibrations = ['403']#, 'Combined'] 
 
     ij_mapping_X = []
     ij_mapping_Y = []
@@ -119,7 +119,7 @@ def main():
             # Let Scan 437 be the background
             # intensity = [(x-bg_avg) for x in intensity]
 
-            filtered_intensity = [savgol_filter(x, 55, 3) for x in intensity]
+            filtered_intensity = [savgol_filter(x, 49, 3) for x in intensity]
             reduced_q = q[sl]
             reduced_intensity = [x[sl] for x in filtered_intensity]
             #reduced_intensity = [y/np.trapz(y, x=reduced_q) for y in reduced_intensity]

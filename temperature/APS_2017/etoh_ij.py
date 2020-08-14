@@ -58,7 +58,7 @@ def main():
                    (np.abs(np.array(q) - 1.75)).argmin()
                    )
         intensities = [(x-bg_avg) for x in intensities]
-        filtered_I = [savgol_filter(x, 55, 3) for x in intensities]
+        filtered_I = [savgol_filter(x, 49, 3) for x in intensities]
         reduced_q = np.array(q[sl])
         reduced_I = [x[sl] for x in filtered_I]
         #reduced_I = [y/np.trapz(y, x=reduced_q) for y in reduced_I]

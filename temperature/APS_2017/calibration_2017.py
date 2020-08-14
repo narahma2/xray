@@ -66,7 +66,7 @@ def main(test, scan):
                    (np.abs(np.array(q) - 1.70)).argmin(),
                    (np.abs(np.array(q) - 3.1)).argmin()
                    )
-        avg_rows = 5
+        avg_rows = 10
 
     # 2017 Ethanol
     # 404 looked at the same q range as the water scans
@@ -85,7 +85,7 @@ def main(test, scan):
                    (np.abs(np.array(q) - 1.70)).argmin(),
                    (np.abs(np.array(q) - 3.1)).argmin()
                    )
-        avg_rows = 5
+        avg_rows = 10
 
     # 408 and 409 had a different detector position (different q range)
     if scan == 408:
@@ -103,7 +103,7 @@ def main(test, scan):
                    (np.abs(np.array(q) - 0.6)).argmin(),
                    (np.abs(np.array(q) - 1.75)).argmin()
                    )
-        avg_rows = 5
+        avg_rows = 1
 
     if scan == 409:
         g = h5py.File(prj_fld + '/RawData/Scan_410.hdf5', 'r')
@@ -120,7 +120,7 @@ def main(test, scan):
                    (np.abs(np.array(q) - 0.6)).argmin(),
                    (np.abs(np.array(q) - 1.75)).argmin()
                    )
-        avg_rows = 5
+        avg_rows = 1
 
     # 2017 Dodecane
     if scan == 414:
@@ -138,7 +138,7 @@ def main(test, scan):
                    (np.abs(np.array(q) - 0.6)).argmin(),
                    (np.abs(np.array(q) - 1.75)).argmin()
                    )
-        avg_rows = 10
+        avg_rows = 1
 
     if scan == 415:
         g = h5py.File(prj_fld + '/RawData/Scan_416.hdf5', 'r')
@@ -155,7 +155,7 @@ def main(test, scan):
                    (np.abs(np.array(q) - 0.6)).argmin(),
                    (np.abs(np.array(q) - 1.75)).argmin()
                    )
-        avg_rows = 10
+        avg_rows = 1
 
     # Background subtraction
     intensity = [(x-bg_avg) for x in raw_intensity]
@@ -166,23 +166,28 @@ def main(test, scan):
     T_avg = []
     scatter = []
 
-    # Bin the data sets
-    for i in range(0, len(intensity) // avg_rows):
-        start = i*avg_rows
-        stop = ((i+1)*avg_rows)-1
-        scatter.append(np.mean(f['Scatter_images'][start:stop], axis=0))
-        intensity_avg.append(np.mean(intensity[start:stop], axis=0))
-        T_avg.append(np.mean(T[start:stop]))
+    # Bin the data sets if requested
+    if avg_rows > 1:
+        for i in range(0, len(intensity) // avg_rows):
+            start = i*avg_rows
+            stop = ((i+1)*avg_rows)-1
+            scatter.append(np.mean(f['Scatter_images'][start:stop], axis=0))
+            intensity_avg.append(np.mean(intensity[start:stop], axis=0))
+            T_avg.append(np.mean(T[start:stop]))
 
-    i = (len(intensity) // avg_rows)
-    if np.mod(len(intensity), avg_rows) != 0:
-        start = i*avg_rows
-        scatter.append(np.mean(f['Scatter_images'][start:-1], axis=0))
-        intensity_avg.append(np.mean(intensity[start:-1], axis=0))
-        T_avg.append(np.mean(T[start:-1]))
+        i = (len(intensity) // avg_rows)
+        if np.mod(len(intensity), avg_rows) != 0:
+            start = i*avg_rows
+            scatter.append(np.mean(f['Scatter_images'][start:-1], axis=0))
+            intensity_avg.append(np.mean(intensity[start:-1], axis=0))
+            T_avg.append(np.mean(T[start:-1]))
+    else:
+        scatter = f['Scatter_images']
+        intensity_avg = intensity
+        T_avg = T
 
     # Savitzky-Golay filtering
-    filt_I = [savgol_filter(x, 55, 3) for x in intensity_avg]
+    filt_I = [savgol_filter(x, 49, 3) for x in intensity_avg]
 
     reduced_q = np.array(q[sl])
     reduced_I = [x[sl] for x in filt_I]
@@ -245,12 +250,12 @@ def run_main():
     # Ethanol: 404, 408, 409
     # Dodecane: 414, 415
     scans = [
-             400, 401, 403,
+             #400, 401, 403,
              408, 409,
              414, 415
              ]
     tests = [
-             'Water', 'Water', 'Water',
+             #'Water', 'Water', 'Water',
              'Ethanol', 'Ethanol',
              'Dodecane', 'Dodecane'
              ]

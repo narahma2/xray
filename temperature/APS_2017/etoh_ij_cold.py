@@ -43,7 +43,7 @@ def main():
                )
 
     # Final processing steps
-    filtered_intensity = [savgol_filter(x, 55, 3) for x in intensity]
+    filtered_intensity = [savgol_filter(x, 49, 3) for x in intensity]
     reduced_q = np.array(q[sl])
     reduced_intensity = [x[sl] for x in filtered_intensity]
     #reduced_intensity = np.array([

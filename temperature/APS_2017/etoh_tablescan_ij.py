@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import pickle
 from scipy.constants import convert_temperature
 from scipy.signal import savgol_filter
-from temperature_processing import main as temperature_processing
+from temperature.temperature_processing import main as temperature_processing
 
 
 def main():
@@ -76,7 +76,7 @@ def main():
         intensities[x:(x+18)] = intensities[x:(x+18)] - bg
 
     # Smooth out data using Savitzky-Golay filter
-    filtered_intensity = [savgol_filter(x, 55, 3) for x in intensities]
+    filtered_intensity = [savgol_filter(x, 49, 3) for x in intensities]
 
     # Crop q range to look at same window as EtOH calibration sets
     reduced_q = np.array(q[sl])
@@ -122,6 +122,17 @@ def main():
                                structure_factor=None, y=None, ramping=True,
                                scatter=f['Scatter_images'][i],
                                background=g['Scatter_images'])
+
+    # Pooled case (flattened array)
+    par_test = test.rsplit('/')[0]
+    par_scan = test.rsplit('/')[1] + '/Pooled/'
+    temperature_processing(par_test, folder, par_scan,
+                           reduced_intensity, reduced_q,
+                           temperature=nozzle_T,
+                           structure_factor=None, y=y_loc, ramping=True,
+                           scatter=f['Scatter_images'][i],
+                           background=g['Scatter_images'],
+                           pooled=True)
 
     # Plot calibration jets for each of the constant T cases
     # Load calibration data set

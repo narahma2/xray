@@ -77,7 +77,7 @@ def main():
                                       axis=0)
                               for y in files
                               ])
-        filtered_I = [savgol_filter(x, 55, 3) for x in intensity]
+        filtered_I = [savgol_filter(x, 49, 3) for x in intensity]
         reduced_I = [x[sl] for x in filtered_I]
         #reduced_I = np.array([
         #                      y/np.trapz(y, x=reduced_q)

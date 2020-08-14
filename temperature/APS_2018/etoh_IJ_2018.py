@@ -62,7 +62,7 @@ def main():
 
         intensity = [np.mean([np.loadtxt(x, usecols=1)-bg for x in y], axis=0) for y in files]
 
-        filtered_intensity = [savgol_filter(x, 55, 3) for x in intensity]
+        filtered_intensity = [savgol_filter(x, 49, 3) for x in intensity]
 
         sl = slice((np.abs(np.array(q) - 0.6)).argmin(), (np.abs(np.array(q) - 1.75)).argmin())
 
