@@ -5,11 +5,11 @@ Created on Wed May 22 17:12:11 2019
 """
 
 import glob
+import IM
 import numpy as np
 import tecplot as tp
 
 from os import path
-from libim7 import readim7
 from scipy.ndimage.interpolation import shift
 from general.misc import create_folder
 
@@ -36,7 +36,8 @@ def load_davis(im7_path):
         im7_files = glob.glob(im7_path + "*.im7")
 
         for n, im7_file in enumerate(im7_files):
-            buf, att = readim7(im7_file)
+            buf = IM.IM7(im7_file)
+            att = IM.IM7(im7_file).attributes
 
             if n == 0:
                 # Number of voxels in X, Y, Z
@@ -47,19 +48,19 @@ def load_davis(im7_path):
 
             # Transpose the read in block so that volume is in
             # (nx, ny) dimensions
-            volume[:,:,n] = buf.blocks.T[:,:,0]
+            volume[:,:,n] = buf.I.data[0].T
 
-    # IF AN INDIVIDUAL VOLUME IS CONTAINED WITHIN ONE B0*.im7 FILE,
-    # THEN VOLUME GRID CAN BE READ IN DIRECTLY BELOW.
-    elif path.isfile(im7_path):
-        buf, att = readim7(im7_path)
-        # Number of voxels in X, Y, Z
-        nx = buf.nx
-        ny = buf.ny
-        nz = buf.nz
-        # Transpose the read in block so that volume is in
-        # (nx, ny, nz) dimensions
-        volume = buf.blocks.T
+    ## IF AN INDIVIDUAL VOLUME IS CONTAINED WITHIN ONE B0*.im7 FILE,
+    ## THEN VOLUME GRID CAN BE READ IN DIRECTLY BELOW.
+    #elif path.isfile(im7_path):
+    #    buf, att = readim7(im7_path)
+    #    # Number of voxels in X, Y, Z
+    #    nx = buf.nx
+    #    ny = buf.ny
+    #    nz = buf.nz
+    #    # Transpose the read in block so that volume is in
+    #    # (nx, ny, nz) dimensions
+    #    volume = buf.blocks.T
 
     # Millimeters per voxel from calibration
     scale_x = float(att['_SCALE_X'].rsplit(' ')[0])
