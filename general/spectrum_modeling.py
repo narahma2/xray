@@ -160,3 +160,44 @@ def density_KIinH2O(concentration):
     rho = p1*(concentration)**2 + p2*(concentration) + p3
 
     return rho
+
+def viscosity_KIinH2O(conc, T):
+    """
+    Calculates the dynamic viscosity of a KI/water solution in Pa-s.
+    DOI: 10.1021/je0604075
+
+    INPUT VARIABLES
+    ---------------
+    conc:   Mass fraction of the KI solvent in water. Can be
+            in the range [0, 1] or [0, 100] (will be normalized).
+
+    T:      Temperature of the solution in degrees C.
+    """
+    # Scale concentration to 0-1
+    if conc > 1:
+        conc /= 100
+
+    w_i = conc
+    w_w = 1 - w_i
+
+    # Constants for KI (Table 2)
+    v1 = 4.9108
+    v2 = 1.1146
+    v3 = -1.2651
+    v4 = 0.060535
+    v5 = 0.52054
+    v6 = 0.09659
+
+    # Viscosity of pure water (Eq. 11) in mPa-s
+    eta_w = (T+246) / ((0.05594*T+5.2842)*T+137.37)
+
+    # Viscosity of the solute (Eq. 12) in mPa-s
+    eta_i = np.exp((v1*(1-w_w)**v2+v3) / ((v4*T+1)*(v5*(1-w_w)**v6+1)))
+
+    # Viscosity of the solution (Eq. 9) in mPa-s
+    eta_m = (eta_w**w_w)*(eta_i**w_i)
+
+    # Convert viscosity to SI units of Pa-s
+    eta_m /= 1000
+
+    return eta_m
