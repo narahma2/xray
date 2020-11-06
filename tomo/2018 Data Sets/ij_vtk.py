@@ -5,7 +5,7 @@ import numpy as np
 from pyevtk.hl import imageToVTK
 from pyevtk.vtk import VtkGroup
 from PIL import Image
-from scipy.ndimage import rotate
+from scipy.ndimage import rotate, shift
 
 from general.Tecplot.d10_to_tecplot import load_davis
 from general.misc import create_folder
@@ -44,10 +44,7 @@ def convertVTK(ij_inp, rot, ij_out, density):
         # Load in the density volume
         # Only load in the X/Y/Z values on the first volume (always the same)
         if i == 0:
-            volume, x_mm, y_mm, z_mm = load_davis(
-                                                  inp,
-                                                  rot=rot
-                                                  )
+            volume, x_mm, y_mm, z_mm = load_davis(inp)
 
             # Flip the Y values
             y_mm = y_mm[::-1]
@@ -101,15 +98,28 @@ def convertVTK(ij_inp, rot, ij_out, density):
                     allow_pickle=False)
 
             # Get the APS locations
-            slice_ij = np.argmin(np.abs(y_mm - 0))
-            slice_down4 = np.argmin(np.abs(y_mm - 4))
-            slice_down8 = np.argmin(np.abs(y_mm - 8))
+            ind0X = np.argmin(np.abs(x_mm - 0))
+            ind0Z = np.argmin(np.abs(z_mm - 0))
+            ind0Y = np.argmin(np.abs(y_mm - 0))
+            ind4Y = np.argmin(np.abs(y_mm - 4))
+            ind8Y = np.argmin(np.abs(y_mm - 8))
 
         else:
-            volume, _, _, _ = load_davis(
-                                         inp,
-                                         rot=rot
-                                         )
+            volume, _, _, _ = load_davis(inp)
+
+        # Rotate the volume
+        volume = rotate(volume, rot['Angle'], axes=rot['Axes'])
+
+        # Shift the volume
+        volume = shift(
+                       volume,
+                       (
+                        center_X - volume.shape[0]/2,
+                        center_Y - volume.shape[1]/2,
+                        center_Z - volume.shape[2]/2
+                        ),
+                       cval=0
+                       )
 
         # Get voxel size
         dx = np.abs(x_mm[1] - x_mm[0])
@@ -117,25 +127,25 @@ def convertVTK(ij_inp, rot, ij_out, density):
         dz = np.abs(z_mm[1] - z_mm[0])
         voxelSize = (dx, dy, dz)
 
-        # Get the intensity value at the impingement point (as density)
-        ijPt0_den[i] = volume[center_X, slice_ij, center_Z] / dx
-        ijPt4_den[i] = volume[center_X, slice_down4, center_Z] / dx
-        ijPt8_den[i] = volume[center_X, slice_down8, center_Z] / dx
-
         # Cropping
         volume = volume[x1:x2, y1:y2, z1:z2].astype('float32')
 
+        # Get the intensity value at the impingement point (as density)
+        ijPt0_den[i] = volume[ind0X, ind0Y, ind0Z] / dx
+        ijPt4_den[i] = volume[ind0X, ind4Y, ind0Z] / dx
+        ijPt8_den[i] = volume[ind0X, ind8Y, ind0Z] / dx
+
         # Extract the slices as solution density
-        vol_ij = volume[:, slice_ij, :].astype('float32') / dx
-        vol_down4 = volume[:, slice_down4, :].astype('float32') / dx
-        vol_down8 = volume[:, slice_down8, :].astype('float32') / dx
+        slice0 = volume[:, ind0Y, :].astype('float32') / dx
+        slice4 = volume[:, ind4Y, :].astype('float32') / dx
+        slice8 = volume[:, ind8Y, :].astype('float32') / dx
 
         # Save slices as numpy files
-        np.save('{0}/SliceIJ/{1:03d}'.format(ij_out, i), vol_ij,
+        np.save('{0}/SliceIJ/{1:03d}'.format(ij_out, i), slice0,
                 allow_pickle=False)
-        np.save('{0}/Slice+4/{1:03d}'.format(ij_out, i), vol_down4,
+        np.save('{0}/Slice+4/{1:03d}'.format(ij_out, i), slice4,
                 allow_pickle=False)
-        np.save('{0}/Slice+8/{1:03d}'.format(ij_out, i), vol_down8,
+        np.save('{0}/Slice+8/{1:03d}'.format(ij_out, i), slice8,
                 allow_pickle=False)
 
         # Convert density to liquid volume fraction (LVF)
