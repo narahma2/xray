@@ -53,9 +53,9 @@ def convertVTK(ij_inp, rot, ij_out, density):
             X, Y, Z = np.meshgrid(x_mm, y_mm, z_mm, indexing='ij')
 
             # Rotate the X, Y, Z meshgrids
-            X = rotate(X, 13, axes=(2,0), reshape=False)
-            Y = rotate(Y, 13, axes=(2,0), reshape=False)
-            Z = rotate(Z, 13, axes=(2,0), reshape=False)
+            X = rotate(X, rot['Angle'], axes=rot['Axes'], reshape=False)
+            Y = rotate(Y, rot['Angle'], axes=rot['Axes'], reshape=False)
+            Z = rotate(Z, rot['Angle'], axes=rot['Axes'], reshape=False)
 
             # Center point in voxels
             center_X = 90
@@ -108,18 +108,12 @@ def convertVTK(ij_inp, rot, ij_out, density):
             volume, _, _, _ = load_davis(inp)
 
         # Rotate the volume
-        volume = rotate(volume, rot['Angle'], axes=rot['Axes'])
+        volume = rotate(volume, rot['Angle'], axes=rot['Axes'], reshape=False)
 
-        # Shift the volume
-        volume = shift(
-                       volume,
-                       (
-                        center_X - volume.shape[0]/2,
-                        center_Y - volume.shape[1]/2,
-                        center_Z - volume.shape[2]/2
-                        ),
-                       cval=0
-                       )
+        # Calculate optical depth for the mixing cases
+        # Volumes were inverted (1 - buffer) in DaVis
+        if density == 1:
+            volume = -np.log(1 - volume)
 
         # Get voxel size
         dx = np.abs(x_mm[1] - x_mm[0])
@@ -220,18 +214,16 @@ def main():
                                 .format(out_fld))
 
     # Location of the mixing 0.30 gpm input and outputs
-    ij_mix0p30_inp = glob.glob('{0}/Mixing_0p30/Cam1/MergeDatasets/'
-                               'Filtered_Masked_125um_01/Binned_2x2/'
-                               'Invert/FastMART_500iter_Smooth500iter/'
+    ij_mix0p30_inp = glob.glob('{0}/Mixing_0p30/CompressExpand/'
+                               'FastMART_500iter_Smooth500iter/'
                                'Data/S0*/'.format(inp_fld))
     ij_mix0p30_out = create_folder('{0}/SprayVol/IJ_Mixing_0p30gpm/'
                                    .format(out_fld))
 
     # Location of the mixing 0.45 gpm input and outputs
-    ij_mix0p45_inp = glob.glob('{0}/Mixing_0p45/Cam1/MergeDatasets/'
-                               'AddCameraAttributes/Filtered_Masked_125um_01/'
-                               'Binned_2x2/Invert/FastMART_500iter_'
-                               'Smooth500/Data/S0*/'.format(inp_fld))
+    ij_mix0p45_inp = glob.glob('{0}/Mixing_0p45/CompressExpand/'
+                               'FastMART_500iter_Smooth500iter/'
+                               'Data/S0*/'.format(inp_fld))
     ij_mix0p45_out = create_folder('{0}/SprayVol/IJ_Mixing_0p45gpm/'
                                 .format(out_fld))
 
@@ -241,8 +233,8 @@ def main():
     # Convert the individual volumes
     convertVTK(ij_0p30_inp, rot, ij_0p30_out, density)
     convertVTK(ij_0p45_inp, rot, ij_0p45_out, density)
-    #convertVTK(ij_mix0p30_inp, rot, ij_mix0p30_out, density=1)
-    #convertVTK(ij_mix0p45_inp, rot, ij_mix0p45_out, density=1)
+    convertVTK(ij_mix0p30_inp, rot, ij_mix0p30_out, density=1)
+    convertVTK(ij_mix0p45_inp, rot, ij_mix0p45_out, density=1)
 
 
 if __name__ is '__main__':
