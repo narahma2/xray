@@ -31,11 +31,13 @@ def convertVTK(ij_inp, rot, ij_out, density):
     """
     # Create folders as needed
     create_folder('{0}/VTK'.format(ij_out))
+    create_folder('{0}/Slice-4'.format(ij_out))
     create_folder('{0}/SliceIJ'.format(ij_out))
     create_folder('{0}/Slice+4'.format(ij_out))
     create_folder('{0}/Slice+8'.format(ij_out))
 
     # Get total number of volumes and initialize the impingement point var 
+    ijPtn4_den = np.zeros((len(ij_inp), 1))
     ijPt0_den = np.zeros((len(ij_inp), 1))
     ijPt4_den = np.zeros((len(ij_inp), 1))
     ijPt8_den = np.zeros((len(ij_inp), 1))
@@ -100,6 +102,7 @@ def convertVTK(ij_inp, rot, ij_out, density):
             # Get the APS locations
             ind0X = np.argmin(np.abs(x_mm - 0))
             ind0Z = np.argmin(np.abs(z_mm - 0))
+            indn4Y = np.argmin(np.abs(y_mm - -4))
             ind0Y = np.argmin(np.abs(y_mm - 0))
             ind4Y = np.argmin(np.abs(y_mm - 4))
             ind8Y = np.argmin(np.abs(y_mm - 8))
@@ -125,16 +128,20 @@ def convertVTK(ij_inp, rot, ij_out, density):
         volume = volume[x1:x2, y1:y2, z1:z2].astype('float32')
 
         # Get the intensity value at the impingement point (as density)
+        ijPtn4_den[i] = volume[ind0X, indn4Y, ind0Z] / dx
         ijPt0_den[i] = volume[ind0X, ind0Y, ind0Z] / dx
         ijPt4_den[i] = volume[ind0X, ind4Y, ind0Z] / dx
         ijPt8_den[i] = volume[ind0X, ind8Y, ind0Z] / dx
 
         # Extract the slices as solution density
+        slicen4 = volume[:, indn4Y, :].astype('float32') / dx
         slice0 = volume[:, ind0Y, :].astype('float32') / dx
         slice4 = volume[:, ind4Y, :].astype('float32') / dx
         slice8 = volume[:, ind8Y, :].astype('float32') / dx
 
         # Save slices as numpy files
+        np.save('{0}/Slice-4/{1:03d}'.format(ij_out, i), slicen4,
+                allow_pickle=False)
         np.save('{0}/SliceIJ/{1:03d}'.format(ij_out, i), slice0,
                 allow_pickle=False)
         np.save('{0}/Slice+4/{1:03d}'.format(ij_out, i), slice4,
@@ -157,6 +164,9 @@ def convertVTK(ij_inp, rot, ij_out, density):
     seriesVTK(ij_out)
 
     # Save the impingement point values as density and LVF
+    np.save('{0}/ijPtn4_den'.format(ij_out), ijPtn4_den)
+    np.save('{0}/ijPtn4_LVF'.format(ij_out), ijPtn4_den / density)
+
     np.save('{0}/ijPt0_den'.format(ij_out), ijPt0_den)
     np.save('{0}/ijPt0_LVF'.format(ij_out), ijPt0_den / density)
 
@@ -222,7 +232,7 @@ def main():
 
     # Location of the mixing 0.45 gpm input and outputs
     ij_mix0p45_inp = glob.glob('{0}/Mixing_0p45/CompressExpand/'
-                               'FastMART_500iter_Smooth500iter/'
+                               'FastMART_500iter_Smooth500/'
                                'Data/S0*/'.format(inp_fld))
     ij_mix0p45_out = create_folder('{0}/SprayVol/IJ_Mixing_0p45gpm/'
                                 .format(out_fld))
