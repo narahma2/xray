@@ -31,6 +31,7 @@ def convertVTK(ij_inp, rot, ij_out, density):
     """
     # Create folders as needed
     create_folder('{0}/VTK'.format(ij_out))
+    create_folder('{0}/PIM'.format(ij_out))
     create_folder('{0}/Slice-4'.format(ij_out))
     create_folder('{0}/SliceIJ'.format(ij_out))
     create_folder('{0}/Slice+4'.format(ij_out))
@@ -127,6 +128,14 @@ def convertVTK(ij_inp, rot, ij_out, density):
         # Cropping
         volume = volume[x1:x2, y1:y2, z1:z2].astype('float32')
 
+        # Calculate the PIM as a function of y
+        # Convert volume to density, then project onto all XZ planes
+        PIM = np.sum(volume/dx, axis=(0,2)) * dx**2
+
+        # Save the PIM trace
+        np.save('{0}/PIM/{1:04d}'.format(ij_out, i), PIM,
+                allow_pickle=False)
+
         # Get the intensity value at the impingement point (as density)
         ijPtn4_den[i] = volume[ind0X, indn4Y, ind0Z] / dx
         ijPt0_den[i] = volume[ind0X, ind0Y, ind0Z] / dx
@@ -140,13 +149,13 @@ def convertVTK(ij_inp, rot, ij_out, density):
         slice8 = volume[:, ind8Y, :].astype('float32') / dx
 
         # Save slices as numpy files
-        np.save('{0}/Slice-4/{1:03d}'.format(ij_out, i), slicen4,
+        np.save('{0}/Slice-4/{1:04d}'.format(ij_out, i), slicen4,
                 allow_pickle=False)
-        np.save('{0}/SliceIJ/{1:03d}'.format(ij_out, i), slice0,
+        np.save('{0}/SliceIJ/{1:04d}'.format(ij_out, i), slice0,
                 allow_pickle=False)
-        np.save('{0}/Slice+4/{1:03d}'.format(ij_out, i), slice4,
+        np.save('{0}/Slice+4/{1:04d}'.format(ij_out, i), slice4,
                 allow_pickle=False)
-        np.save('{0}/Slice+8/{1:03d}'.format(ij_out, i), slice8,
+        np.save('{0}/Slice+8/{1:04d}'.format(ij_out, i), slice8,
                 allow_pickle=False)
 
         # Convert density to liquid volume fraction (LVF)
@@ -154,7 +163,7 @@ def convertVTK(ij_inp, rot, ij_out, density):
 
         # Convert files to VTK format (make sure to normalize by grid size!)
         imageToVTK(
-                   '{0}/VTK/{1:03d}'.format(ij_out, i),
+                   '{0}/VTK/{1:04d}'.format(ij_out, i),
                    origin=origin,
                    spacing=voxelSize,
                    pointData={'LVF': LVF/dx},
@@ -210,32 +219,32 @@ def main():
     density = density_KIinH2O(50) * 1000
 
     # Location of the 0.30 gpm input and outputs
-    ij_0p30_inp = glob.glob('{0}/IJ_0p30_Filtered_Masked_125um/'
-                            'Binned_2x2/FastMART_500iter_Smooth500iter/'
+    ij_0p30_inp = glob.glob('{0}/Statistics_0p30/'
+                            '0p30/FastMART_500iter_Smooth500iter/'
                             'Data/S0*/'.format(inp_fld))
     ij_0p30_out = create_folder('{0}/SprayVol/IJ_0p30gpm/'
                                 .format(out_fld))
 
     # Location of the 0.45 gpm input and outputs
-    ij_0p45_inp = glob.glob('{0}/IJ_0p45_Filtered_Masked_125um/'
-                            'Binned_2x2/FastMART_500iter_Smooth500/'
+    ij_0p45_inp = glob.glob('{0}/Statistics_0p45/'
+                            '0p45/FastMART_500iter_Smooth500/'
                             'Data/S0*/'.format(inp_fld))
     ij_0p45_out = create_folder('{0}/SprayVol/IJ_0p45gpm/'
                                 .format(out_fld))
 
-    # Location of the mixing 0.30 gpm input and outputs
-    ij_mix0p30_inp = glob.glob('{0}/Mixing_0p30/CompressExpand/'
-                               'FastMART_500iter_Smooth500iter/'
-                               'Data/S0*/'.format(inp_fld))
-    ij_mix0p30_out = create_folder('{0}/SprayVol/IJ_Mixing_0p30gpm/'
-                                   .format(out_fld))
+    ## Location of the mixing 0.30 gpm input and outputs
+    #ij_mix0p30_inp = glob.glob('{0}/Mixing_0p30/CompressExpand/'
+    #                           'FastMART_500iter_Smooth500iter/'
+    #                           'Data/S0*/'.format(inp_fld))
+    #ij_mix0p30_out = create_folder('{0}/SprayVol/IJ_Mixing_0p30gpm/'
+    #                               .format(out_fld))
 
-    # Location of the mixing 0.45 gpm input and outputs
-    ij_mix0p45_inp = glob.glob('{0}/Mixing_0p45/CompressExpand/'
-                               'FastMART_500iter_Smooth500/'
-                               'Data/S0*/'.format(inp_fld))
-    ij_mix0p45_out = create_folder('{0}/SprayVol/IJ_Mixing_0p45gpm/'
-                                .format(out_fld))
+    ## Location of the mixing 0.45 gpm input and outputs
+    #ij_mix0p45_inp = glob.glob('{0}/Mixing_0p45/CompressExpand/'
+    #                           'FastMART_500iter_Smooth500/'
+    #                           'Data/S0*/'.format(inp_fld))
+    #ij_mix0p45_out = create_folder('{0}/SprayVol/IJ_Mixing_0p45gpm/'
+    #                            .format(out_fld))
 
     # Rotations for the volumes (see Jupyter Notebook)
     rot = {'Angle': 13, 'Axes': (2, 0)}
@@ -243,8 +252,8 @@ def main():
     # Convert the individual volumes
     convertVTK(ij_0p30_inp, rot, ij_0p30_out, density)
     convertVTK(ij_0p45_inp, rot, ij_0p45_out, density)
-    convertVTK(ij_mix0p30_inp, rot, ij_mix0p30_out, density=1)
-    convertVTK(ij_mix0p45_inp, rot, ij_mix0p45_out, density=1)
+    #convertVTK(ij_mix0p30_inp, rot, ij_mix0p30_out, density=1)
+    #convertVTK(ij_mix0p45_inp, rot, ij_mix0p45_out, density=1)
 
 
 if __name__ is '__main__':
